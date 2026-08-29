@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2027 一階醫師國考 - 20週全方位戰鬥儀表板</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0f172a; color: #f8fafc; }
+    .calendar-day-exam { background-color: rgba(244, 63, 94, 0.25); color: #fb7185; font-weight: bold; border: 1px solid rgba(244, 63, 94, 0.5); }
+    .calendar-day-reg { background-color: rgba(168, 85, 247, 0.2); color: #c084fc; font-weight: bold; border: 1px solid rgba(168, 85, 247, 0.4); }
+    .calendar-day-class { background-color: rgba(250, 204, 21, 0.2); color: #fde047; font-weight: bold; }
+    .calendar-day-today { border: 2px solid #38bdf8 !important; box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
+    .current-week-card { border-color: #38bdf8 !important; background-color: rgba(14, 165, 233, 0.15) !important; box-shadow: 0 0 12px rgba(56, 189, 248, 0.25); }
+  </style>
+</head>
+<body class="p-4 md:p-6">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header 頂部看板 -->
+    <header class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 text-xs font-bold border border-rose-500/30 flex items-center gap-1">
+              <i data-lucide="target" class="w-3.5 h-3.5"></i> 考試日：2027/01/16 (六)
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-300 text-xs font-semibold border border-purple-500/30">
+              報名日：115/10/06 - 10/15
+            </span>
+            <span id="sync-status" class="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-400 font-mono">連線中...</span>
+          </div>
+          <h1 class="text-xl md:text-2xl font-bold text-white mt-1.5">一階醫師國考 戰鬥儀表板</h1>
+        </div>
+
+        <!-- 即時時間與倒數計時 -->
+        <div class="flex items-center gap-4 bg-slate-900/90 px-4 py-2.5 rounded-xl border border-slate-700">
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 block uppercase font-mono tracking-wider">即時時間</span>
+            <span id="current-clock" class="text-sm font-bold font-mono text-sky-400">--:--:--</span>
+          </div>
+          <div class="h-6 w-px bg-slate-700"></div>
+          <div class="text-center">
+            <span class="text-[10px] text-slate-400 block uppercase font-mono">考前倒數</span>
+            <span id="countdown-days" class="text-xl font-black text-amber-400 font-mono">--</span>
+            <span class="text-[10px] text-slate-400">天</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 快速外連 ＆ 每日自律打卡 -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-3 border-t border-slate-700/60">
+        <div class="flex flex-wrap items-center gap-2">
+          <a href="https://cougarbot.cc/" target="_blank" class="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition">
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i> 考古豹 (CougarBot)
+          </a>
+          <a href="https://register.moex.gov.tw" target="_blank" class="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 text-sky-300 border border-sky-500/30 hover:bg-sky-500/20 transition">
+            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> 考選部報名
+          </a>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 text-xs">
+          <div class="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono">
+            <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-400"></i> 連續自律: <span id="streak-days" class="font-bold">0</span> 天
+          </div>
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+            <input type="checkbox" id="daily-sport" class="rounded bg-slate-800 border-slate-600 text-amber-400 focus:ring-0"> 晨光運動+曬太陽
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+            <input type="checkbox" id="daily-exam" class="rounded bg-slate-800 border-slate-600 text-sky-400 focus:ring-0"> 考古豹 50+ 題
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+            <input type="checkbox" id="daily-game" class="rounded bg-slate-800 border-slate-600 text-pink-400 focus:ring-0"> 3hr 遊戲放鬆
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <!-- 備考月曆 ＆ 作息課表雙欄 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3 border-b border-slate-700/60 pb-2">
+            <h2 class="text-sm font-bold flex items-center gap-1.5 text-white">
+              <i data-lucide="calendar-days" class="w-4 h-4 text-sky-400"></i> 備考月曆
+            </h2>
+            <div class="flex items-center gap-1">
+              <button id="prev-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+              <span id="calendar-title" class="text-xs font-mono font-semibold px-1.5 text-slate-200">2026 / 09</span>
+              <button id="next-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </div>
+          <div>
+            <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-slate-400 mb-1">
+              <span class="text-rose-400">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-700/60 flex flex-wrap items-center justify-between text-[10px] text-slate-400 gap-1.5">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded calendar-day-today bg-slate-800"></span> 今天</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500/40 border border-purple-500"></span> 報名日 (10/6-15)</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-yellow-400/40 border border-yellow-400"></span> 鐸鐸生化</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500/40 border border-rose-500"></span> 國考 (1/16-18)</span>
+        </div>
+      </div>
+
+      <!-- 每週作息課表 -->
+      <div class="lg:col-span-2 bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg overflow-x-auto">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+            <i data-lucide="clock" class="w-4 h-4 text-sky-400"></i> 日常作息表（含三餐、運動與讀書）
+          </h2>
+          <span class="text-[10px] text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">週六下午為法定彈性緩衝區</span>
+        </div>
+        <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+          <tbody class="divide-y divide-slate-700/50 text-slate-300">
+            <tr>
+              <td class="py-2 px-2 font-mono text-slate-400 w-24">07:15 - 08:00</td>
+              <td class="py-2 px-2 text-amber-300 font-medium">晨光運動（快走/慢跑 + Fitness+ 4階段漸進菜單）</td>
+            </tr>
+            <tr class="bg-amber-950/20">
+              <td class="py-2 px-2 font-mono text-amber-400 font-semibold">08:00 - 08:45</td>
+              <td class="py-2 px-2 text-amber-200 font-medium">🍳【淋浴 ＋ 營養早餐】整裝開機、準備翻開講義</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-2 font-mono text-slate-400">08:45 - 11:45</td>
+              <td class="py-2 px-2 text-sky-300 font-medium">【區塊 A】主科進度（看影片 / 精讀核心觀念 3 hr）</td>
+            </tr>
+            <tr class="bg-amber-950/20">
+              <td class="py-2 px-2 font-mono text-amber-400 font-semibold">11:45 - 13:15</td>
+              <td class="py-2 px-2 text-amber-200 font-medium">🍱【午餐 ＋ 徹底午休】小憩 20-30 分鐘，重置下午專注力</td>
+            </tr>
+            <tr class="bg-sky-950/20">
+              <td class="py-2 px-2 font-mono text-sky-400 font-bold">13:15 - 16:15</td>
+              <td class="py-2 px-2 text-sky-200 font-bold">【區塊 B】實戰推進 / 考古豹以題帶念（週六為彈性進度緩衝）</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-2 font-mono text-slate-400">16:45 - 18:00</td>
+              <td class="py-2 px-2 text-emerald-400 font-medium">【區塊 C1】深度訂正錯題 ＋ 考古豹收藏星號</td>
+            </tr>
+            <tr class="bg-amber-950/20">
+              <td class="py-2 px-2 font-mono text-amber-400 font-semibold">18:00 - 19:15</td>
+              <td class="py-2 px-2 text-amber-200 font-medium">🍲【晚餐 ＋ 散步休息】身心降溫放鬆 <em>(鐸鐸上課日 16:45 提早吃洗)</em></td>
+            </tr>
+            <tr>
+              <td class="py-2 px-2 font-mono text-slate-400">19:15 - 20:15</td>
+              <td class="py-2 px-2 text-indigo-300">【區塊 C2】副科調劑（寄生蟲表/生統）<em>[鐸鐸課日 18-22 上課]</em></td>
+            </tr>
+            <tr class="bg-pink-950/20">
+              <td class="py-2 px-2 font-mono text-pink-400 font-bold">20:15 - 23:15</td>
+              <td class="py-2 px-2 text-pink-300 font-bold">🎮【無罪惡感休閒 3 hr】打遊戲、追番，大腦徹底關機</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 鐸鐸生化課表專區 -->
+    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> 2027 寒假鐸鐸生化班課表（18:00 - 22:00，共 8 堂）
+        </h2>
+        <span class="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">2026 最新趨勢對應</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
+          <div class="text-xs font-semibold text-sky-400">第 1 堂 ｜ 11/06 (五)</div>
+          <div class="text-sm font-medium text-slate-200 mt-0.5">酵素學 ＋ 醣類代謝(上)</div>
+        </div>
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
+          <div class="text-xs font-semibold text-sky-400">第 2 堂 ｜ 11/13 (五)</div>
+          <div class="text-sm font-medium text-slate-200 mt-0.5">醣類代謝(下)</div>
+        </div>
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
+          <div class="text-xs font-semibold text-amber-400">第 3 堂 ｜ 11/18 (三)</div>
+          <div class="text-sm font-medium text-slate-200 mt-0.5">脂肪代謝 ＋ 膜化學 ＋ 訊息傳遞</div>
+        </div>
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
+          <div class="text-xs font-semibold text-sky-400">第 4 堂 ｜ 11/27 (五)</div>
+          <div class="text-sm font-medium text-slate-200 mt-0.5">蛋白質化學</div>
+        </div>
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
+          <div class="text-xs font-semibold text-sky-400">第 5 堂 ｜ 12/04 (五)</div>
+          <div class="text-sm font-medium text-slate-200 mt-0.5">分子生物學(上)</div>
+        </div>
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
+          <div class="text-xs font-semibold text-sky-400">第 6 堂 ｜ 12/11 (五)</div>
+          <div class="text-sm font-medium text-slate-200 mt-0.5">分子生物學(中)</div>
+        </div>
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
+          <div class="text-xs font-semibold text-amber-400">第 7 堂 ｜ 12/23 (三)</div>
+          <div class="text-sm font-medium text-slate-200 mt-0.5">分子生物學(下) ＋ 生物科技</div>
+        </div>
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
+          <div class="text-xs font-semibold text-emerald-400">第 8 堂 ｜ 12/28 (一) [完課]</div>
+          <div class="text-sm font-medium text-slate-200 mt-0.5">細胞週期等冷僻題型整理</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 20 週 4 階段漸進式運動菜單專區 -->
+    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+          <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> 20 週 4 階段漸進式運動菜單（晨光陽光 ＋ Apple Fitness+）
+        </h2>
+        <span class="text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">每日 07:15 - 08:00</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-sky-400">階段一 ｜ 第 1–4 週</span>
+            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">9月</span>
+          </div>
+          <div class="text-xs font-semibold text-white">喚醒與低衝擊適應</div>
+          <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+            <li><strong>戶外</strong>：純快走 15–20 分鐘（曬太陽）</li>
+            <li><strong>一三五</strong>：Fitness+ 徒手肌力（看左邊示範）</li>
+            <li><strong>二四</strong>：Fitness+ 核心 10m + 伸展 5m</li>
+            <li><strong>週六</strong>：慢流動瑜伽 20m 放鬆開髖</li>
+          </ul>
+        </div>
+
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-400">階段二 ｜ 第 5–10 週</span>
+            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">10月</span>
+          </div>
+          <div class="text-xs font-semibold text-white">肌力與核心強化</div>
+          <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+            <li><strong>戶外</strong>：走跑交替（跑 1 分 + 走 2 分）</li>
+            <li><strong>一三五</strong>：Total/Upper Body 20m 救駝背</li>
+            <li><strong>二四</strong>：核心 10m + HIIT 10m（低衝擊）</li>
+            <li><strong>週六</strong>：慢流動瑜伽 30m 深層修復</li>
+          </ul>
+        </div>
+
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-400">階段三 ｜ 第 11–16 週</span>
+            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">11-12月</span>
+          </div>
+          <div class="text-xs font-semibold text-white">體能與多巴胺巔峰</div>
+          <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+            <li><strong>戶外</strong>：輕鬆慢跑 20 分鐘（排解壓力）</li>
+            <li><strong>一三五</strong>：Strength 全身循環 20m</li>
+            <li><strong>二四</strong>：Kickboxing 或 Dance 20m 抒壓</li>
+            <li><strong>週六</strong>：瑜伽 30m 舒緩久坐腰椎</li>
+          </ul>
+        </div>
+
+        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-rose-400">階段四 ｜ 第 17–20 週</span>
+            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">12底-1月</span>
+          </div>
+          <div class="text-xs font-semibold text-white">考前減量與神經保溫</div>
+          <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+            <li><strong>戶外</strong>：陽光散步 15–20 分鐘（純放空）</li>
+            <li><strong>週一至五</strong>：輕量肌力 10m + 伸展放鬆 10m</li>
+            <li><strong>考前一週</strong>：純散步曬太陽 + 呼吸冥想</li>
+            <li><strong>目標</strong>：防受傷、降皮質醇、保證考場精力</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 免動腦自主循環備用動作 -->
+      <div class="p-2.5 bg-slate-900/50 border border-slate-700/40 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+        <span class="text-amber-300 font-semibold flex items-center gap-1.5">
+          <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i> 免看影片自主循環（各 3 組）：
+        </span>
+        <div class="flex flex-wrap gap-1.5 text-[11px]">
+          <span class="px-2 py-0.5 bg-slate-800 rounded">徒手深蹲 10-12下</span>
+          <span class="px-2 py-0.5 bg-slate-800 rounded">跪姿伏地挺身 8-10下</span>
+          <span class="px-2 py-0.5 bg-slate-800 rounded text-emerald-300 font-medium">臀橋（救久坐必做）12-15下</span>
+          <span class="px-2 py-0.5 bg-slate-800 rounded">死蟲式 每側8下</span>
+          <span class="px-2 py-0.5 bg-slate-800 rounded">鳥狗式 每側8下</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 20 週 Checklist -->
+    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+            <i data-lucide="check-square" class="w-4 h-4 text-emerald-400"></i> 20 週衝刺進度檢核
+          </h2>
+          <button id="jump-today-week-btn" class="text-[11px] flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition">
+            <i data-lucide="locate" class="w-3 h-3"></i> 定位當週
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
+            <div id="progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <span id="progress-text" class="text-xs font-bold font-mono text-emerald-400">0%</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="checklist-container"></div>
+    </div>
+
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // ==========================================
+    // 🔧 你的專屬 Firebase 即時同步設定（已自動填妥）
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTdvMQQegAy69B5yooc0vTvdpodQwoCIE",
+      authDomain: "my-exam-1aab9.firebaseapp.com",
+      databaseURL: "https://my-exam-1aab9-default-rtdb.firebaseio.com",
+      projectId: "my-exam-1aab9",
+      storageBucket: "my-exam-1aab9.firebasestorage.app",
+      messagingSenderId: "539077866579",
+      appId: "1:539077866579:web:3d4b3fb62eca578f8ec2a6",
+      measurementId: "G-TDZ4263TB0"
+    };
+
+    let db = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      document.getElementById('sync-status').innerText = '雲端即時同步 🟢';
+      document.getElementById('sync-status').className = 'text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono';
+    } catch (e) {
+      console.warn('Firebase 連線未啟用', e);
+      document.getElementById('sync-status').innerText = '本地儲存 🟡';
+    }
+
+    // 1. 即時時鐘與考試倒數
+    const examDate = new Date('2027-01-16T08:30:00');
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('current-clock').innerText = now.toTimeString().split(' ')[0];
+      const diffDays = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
+      document.getElementById('countdown-days').innerText = diffDays > 0 ? diffDays : 0;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. 每日三大自律習慣（跨日重置 + 連續打卡天數 Streak）
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const habits = ['daily-sport', 'daily-exam', 'daily-game'];
+    const habitStorageKey = `med_exam_habits_${todayStr}`;
+    let todayHabits = JSON.parse(localStorage.getItem(habitStorageKey) || '{}');
+
+    function calculateStreak() {
+      let streak = 0;
+      let checkDate = new Date();
+      const allTodayDone = habits.every(h => todayHabits[h]);
+      if (allTodayDone) streak++;
+      
+      for (let i = 1; i <= 365; i++) {
+        let prev = new Date();
+        prev.setDate(checkDate.getDate() - i);
+        let prevStr = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(prev.getDate()).padStart(2, '0')}`;
+        let prevData = JSON.parse(localStorage.getItem(`med_exam_habits_${prevStr}`) || '{}');
+        if (habits.every(h => prevData[h])) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      document.getElementById('streak-days').innerText = streak;
+    }
+
+    habits.forEach(id => {
+      const el = document.getElementById(id);
+      el.checked = !!todayHabits[id];
+      el.addEventListener('change', () => {
+        todayHabits[id] = el.checked;
+        localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
+        if (db) db.ref(`habits/${todayStr}`).set(todayHabits);
+        calculateStreak();
+      });
+    });
+
+    if (db) {
+      db.ref(`habits/${todayStr}`).on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          todayHabits = val;
+          localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
+          habits.forEach(id => {
+            document.getElementById(id).checked = !!todayHabits[id];
+          });
+          calculateStreak();
+        }
+      });
+    }
+    calculateStreak();
+
+    // 3. 備考月曆
+    const classDates = ['2026-11-06', '2026-11-13', '2026-11-18', '2026-11-27', '2026-12-04', '2026-12-11', '2026-12-23', '2026-12-28'];
+    const examDatesList = ['2027-01-16', '2027-01-17', '2027-01-18'];
+    const regDatesList = [
+      '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10',
+      '2026-10-11', '2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15'
+    ];
+    let currentCalDate = new Date(2026, 8, 1);
+
+    function renderCalendar() {
+      const year = currentCalDate.getFullYear();
+      const month = currentCalDate.getMonth();
+      document.getElementById('calendar-title').innerText = `${year} / ${String(month + 1).padStart(2, '0')}`;
+      const firstDay = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="p-1.5 text-slate-600"></div>`;
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        let classes = 'p-1.5 rounded text-[11px] transition ';
+        if (examDatesList.includes(dateStr)) classes += 'calendar-day-exam ';
+        else if (regDatesList.includes(dateStr)) classes += 'calendar-day-reg ';
+        else if (classDates.includes(dateStr)) classes += 'calendar-day-class ';
+        else classes += 'text-slate-300 hover:bg-slate-700/50 ';
+
+        if (dateStr === todayStr) classes += 'calendar-day-today ';
+        grid.innerHTML += `<div class="${classes}">${d}</div>`;
+      }
+    }
+
+    document.getElementById('prev-month').addEventListener('click', () => {
+      currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+      renderCalendar();
+    });
+    document.getElementById('next-month').addEventListener('click', () => {
+      currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+      renderCalendar();
+    });
+    renderCalendar();
+
+    // 4. 20 週清單資料
+    const weeksData = [
+      { w: 1, start: '2026-09-01', end: '2026-09-05', date: "9/01-9/05", title: "趙俊彥 01-05：骨骼/肌肉 ＋ 考古豹刷題 ＋ 寄生蟲表 ＋ [運動:快走+徒手]" },
+      { w: 2, start: '2026-09-07', end: '2026-09-12', date: "9/07-9/12", title: "趙俊彥 06-11：循環血管/脊髓/腦幹 ＋ 考古豹 ＋ 生統計算" },
+      { w: 3, start: '2026-09-14', end: '2026-09-19', date: "9/14-9/19", title: "趙俊彥 12-17：皮質/腦神經/自律/神經叢 ＋ 考古豹 ＋ 寄生蟲" },
+      { w: 4, start: '2026-09-21', end: '2026-09-26', date: "9/21-9/26", title: "趙俊彥 18-23：內臟系統解剖 ＋ 考古豹 ＋ 生統" },
+      { w: 5, start: '2026-09-28', end: '2026-10-03', date: "9/28-10/03", title: "趙俊彥 24-30：組織胚胎全通關 ＋ 考古豹解剖錯題清倉 ＋ [運動:走跑交替啟動]" },
+      { w: 6, start: '2026-10-05', end: '2026-10-10', date: "10/05-10/10", title: "何宣生理(上)：心血管/呼吸/神經肌肉 ＋ 考古豹" },
+      { w: 7, start: '2026-10-12', end: '2026-10-17', date: "10/12-10/17", title: "何宣生理(下)：腎臟酸鹼/內分泌 ＋ 考古豹 [★ 10/6-15 國考線上報名]" },
+      { w: 8, start: '2026-10-19', end: '2026-10-24', date: "10/19-10/24", title: "小美免疫 ＋ Winner 免疫架構 ＋ 考古豹" },
+      { w: 9, start: '2026-10-26', end: '2026-10-31', date: "10/26-10/31", title: "Winner 細菌學/真菌學 ＋ 考古豹" },
+      { w: 10, start: '2026-11-02', end: '2026-11-07', date: "11/02-11/07", title: "Winner 病毒/寄生蟲熟背 ＋ 鐸鐸生化第1堂(11/6)" },
+      { w: 11, start: '2026-11-09', end: '2026-11-14', date: "11/09-11/14", title: "子翔藥理(ANS/心血管) ＋ 鐸鐸生化第2堂(11/13) ＋ [運動:慢跑巔峰]" },
+      { w: 12, start: '2026-11-16', end: '2026-11-21', date: "11/16-11/21", title: "子翔藥理(CNS/抗生素) ＋ 鐸鐸生化第3堂(11/18)" },
+      { w: 13, start: '2026-11-23', end: '2026-11-28', date: "11/23-11/28", title: "子翔藥理收尾 ＋ FC 生統 ＋ 鐸鐸生化第4堂(11/27)" },
+      { w: 14, start: '2026-11-30', end: '2026-12-05', date: "11/30-12/05", title: "FC 公衛流病法規 ＋ 鐸鐸生化第5堂(12/4)" },
+      { w: 15, start: '2026-12-07', end: '2026-12-12', date: "12/07-12/12", title: "考古豹病理 8 年題庫 ＋ 鐸鐸生化第6堂(12/11)" },
+      { w: 16, start: '2026-12-14', end: '2026-12-19', date: "12/14-12/19", title: "考古豹病理刷題（腫瘤/心血管/腎絲球）＋ 生化複習" },
+      { w: 17, start: '2026-12-21', end: '2026-12-26', date: "12/21-12/26", title: "考古豹病理收尾 ＋ 鐸鐸生化第7堂[分生下+生技](12/23) ＋ [運動:考前減量伸展]" },
+      { w: 18, start: '2026-12-28', end: '2027-01-02', date: "12/28-01/02", title: "鐸鐸生化第8堂[冷僻題完課](12/28) ＋ 考古豹歷史錯題總清倉" },
+      { w: 19, start: '2027-01-04', end: '2027-01-09', date: "01/04-01/09", title: "考古豹全真試卷模考（每2天一套 200 題計時＋全檢討）" },
+      { w: 20, start: '2027-01-11', end: '2027-01-15', date: "01/11-01/15", title: "考前5天：生化/藥理/微免表格速記 ➔ 1/16 應考！" }
+    ];
+
+    const container = document.getElementById('checklist-container');
+    let savedState = JSON.parse(localStorage.getItem('med_exam_checklist_cloud') || '{}');
+
+    function updateProgress() {
+      const checkedCount = Object.values(savedState).filter(Boolean).length;
+      const percent = Math.round((checkedCount / weeksData.length) * 100);
+      document.getElementById('progress-bar').style.width = percent + '%';
+      document.getElementById('progress-text').innerText = percent + '%';
+    }
+
+    function renderChecklist() {
+      container.innerHTML = '';
+      weeksData.forEach(item => {
+        const isChecked = !!savedState[item.w];
+        const div = document.createElement('div');
+        div.id = `week-card-${item.w}`;
+        div.className = `p-2.5 rounded-xl border transition-all flex items-start gap-2.5 cursor-pointer ${
+          isChecked ? 'bg-slate-900/40 border-slate-700/40 text-slate-500' : 'bg-slate-900/80 border-slate-700 text-slate-200 hover:border-slate-600'
+        }`;
+        div.innerHTML = `
+          <input type="checkbox" id="w-${item.w}" class="mt-0.5 rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0 cursor-pointer" ${isChecked ? 'checked' : ''}>
+          <label for="w-${item.w}" class="flex-1 cursor-pointer">
+            <div class="flex items-center justify-between text-xs font-semibold ${isChecked ? 'text-slate-500' : 'text-sky-400'}">
+              <span>第 ${item.w} 週</span>
+              <span class="font-mono text-[10px]">${item.date}</span>
+            </div>
+            <div class="text-[11px] mt-0.5 leading-tight ${isChecked ? 'line-through text-slate-500' : 'text-slate-300'}">${item.title}</div>
+          </label>
+        `;
+
+        div.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const checkbox = div.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+          }
+          const checkbox = div.querySelector('input');
+          savedState[item.w] = checkbox.checked;
+          localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
+          if (db) db.ref('checklist').set(savedState);
+          renderChecklist();
+          updateProgress();
+        });
+
+        container.appendChild(div);
+      });
+      updateProgress();
+    }
+    renderChecklist();
+
+    if (db) {
+      db.ref('checklist').on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          savedState = val;
+          localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
+          renderChecklist();
+        }
+      });
+    }
+
+    // 5. 定位當週速跳功能
+    document.getElementById('jump-today-week-btn').addEventListener('click', () => {
+      let targetWeek = weeksData.find(w => todayStr >= w.start && todayStr <= w.end) || weeksData[0];
+      const card = document.getElementById(`week-card-${targetWeek.w}`);
+      if (card) {
+        document.querySelectorAll('.current-week-card').forEach(el => el.classList.remove('current-week-card'));
+        card.classList.add('current-week-card');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  </script>
+</body>
+</html>
