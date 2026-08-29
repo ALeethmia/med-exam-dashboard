@@ -83,12 +83,12 @@
       </div>
     </header>
 
-    <!-- 趙俊彥 人體解剖學（全 30 講）影片清單 Check list -->
+    <!-- 趙俊彥 人體解剖學（全 30 講）純數字 Check list -->
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div class="flex items-center gap-2">
           <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-            <i data-lucide="video" class="w-4 h-4 text-rose-400"></i> 趙俊彥 人體解剖學（全 30 講影片進度追蹤）
+            <i data-lucide="video" class="w-4 h-4 text-rose-400"></i> 趙俊彥解剖影片進度（1–30 講）
           </h2>
           <a href="https://youtube.com/playlist?list=PL-PlecnICedO0RMacJnAnyYRIHlf0M01t&si=ZY2_G7f2lz2d8srV" target="_blank" class="text-[11px] text-rose-400 hover:underline flex items-center gap-0.5">
             開啟 YT 清單 <i data-lucide="external-link" class="w-3 h-3"></i>
@@ -102,7 +102,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2" id="video-checklist-container"></div>
+      <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-2" id="video-checklist-container"></div>
     </div>
 
     <!-- 備考月曆 ＆ 作息課表雙欄 -->
@@ -429,83 +429,60 @@
     calculateStreak();
 
     // ==========================================
-    // 3. 趙俊彥 人體解剖學（全 30 講）Check list
+    // 3. 趙俊彥 人體解剖學（1–30 講）純數字 Check list
     // ==========================================
-    const anatomyVideos = [
-      { id: 1, title: "第 01 講：骨骼系統(上)", week: "W1" },
-      { id: 2, title: "第 02 講：骨骼系統(中)", week: "W1" },
-      { id: 3, title: "第 03 講：骨骼系統(下)", week: "W1" },
-      { id: 4, title: "第 04 講：關節學", week: "W1" },
-      { id: 5, title: "第 05 講：肌肉系統(上)", week: "W1" },
-      { id: 6, title: "第 06 講：肌肉系統(下)", week: "W2" },
-      { id: 7, title: "第 07 講：循環心臟", week: "W2" },
-      { id: 8, title: "第 08 講：動脈循環", week: "W2" },
-      { id: 9, title: "第 09 講：靜脈與淋巴", week: "W2" },
-      { id: 10, title: "第 10 講：神經總論/脊髓", week: "W2" },
-      { id: 11, title: "第 11 講：腦幹結構", week: "W2" },
-      { id: 12, title: "第 12 講：小腦與間腦", week: "W3" },
-      { id: 13, title: "第 13 講：大腦大腦皮質", week: "W3" },
-      { id: 14, title: "第 14 講：腦神經(上)", week: "W3" },
-      { id: 15, title: "第 15 講：腦神經(下)", week: "W3" },
-      { id: 16, title: "第 16 講：脊神經/神經叢", week: "W3" },
-      { id: 17, title: "第 17 講：自律神經系統", week: "W3" },
-      { id: 18, title: "第 18 講：呼吸系統", week: "W4" },
-      { id: 19, title: "第 19 講：消化系統(上)", week: "W4" },
-      { id: 20, title: "第 20 講：消化系統(下)", week: "W4" },
-      { id: 21, title: "第 21 講：泌尿系統", week: "W4" },
-      { id: 22, title: "第 22 講：生殖系統(男)", week: "W4" },
-      { id: 23, title: "第 23 講：生殖系統(女)", week: "W4" },
-      { id: 24, title: "第 24 講：內分泌系統", week: "W5" },
-      { id: 25, title: "第 25 講：組織學-上皮結締", week: "W5" },
-      { id: 26, title: "第 26 講：組織學-肌與神經", week: "W5" },
-      { id: 27, title: "第 27 講：組織學-器官系統", week: "W5" },
-      { id: 28, title: "第 28 講：胚胎學-早期發育", week: "W5" },
-      { id: 29, title: "第 29 講：胚胎學-心血管發育", week: "W5" },
-      { id: 30, title: "第 30 講：胚胎學-鰓弓與器官", week: "W5" }
-    ];
-
+    const totalVideos = 30;
     const videoContainer = document.getElementById('video-checklist-container');
     let savedVideoState = JSON.parse(localStorage.getItem('med_exam_videos_cloud') || '{}');
 
+    function getWeekLabel(num) {
+      if (num <= 5) return 'W1';
+      if (num <= 11) return 'W2';
+      if (num <= 17) return 'W3';
+      if (num <= 23) return 'W4';
+      return 'W5';
+    }
+
     function updateVideoProgress() {
       const checkedCount = Object.values(savedVideoState).filter(Boolean).length;
-      const percent = Math.round((checkedCount / anatomyVideos.length) * 100);
+      const percent = Math.round((checkedCount / totalVideos) * 100);
       document.getElementById('video-progress-bar').style.width = percent + '%';
-      document.getElementById('video-progress-text').innerText = `${checkedCount}/30 (${percent}%)`;
+      document.getElementById('video-progress-text').innerText = `${checkedCount}/${totalVideos} (${percent}%)`;
     }
 
     function renderVideoChecklist() {
       videoContainer.innerHTML = '';
-      anatomyVideos.forEach(v => {
-        const isChecked = !!savedVideoState[v.id];
+      for (let i = 1; i <= totalVideos; i++) {
+        const isChecked = !!savedVideoState[i];
+        const weekTag = getWeekLabel(i);
         const div = document.createElement('div');
-        div.className = `p-2 rounded-lg border text-xs transition-all flex items-center justify-between cursor-pointer ${
-          isChecked ? 'bg-slate-900/40 border-slate-700/40 text-slate-500' : 'bg-slate-900/80 border-slate-700 text-slate-200 hover:border-slate-600'
+        div.className = `p-2 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 select-none ${
+          isChecked 
+            ? 'bg-slate-900/40 border-slate-700/40 text-slate-500' 
+            : 'bg-slate-900/80 border-slate-700 text-slate-200 hover:border-rose-500/50 hover:bg-slate-800/80'
         }`;
+        
         div.innerHTML = `
-          <div class="flex items-center gap-1.5 truncate">
-            <input type="checkbox" id="v-${v.id}" class="rounded bg-slate-800 border-slate-600 text-rose-500 focus:ring-0 cursor-pointer" ${isChecked ? 'checked' : ''}>
-            <span class="truncate ${isChecked ? 'line-through text-slate-500' : ''}">${v.title}</span>
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-bold font-mono ${isChecked ? 'line-through text-slate-500' : 'text-rose-400'}">${i}</span>
+            <i data-lucide="${isChecked ? 'check-circle-2' : 'circle'}" class="w-3.5 h-3.5 ${isChecked ? 'text-slate-500' : 'text-slate-600'}"></i>
           </div>
-          <span class="text-[9px] px-1 py-0.5 rounded bg-slate-800 text-slate-400 font-mono ml-1">${v.week}</span>
+          <span class="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-400">${weekTag}</span>
         `;
 
-        div.addEventListener('click', (e) => {
-          if (e.target.tagName !== 'INPUT') {
-            const checkbox = div.querySelector('input');
-            checkbox.checked = !checkbox.checked;
-          }
-          const checkbox = div.querySelector('input');
-          savedVideoState[v.id] = checkbox.checked;
+        div.addEventListener('click', () => {
+          savedVideoState[i] = !savedVideoState[i];
           localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
           if (db) db.ref('videos').set(savedVideoState);
           renderVideoChecklist();
           updateVideoProgress();
+          lucide.createIcons();
         });
 
         videoContainer.appendChild(div);
-      });
+      }
       updateVideoProgress();
+      lucide.createIcons();
     }
     renderVideoChecklist();
 
