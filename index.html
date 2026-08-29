@@ -55,6 +55,9 @@
       <!-- 快速外連 ＆ 每日自律打卡 -->
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-3 border-t border-slate-700/60">
         <div class="flex flex-wrap items-center gap-2">
+          <a href="https://youtube.com/playlist?list=PL-PlecnICedO0RMacJnAnyYRIHlf0M01t&si=ZY2_G7f2lz2d8srV" target="_blank" class="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 transition">
+            <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> 趙俊彥解剖播放清單
+          </a>
           <a href="https://cougarbot.cc/" target="_blank" class="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition">
             <i data-lucide="zap" class="w-3.5 h-3.5"></i> 考古豹 (CougarBot)
           </a>
@@ -79,6 +82,28 @@
         </div>
       </div>
     </header>
+
+    <!-- 趙俊彥 人體解剖學（全 30 講）影片清單 Check list -->
+    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+            <i data-lucide="video" class="w-4 h-4 text-rose-400"></i> 趙俊彥 人體解剖學（全 30 講影片進度追蹤）
+          </h2>
+          <a href="https://youtube.com/playlist?list=PL-PlecnICedO0RMacJnAnyYRIHlf0M01t&si=ZY2_G7f2lz2d8srV" target="_blank" class="text-[11px] text-rose-400 hover:underline flex items-center gap-0.5">
+            開啟 YT 清單 <i data-lucide="external-link" class="w-3 h-3"></i>
+          </a>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
+            <div id="video-progress-bar" class="bg-rose-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <span id="video-progress-text" class="text-xs font-bold font-mono text-rose-400">0/30 (0%)</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2" id="video-checklist-container"></div>
+    </div>
 
     <!-- 備考月曆 ＆ 作息課表雙欄 -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -315,7 +340,7 @@
     lucide.createIcons();
 
     // ==========================================
-    // 🔧 你的專屬 Firebase 即時同步設定（已自動填妥）
+    // 🔧 Firebase 雲端即時同步設定
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyDTdvMQQegAy69B5yooc0vTvdpodQwoCIE",
@@ -403,7 +428,99 @@
     }
     calculateStreak();
 
-    // 3. 備考月曆
+    // ==========================================
+    // 3. 趙俊彥 人體解剖學（全 30 講）Check list
+    // ==========================================
+    const anatomyVideos = [
+      { id: 1, title: "第 01 講：骨骼系統(上)", week: "W1" },
+      { id: 2, title: "第 02 講：骨骼系統(中)", week: "W1" },
+      { id: 3, title: "第 03 講：骨骼系統(下)", week: "W1" },
+      { id: 4, title: "第 04 講：關節學", week: "W1" },
+      { id: 5, title: "第 05 講：肌肉系統(上)", week: "W1" },
+      { id: 6, title: "第 06 講：肌肉系統(下)", week: "W2" },
+      { id: 7, title: "第 07 講：循環心臟", week: "W2" },
+      { id: 8, title: "第 08 講：動脈循環", week: "W2" },
+      { id: 9, title: "第 09 講：靜脈與淋巴", week: "W2" },
+      { id: 10, title: "第 10 講：神經總論/脊髓", week: "W2" },
+      { id: 11, title: "第 11 講：腦幹結構", week: "W2" },
+      { id: 12, title: "第 12 講：小腦與間腦", week: "W3" },
+      { id: 13, title: "第 13 講：大腦大腦皮質", week: "W3" },
+      { id: 14, title: "第 14 講：腦神經(上)", week: "W3" },
+      { id: 15, title: "第 15 講：腦神經(下)", week: "W3" },
+      { id: 16, title: "第 16 講：脊神經/神經叢", week: "W3" },
+      { id: 17, title: "第 17 講：自律神經系統", week: "W3" },
+      { id: 18, title: "第 18 講：呼吸系統", week: "W4" },
+      { id: 19, title: "第 19 講：消化系統(上)", week: "W4" },
+      { id: 20, title: "第 20 講：消化系統(下)", week: "W4" },
+      { id: 21, title: "第 21 講：泌尿系統", week: "W4" },
+      { id: 22, title: "第 22 講：生殖系統(男)", week: "W4" },
+      { id: 23, title: "第 23 講：生殖系統(女)", week: "W4" },
+      { id: 24, title: "第 24 講：內分泌系統", week: "W5" },
+      { id: 25, title: "第 25 講：組織學-上皮結締", week: "W5" },
+      { id: 26, title: "第 26 講：組織學-肌與神經", week: "W5" },
+      { id: 27, title: "第 27 講：組織學-器官系統", week: "W5" },
+      { id: 28, title: "第 28 講：胚胎學-早期發育", week: "W5" },
+      { id: 29, title: "第 29 講：胚胎學-心血管發育", week: "W5" },
+      { id: 30, title: "第 30 講：胚胎學-鰓弓與器官", week: "W5" }
+    ];
+
+    const videoContainer = document.getElementById('video-checklist-container');
+    let savedVideoState = JSON.parse(localStorage.getItem('med_exam_videos_cloud') || '{}');
+
+    function updateVideoProgress() {
+      const checkedCount = Object.values(savedVideoState).filter(Boolean).length;
+      const percent = Math.round((checkedCount / anatomyVideos.length) * 100);
+      document.getElementById('video-progress-bar').style.width = percent + '%';
+      document.getElementById('video-progress-text').innerText = `${checkedCount}/30 (${percent}%)`;
+    }
+
+    function renderVideoChecklist() {
+      videoContainer.innerHTML = '';
+      anatomyVideos.forEach(v => {
+        const isChecked = !!savedVideoState[v.id];
+        const div = document.createElement('div');
+        div.className = `p-2 rounded-lg border text-xs transition-all flex items-center justify-between cursor-pointer ${
+          isChecked ? 'bg-slate-900/40 border-slate-700/40 text-slate-500' : 'bg-slate-900/80 border-slate-700 text-slate-200 hover:border-slate-600'
+        }`;
+        div.innerHTML = `
+          <div class="flex items-center gap-1.5 truncate">
+            <input type="checkbox" id="v-${v.id}" class="rounded bg-slate-800 border-slate-600 text-rose-500 focus:ring-0 cursor-pointer" ${isChecked ? 'checked' : ''}>
+            <span class="truncate ${isChecked ? 'line-through text-slate-500' : ''}">${v.title}</span>
+          </div>
+          <span class="text-[9px] px-1 py-0.5 rounded bg-slate-800 text-slate-400 font-mono ml-1">${v.week}</span>
+        `;
+
+        div.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const checkbox = div.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+          }
+          const checkbox = div.querySelector('input');
+          savedVideoState[v.id] = checkbox.checked;
+          localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
+          if (db) db.ref('videos').set(savedVideoState);
+          renderVideoChecklist();
+          updateVideoProgress();
+        });
+
+        videoContainer.appendChild(div);
+      });
+      updateVideoProgress();
+    }
+    renderVideoChecklist();
+
+    if (db) {
+      db.ref('videos').on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          savedVideoState = val;
+          localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
+          renderVideoChecklist();
+        }
+      });
+    }
+
+    // 4. 備考月曆
     const classDates = ['2026-11-06', '2026-11-13', '2026-11-18', '2026-11-27', '2026-12-04', '2026-12-11', '2026-12-23', '2026-12-28'];
     const examDatesList = ['2027-01-16', '2027-01-17', '2027-01-18'];
     const regDatesList = [
@@ -448,7 +565,7 @@
     });
     renderCalendar();
 
-    // 4. 20 週清單資料
+    // 5. 20 週清單資料
     const weeksData = [
       { w: 1, start: '2026-09-01', end: '2026-09-05', date: "9/01-9/05", title: "趙俊彥 01-05：骨骼/肌肉 ＋ 考古豹刷題 ＋ 寄生蟲表 ＋ [運動:快走+徒手]" },
       { w: 2, start: '2026-09-07', end: '2026-09-12', date: "9/07-9/12", title: "趙俊彥 06-11：循環血管/脊髓/腦幹 ＋ 考古豹 ＋ 生統計算" },
@@ -532,7 +649,7 @@
       });
     }
 
-    // 5. 定位當週速跳功能
+    // 6. 定位當週速跳功能
     document.getElementById('jump-today-week-btn').addEventListener('click', () => {
       let targetWeek = weeksData.find(w => todayStr >= w.start && todayStr <= w.end) || weeksData[0];
       const card = document.getElementById(`week-card-${targetWeek.w}`);
