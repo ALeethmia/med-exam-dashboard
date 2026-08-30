@@ -1,6 +1,6 @@
 {
   "name": "2027 一階醫師國考 - 20週全方位戰鬥儀表板",
-  "description": "2027 一階醫師國考 20 週全方位戰鬥儀表板，包含備考月曆、日常作息表、趙俊彥解剖學 30 講、鐸鐸生化學進度檢核與雲端即時同步。",
+  "description": "2027 一階醫師國考 20 週全方位戰鬥儀表板，包含備考月曆、日常作息表、First Choice 生理學 7 大篇章 (配合何宣翻閱)、趙俊彥解剖學 30 講、鐸鐸生化學進度檢核與雲端即時同步。",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

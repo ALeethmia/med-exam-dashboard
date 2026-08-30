@@ -20,7 +20,13 @@
     .lecture-card.completed .title-text { text-decoration: line-through; color: #64748b; }
     .biochem-card.completed { border-color: rgba(245, 158, 11, 0.4) !important; background-color: rgba(245, 158, 11, 0.05) !important; }
     .biochem-card.completed .title-text { text-decoration: line-through; color: #64748b; }
+    .physio-card.completed { border-color: rgba(20, 184, 166, 0.4) !important; background-color: rgba(20, 184, 166, 0.05) !important; }
+    .physio-card.completed .title-text { text-decoration: line-through; color: #64748b; }
+    .physio-sub-card.completed { border-color: rgba(20, 184, 166, 0.3) !important; background-color: rgba(20, 184, 166, 0.06) !important; }
+    .physio-sub-card.completed .sub-title-text { text-decoration: line-through; color: #64748b; }
     .tab-btn.active { color: #38bdf8; border-bottom: 2px solid #38bdf8; background-color: rgba(56, 189, 248, 0.08); }
+    .tab-btn.drag-over { border-left: 2px dashed #38bdf8; transform: scale(0.98); }
+    .tab-btn.dragging { opacity: 0.4; }
     .schedule-subtab.active { background-color: #0284c7 !important; color: #ffffff !important; }
     
     .current-schedule-row {
@@ -111,17 +117,14 @@
       </div>
     </header>
 
-    <!-- 主分頁導覽按鈕 -->
-    <div class="flex border-b border-slate-700/80 gap-2 overflow-x-auto">
-      <button onclick="switchTab('plan')" id="tab-btn-plan" class="tab-btn active px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 text-slate-300 transition-all whitespace-nowrap">
-        <i data-lucide="compass" class="w-4 h-4"></i> 作戰總覽 ＆ 20 週衝刺
-      </button>
-      <button onclick="switchTab('anatomy')" id="tab-btn-anatomy" class="tab-btn px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap">
-        <i data-lucide="book-open" class="w-4 h-4"></i> 趙俊彥解剖學
-      </button>
-      <button onclick="switchTab('biochem')" id="tab-btn-biochem" class="tab-btn px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap">
-        <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> 鐸鐸生化學
-      </button>
+    <!-- 主分頁導覽按鈕 (支援拖曳自訂順序) -->
+    <div class="flex items-center justify-between border-b border-slate-700/80 gap-2 overflow-x-auto pb-1">
+      <div id="main-tabs-header-container" class="flex gap-2 overflow-x-auto">
+        <!-- Tabs will be rendered here dynamically with drag & drop support -->
+      </div>
+      <span class="text-[10px] text-slate-500 font-mono hidden md:inline-flex items-center gap-1 shrink-0 px-2 py-1 bg-slate-900/60 rounded-lg border border-slate-800">
+        <i data-lucide="move" class="w-3 h-3 text-slate-400"></i> 可拖曳分頁調整順序
+      </span>
     </div>
 
     <!-- ========================================== -->
@@ -403,59 +406,231 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 📌 分頁 2：趙俊彥解剖學 30 講獨立專區 -->
+    <!-- 📌 分頁 2：趙俊彥解剖學 15 單元 / 30 講獨立專區 -->
+    <!-- ========================================== -->
+    <!-- 解剖學 (趙俊彥 15 節課 / 30 講) 進度與檢核 -->
     <!-- ========================================== -->
     <div id="tab-content-anatomy" class="space-y-6 hidden">
+      <!-- 頂部進度與解剖學作戰指引 -->
       <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-              <i data-lucide="video" class="w-4 h-4 text-rose-400"></i> 趙俊彥解剖學（全 15 節課 / 30 講進度）
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">每兩部音訊為一節課，點擊卡片可即時打勾標記進度。</p>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
-              <div id="video-progress-bar" class="bg-rose-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 text-[11px] font-bold border border-rose-500/30">
+                15 節課上課順序
+              </span>
+              <span class="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
+                基礎期：第 1-5 週 (08/31-10/03)
+              </span>
             </div>
-            <span id="video-progress-text" class="text-xs font-bold font-mono text-rose-400">0/30 (0%)</span>
+            <h2 class="text-base md:text-lg font-bold flex items-center gap-2 text-white mt-1.5">
+              <i data-lucide="book-open" class="w-5 h-5 text-rose-400"></i> 趙俊彥人體解剖學（按正規 15 節課 · 30 講上課順序）
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">完全依照趙俊彥老師正式上課順序（第 1 課至第 15 課）編排，每節課含 (上)(下) 兩講。聽課 ➔ 筆記繪圖 ➔ 考古題驗收。</p>
+          </div>
+          <div class="flex flex-col items-end gap-1.5 min-w-[160px]">
+            <div class="flex items-center gap-3 w-full justify-end">
+              <div class="w-32 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                <div id="video-progress-bar" class="bg-rose-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <span id="video-progress-text" class="text-xs font-bold font-mono text-rose-400">0/30 (0%)</span>
+            </div>
+            <div class="text-[11px] text-slate-400 font-mono" id="anatomy-unit-stat">已完成 0 / 15 節課 (0 / 30 講)</div>
           </div>
         </div>
 
-        <!-- 搜尋列 -->
-        <div class="relative w-full">
-          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
-          <input type="text" id="video-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition" placeholder="搜尋章節名稱、第幾講或檔名...">
+        <!-- 5 週進度導航與三步備考法 -->
+        <div class="p-3.5 bg-slate-900/70 border border-rose-500/30 rounded-xl grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-rose-500/10 text-rose-300 shrink-0 mt-0.5"><i data-lucide="headphones" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-rose-300">1. 按上課順序精聽</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">每日固定 1 節課 (2 講)，跟隨趙醫師上課脈絡手繪骨骼神經血管圖。</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-sky-500/10 text-sky-300 shrink-0 mt-0.5"><i data-lucide="layers" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-sky-300">2. 節課對照系統章節</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">每堂課清楚標註對應的 Unit 單元，方便跨系統翻閱講義與圖譜。</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-300 shrink-0 mt-0.5"><i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-emerald-300">3. 考古豹 50 題即時鞏固</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">聽完即刻刷題，建立神經傳導路徑與血管分支直覺反射。</div>
+            </div>
+          </div>
         </div>
 
-        <!-- 30 講卡片列表容器 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="video-checklist-container"></div>
+        <!-- 搜尋與週次快速導航 -->
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
+            <input type="text" id="video-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition" placeholder="搜尋第幾節課、單元名稱、講次考點 (如：第 1 節課、骨骼、臂神經叢、腹膜、胚胎...)">
+          </div>
+          <div class="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 text-xs" id="anatomy-filter-chips">
+            <button onclick="filterAnatomyWeek('ALL')" class="anatomy-filter-btn active px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[11px] font-medium whitespace-nowrap">全部 (15節課/30講)</button>
+            <button onclick="filterAnatomyWeek('W1')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W1 (第1-3課)</button>
+            <button onclick="filterAnatomyWeek('W2')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W2 (第4-6課)</button>
+            <button onclick="filterAnatomyWeek('W3')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W3 (第7-9課)</button>
+            <button onclick="filterAnatomyWeek('W4')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W4 (第10-12課)</button>
+            <button onclick="filterAnatomyWeek('W5')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W5 (第13-15課)</button>
+          </div>
+        </div>
       </div>
+
+      <!-- 15 節課解剖學卡片容器 -->
+      <div class="space-y-4" id="anatomy-units-container"></div>
     </div>
 
     <!-- ========================================== -->
     <!-- 📌 分頁 3：鐸鐸生化學 獨立專區 -->
     <!-- ========================================== -->
     <div id="tab-content-biochem" class="space-y-6 hidden">
+      <!-- 頂部進度與生化學作戰指引 -->
       <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-              <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> 鐸鐸生化學（2027 寒假班 · 全 8 堂）
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">上課時間：18:00 - 22:00，點擊卡片可即時打勾標記完課狀態。</p>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
-              <div id="biochem-progress-bar" class="bg-amber-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[11px] font-bold border border-amber-500/30">
+                2027 寒假正課班
+              </span>
+              <span class="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
+                開課期：第 10-18 週 (11/06-12/28)
+              </span>
             </div>
-            <span id="biochem-progress-text" class="text-xs font-bold font-mono text-amber-400">0/8 (0%)</span>
+            <h2 class="text-base md:text-lg font-bold flex items-center gap-2 text-white mt-1.5">
+              <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i> 鐸鐸生化學（全 8 堂 · 18:00 - 22:00 正課班）
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">配合高點面授/視訊上課日期精準鎖定，課後當晚或隔日早晨立即進行章節複習與考古豹題庫驗收。</p>
+          </div>
+          <div class="flex flex-col items-end gap-1.5 min-w-[160px]">
+            <div class="flex items-center gap-3 w-full justify-end">
+              <div class="w-32 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                <div id="biochem-progress-bar" class="bg-amber-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <span id="biochem-progress-text" class="text-xs font-bold font-mono text-amber-400">0/8 (0%)</span>
+            </div>
+            <div class="text-[11px] text-slate-400 font-mono" id="biochem-time-stat">已完成 0 / 8 堂課</div>
           </div>
         </div>
 
-        <!-- 8 堂生化卡片容器 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="biochem-checklist-container"></div>
+        <!-- 3 大生化攻堅重點 -->
+        <div class="p-3.5 bg-slate-900/70 border border-amber-500/30 rounded-xl grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-amber-500/10 text-amber-300 shrink-0 mt-0.5"><i data-lucide="flame" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-amber-300">1. 代謝路徑與限速酵素</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">鎖定糖解、TCA、脂肪酸合成/氧化、尿素循環關鍵酵素與調控。</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-sky-500/10 text-sky-300 shrink-0 mt-0.5"><i data-lucide="dna" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-sky-300">2. 分子生物學三大主題</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">DNA 複製修復、RNA 轉錄後修飾、蛋白質轉譯及現代生技 (PCR/CRISPR)。</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-300 shrink-0 mt-0.5"><i data-lucide="calendar" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-emerald-300">3. 課後 24 小時內刷題</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">鐸鐸上完課當週務必完成生化考古題庫，掌握最新出題風向。</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 搜尋列 -->
+        <div class="relative w-full pt-1">
+          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
+          <input type="text" id="biochem-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition" placeholder="搜尋生化課題、關鍵字 (如：酵素、醣類、分生、蛋白質、脂肪...)">
+        </div>
       </div>
+
+      <!-- 8 堂生化卡片容器 (每堂卡片詳細展示週次、日期、核心考點與打勾) -->
+      <div class="space-y-4" id="biochem-units-container"></div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 📌 分頁 4：First Choice 生理學（配合何宣重點翻閱） -->
+    <!-- ========================================== -->
+    <div id="tab-content-physiology" class="space-y-6 hidden">
+      <!-- 頂部進度與何宣對照指引 -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 text-[11px] font-bold border border-teal-500/30">
+                目錄系統化導航
+              </span>
+              <span class="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
+                衝刺期：第 6-7 週 (10/05-10/17)
+              </span>
+            </div>
+            <h2 class="text-base md:text-lg font-bold flex items-center gap-2 text-white mt-1.5">
+              <i data-lucide="activity" class="w-5 h-5 text-teal-400"></i> First Choice 生理學（全 7 大篇章 ｜ 37 個子單元 · 共 368 頁）
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">以 First Choice 生理學為骨幹系統化精讀章節 ➔ 遇到抽象機制與機轉圖表時對照何宣經典彩圖與口訣 ➔ 考古豹題庫驗收。</p>
+          </div>
+          <div class="flex flex-col items-end gap-1.5 min-w-[160px]">
+            <div class="flex items-center gap-3 w-full justify-end">
+              <div class="w-32 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                <div id="physio-progress-bar" class="bg-teal-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <span id="physio-progress-text" class="text-xs font-bold font-mono text-teal-400">0/37 (0%)</span>
+            </div>
+            <div class="text-[11px] text-slate-400 font-mono" id="physio-page-stat">已讀 0 / 368 頁</div>
+          </div>
+        </div>
+
+        <!-- 雙軌複習策略指南 -->
+        <div class="p-3.5 bg-slate-900/70 border border-teal-500/30 rounded-xl grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-teal-500/10 text-teal-300 shrink-0 mt-0.5"><i data-lucide="book" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-teal-300">1. FC 生理為骨幹</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">循序漸進攻讀 7 大篇章，打穩各系統生理機轉與定義。</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-sky-500/10 text-sky-300 shrink-0 mt-0.5"><i data-lucide="sparkles" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-sky-300">2. 何宣圖表對照</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">翻閱何宣彩色大表、Wiggers圖、腎小管通道分布與速記口訣。</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-amber-500/10 text-amber-300 shrink-0 mt-0.5"><i data-lucide="zap" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-amber-300">3. 考古豹 50+ 題以題帶念</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">每念完一個單元立即刷 CougarBot 該單元歷屆考題驗收實力。</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 搜尋與章節快速導航 -->
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
+            <input type="text" id="physio-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-teal-500 transition" placeholder="搜尋章節名稱 (如：腎元、膜電位、Wiggers、甲狀腺、Diffusion...)">
+          </div>
+          <div class="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 text-xs" id="physio-filter-chips">
+            <button onclick="filterPhysioChapter('ALL')" class="physio-filter-btn active px-2.5 py-1 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[11px] font-medium whitespace-nowrap">全部 (7章)</button>
+            <button onclick="filterPhysioChapter('甲')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">甲.細胞</button>
+            <button onclick="filterPhysioChapter('乙')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">乙.神經</button>
+            <button onclick="filterPhysioChapter('丙')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">丙.心血管</button>
+            <button onclick="filterPhysioChapter('丁')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">丁.呼吸</button>
+            <button onclick="filterPhysioChapter('戊')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">戊.腎臟</button>
+            <button onclick="filterPhysioChapter('己')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">己.腸胃</button>
+            <button onclick="filterPhysioChapter('庚')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">庚.內分泌</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 生理學 7 大篇章與細項卡片容器 -->
+      <div class="space-y-4" id="physio-chapters-container"></div>
     </div>
 
   </div>
@@ -514,25 +689,126 @@
     lucide.createIcons();
 
     // ==========================================
-    // 🔀 分頁切換邏輯 (主導覽 Tab)
+    // 🔀 分頁切換與拖曳排序邏輯 (主導覽 Tab Draggable)
     // ==========================================
+    const defaultTabs = [
+      { id: 'plan', title: '作戰總覽 ＆ 20 週衝刺', icon: 'compass', color: 'text-sky-400' },
+      { id: 'physiology', title: 'First Choice 生理學', icon: 'activity', color: 'text-teal-400' },
+      { id: 'anatomy', title: '趙俊彥解剖學', icon: 'book-open', color: 'text-rose-400' },
+      { id: 'biochem', title: '鐸鐸生化學', icon: 'sparkles', color: 'text-amber-400' }
+    ];
+
+    let currentActiveTab = localStorage.getItem('med_exam_active_tab') || 'plan';
+    let savedTabOrder = JSON.parse(localStorage.getItem('med_exam_tab_order') || 'null');
+    
+    // 確保 savedTabOrder 完整包含所有分頁
+    if (!Array.isArray(savedTabOrder) || savedTabOrder.length !== defaultTabs.length || !defaultTabs.every(t => savedTabOrder.includes(t.id))) {
+      savedTabOrder = defaultTabs.map(t => t.id);
+    }
+
+    let draggedTabId = null;
+
+    function renderMainTabsNav() {
+      const container = document.getElementById('main-tabs-header-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      savedTabOrder.forEach(tabId => {
+        const meta = defaultTabs.find(t => t.id === tabId);
+        if (!meta) return;
+
+        const btn = document.createElement('button');
+        btn.id = `tab-btn-${meta.id}`;
+        btn.draggable = true;
+        const isActive = meta.id === currentActiveTab;
+        btn.className = `tab-btn px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-grab active:cursor-grabbing ${
+          isActive ? 'active text-slate-200' : 'text-slate-400 hover:text-slate-200'
+        }`;
+        btn.innerHTML = `
+          <i data-lucide="${meta.icon}" class="w-4 h-4 ${meta.color}"></i>
+          <span>${meta.title}</span>
+          <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-600 opacity-40 hover:opacity-100 shrink-0 ml-0.5"></i>
+        `;
+
+        btn.addEventListener('click', () => {
+          switchTab(meta.id);
+        });
+
+        // 拖曳事件
+        btn.addEventListener('dragstart', (e) => {
+          draggedTabId = meta.id;
+          btn.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', meta.id);
+        });
+
+        btn.addEventListener('dragend', () => {
+          btn.classList.remove('dragging');
+          document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('drag-over'));
+        });
+
+        btn.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (draggedTabId && draggedTabId !== meta.id) {
+            btn.classList.add('drag-over');
+          }
+        });
+
+        btn.addEventListener('dragleave', () => {
+          btn.classList.remove('drag-over');
+        });
+
+        btn.addEventListener('drop', (e) => {
+          e.preventDefault();
+          btn.classList.remove('drag-over');
+          if (draggedTabId && draggedTabId !== meta.id) {
+            const fromIndex = savedTabOrder.indexOf(draggedTabId);
+            const toIndex = savedTabOrder.indexOf(meta.id);
+            if (fromIndex !== -1 && toIndex !== -1) {
+              savedTabOrder.splice(fromIndex, 1);
+              savedTabOrder.splice(toIndex, 0, draggedTabId);
+              localStorage.setItem('med_exam_tab_order', JSON.stringify(savedTabOrder));
+              renderMainTabsNav();
+            }
+          }
+        });
+
+        container.appendChild(btn);
+      });
+
+      lucide.createIcons();
+    }
+
     window.switchTab = function(tabName) {
-      const tabs = ['plan', 'anatomy', 'biochem'];
-      tabs.forEach(t => {
+      currentActiveTab = tabName;
+      localStorage.setItem('med_exam_active_tab', tabName);
+      const allTabIds = ['plan', 'physiology', 'anatomy', 'biochem'];
+      allTabIds.forEach(t => {
         const content = document.getElementById(`tab-content-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
-        if (t === tabName) {
-          content.classList.remove('hidden');
-          btn.classList.add('active', 'text-slate-200');
-          btn.classList.remove('text-slate-400');
-        } else {
-          content.classList.add('hidden');
-          btn.classList.remove('active', 'text-slate-200');
-          btn.classList.add('text-slate-400');
+        if (content) {
+          if (t === tabName) {
+            content.classList.remove('hidden');
+          } else {
+            content.classList.add('hidden');
+          }
+        }
+        if (btn) {
+          if (t === tabName) {
+            btn.classList.add('active', 'text-slate-200');
+            btn.classList.remove('text-slate-400');
+          } else {
+            btn.classList.remove('active', 'text-slate-200');
+            btn.classList.add('text-slate-400');
+          }
         }
       });
       lucide.createIcons();
     };
+
+    renderMainTabsNav();
+    switchTab(currentActiveTab);
 
     // ==========================================
     // 📅 作息表子分頁切換
@@ -733,112 +1009,379 @@
     calculateStreak();
 
     // ==========================================
-    // 3. 趙俊彥 人體解剖學（15 節課 / 30 講）
+    // 3. 趙俊彥 人體解剖學（按 15 節課 / 30 講 正式上課順序排列）
     // ==========================================
     const totalVideos = 30;
-    const videoData = [
-      { id: 1, file: "01. 2016DF01-01.m4a", classNum: "第 1 節課 (上)", title: "頭顱骨與面部結構解剖(上)" },
-      { id: 2, file: "02. 2016DF01-02.m4a", classNum: "第 1 節課 (下)", title: "頭顱骨與面部結構解剖(下)" },
-      { id: 3, file: "03. 2016DF02-01.m4a", classNum: "第 2 節課 (上)", title: "軀幹與四肢骨骼關節韌帶(上)" },
-      { id: 4, file: "04. 2016DF02-02.m4a", classNum: "第 2 節課 (下)", title: "軀幹與四肢骨骼關節韌帶(下)" },
-      { id: 5, file: "05. 2016DF03-01.m4a", classNum: "第 3 節課 (上)", title: "頭頸、背部與腹壁肌群結構(上)" },
-      { id: 6, file: "06. 2016DF03-02.m4a", classNum: "第 3 節課 (下)", title: "頭頸、背部與腹壁肌群結構(下)" },
-      { id: 7, file: "07. 2016DF04-01.m4a", classNum: "第 4 節課 (上)", title: "盆底與四肢肌群神經分布(上)" },
-      { id: 8, file: "08. 2016DF04-02.m4a", classNum: "第 4 節課 (下)", title: "盆底與四肢肌群神經分布(下)" },
-      { id: 9, file: "09. 2016DF05-01.m4a", classNum: "第 5 節課 (上)", title: "全身血管分布與靜脈回流系統(上)" },
-      { id: 10, file: "10. 2016DF05 02.m4a", classNum: "第 5 節課 (下)", title: "全身血管分布與靜脈回流系統(下)" },
-      { id: 11, file: "11. 2016DF06-01.m4a", classNum: "第 6 節課 (上)", title: "大腦皮質、內囊與基底核路徑(上)" },
-      { id: 12, file: "12. 2016DF06 02.m4a", classNum: "第 6 節課 (下)", title: "大腦皮質、內囊與基底核路徑(下)" },
-      { id: 13, file: "13. 2016DF07-01.m4a", classNum: "第 7 節課 (上)", title: "間腦、腦幹與小腦解剖生理(上)" },
-      { id: 14, file: "14. 2016DF07-02.m4a", classNum: "第 7 節課 (下)", title: "間腦、腦幹與小腦解剖生理(下)" },
-      { id: 15, file: "15. 2016DF08 01.m4a", classNum: "第 8 節課 (上)", title: "脊髓傳導、腦神經與臂神經叢(上)" },
-      { id: 16, file: "16. 2016DF08 02.m4a", classNum: "第 8 節課 (下)", title: "脊髓傳導、腦神經與臂神經叢(下)" },
-      { id: 17, file: "17. 2016DF09 01.m4a", classNum: "第 9 節課 (上)", title: "周邊、自律神經與視覺系統(上)" },
-      { id: 18, file: "18. 2016DF09 02.m4a", classNum: "第 9 節課 (下)", title: "周邊、自律神經與視覺系統(下)" },
-      { id: 19, file: "19. 2016DF10-01.m4a", classNum: "第 10 節課 (上)", title: "聽覺、平衡覺、嗅覺與腦垂體(上)" },
-      { id: 20, file: "20. 2016DF10 02.m4a", classNum: "第 10 節課 (下)", title: "聽覺、平衡覺、嗅覺與腦垂體(下)" },
-      { id: 21, file: "21. 2016DF11 01.m4a", classNum: "第 11 節課 (上)", title: "細胞連接與淋巴引流系統(上)" },
-      { id: 22, file: "22. 2016DF11 02.m4a", classNum: "第 11 節課 (下)", title: "細胞連接與淋巴引流系統(下)" },
-      { id: 23, file: "23. 2016DF12 01.m4a", classNum: "第 12 節課 (上)", title: "呼吸系統、脾臟與心臟解剖(上)" },
-      { id: 24, file: "24. 2016DF12 02.m4a", classNum: "第 12 節課 (下)", title: "呼吸系統、脾臟與心臟解剖(下)" },
-      { id: 25, file: "25. 2016DF13 01.m4a", classNum: "第 13 節課 (上)", title: "胚胎三胚層與咽器器官發育(上)" },
-      { id: 26, file: "26. 2016DF13 02.m4a", classNum: "第 13 節課 (下)", title: "胚胎三胚層與咽器器官發育(下)" },
-      { id: 27, file: "27. 2016DF14 01.m4a", classNum: "第 14 節課 (上)", title: "消化系統：腹膜與腸胃道解剖(上)" },
-      { id: 28, file: "28. 2016DF14 02.m4a", classNum: "第 14 節課 (下)", title: "消化系統：腹膜與腸胃道解剖(下)" },
-      { id: 29, file: "29. 2016DF15 01.m4a", classNum: "第 15 節課 (上)", title: "泌尿與男女生殖系統解剖(上)" },
-      { id: 30, file: "30. 2016DF15 02.m4a", classNum: "第 15 節課 (下)", title: "泌尿與男女生殖系統解剖(下)" }
+    const anatomyLessonsData = [
+      {
+        lessonId: 1,
+        classNum: "第 1 節課",
+        title: "頭顱骨與面部結構解剖",
+        targetWeek: "第 1 週 (8/31-9/01)",
+        weekKey: "W1",
+        unitTag: "Unit 1 解剖緒論 ＆ 顱骨",
+        note: "趙俊彥核心：顱骨各骨縫、蝶骨翼顎窩結構、面部神經血管走形與孔洞 (眶上孔、眶下孔、頦孔、卵圓孔、棘孔)。",
+        lectures: [
+          { id: 1, part: "上", title: "頭顱骨與面部結構解剖 (上)", file: "01. 2016DF01-01.m4a", date: "8/31 (一)", highYield: "顱骨孔洞與通過結構 (篩板 CN I、視神經管 CN II、眶上裂 CN III,IV,V1,VI、頸靜脈孔 CN IX,X,XI)" },
+          { id: 2, part: "下", title: "頭顱骨與面部結構解剖 (下)", file: "02. 2016DF01-02.m4a", date: "9/01 (二)", highYield: "顳骨岩部、內耳門 CN VII,VIII、莖乳突孔 CN VII、翼顎窩神經血管交通" }
+        ]
+      },
+      {
+        lessonId: 2,
+        classNum: "第 2 節課",
+        title: "軀幹與四肢骨骼關節韌帶",
+        targetWeek: "第 1 週 (9/02-9/03)",
+        weekKey: "W1",
+        unitTag: "Unit 2 骨骼系統",
+        note: "趙俊彥核心：脊椎骨構造差異 (頸椎橫突孔、胸椎肋凹、腰椎乳突)、肩關節/髖關節/膝關節韌帶與半月板。",
+        lectures: [
+          { id: 3, part: "上", title: "軀幹與四肢骨骼關節韌帶 (上)", file: "03. 2016DF02-01.m4a", date: "9/02 (三)", highYield: "椎間盤結構、前縱韌帶 vs 後縱韌帶、黃韌帶、肩關節旋轉肌袖 (SITS) 附著點" },
+          { id: 4, part: "下", title: "軀幹與四肢骨骼關節韌帶 (下)", file: "04. 2016DF02-02.m4a", date: "9/03 (四)", highYield: "骨盆骨骼 (真骨盆 vs 假骨盆)、膝關節前後十字韌帶 (ACL/PCL) 與副韌帶、足弓" }
+        ]
+      },
+      {
+        lessonId: 3,
+        classNum: "第 3 節課",
+        title: "頭頸、背部與腹壁肌群結構",
+        targetWeek: "第 1 週 (9/04-9/05)",
+        weekKey: "W1",
+        unitTag: "Unit 3 肌肉系統 (上)",
+        note: "趙俊彥核心：咀嚼肌 CN V3 vs 表情肌 CN VII、斜角肌三角、腹直肌鞘與腹股溝管層次。",
+        lectures: [
+          { id: 5, part: "上", title: "頭頸、背部與腹壁肌群結構 (上)", file: "05. 2016DF03-01.m4a", date: "9/04 (五)", highYield: "斜角肌間隙 (前/中斜角肌與第1肋骨)、背闊肌、斜方肌、腹直肌鞘與腹股溝管" },
+          { id: 6, part: "下", title: "頭頸、背部與腹壁肌群結構 (下)", file: "06. 2016DF03-02.m4a", date: "9/05 (六)", highYield: "三角肌、旋轉肌群、肱二頭/三頭肌、腕隧道結構 (正中神經與9條屈肌腱)" }
+        ]
+      },
+      {
+        lessonId: 4,
+        classNum: "第 4 節課",
+        title: "盆底與四肢肌群神經分布",
+        targetWeek: "第 2 週 (9/07-9/08)",
+        weekKey: "W2",
+        unitTag: "Unit 3 肌肉系統 (下)",
+        note: "趙俊彥核心：股三角、梨狀肌上下孔、會陰深淺袋、下肢各區支配神經 (股神經、閉孔神經、坐骨神經)。",
+        lectures: [
+          { id: 7, part: "上", title: "盆底與四肢肌群神經分布 (上)", file: "07. 2016DF04-01.m4a", date: "9/07 (一)", highYield: "股三角邊界 (鼠蹊韌帶、縫匠肌、內收長肌) 與內容物 (NAVL)、會陰淺/深袋" },
+          { id: 8, part: "下", title: "盆底與四肢肌群神經分布 (下)", file: "08. 2016DF04-02.m4a", date: "9/08 (二)", highYield: "臀大/中/小肌、梨狀肌上下孔穿出結構 (坐骨神經、臀上/下神經血管)、小腿前後室肌群" }
+        ]
+      },
+      {
+        lessonId: 5,
+        classNum: "第 5 節課",
+        title: "全身動靜脈分布與回流系統",
+        targetWeek: "第 2 週 (9/09-9/10)",
+        weekKey: "W2",
+        unitTag: "Unit 4 血液系統 ＆ 血管",
+        note: "趙俊彥核心：主動脈弓三大分支、頸外動脈分支、腹腔動脈幹/SMA/IMA、海綿竇與門脈高壓側支循環。",
+        lectures: [
+          { id: 9, part: "上", title: "全身動脈血管分布與主幹分支 (上)", file: "09. 2016DF05-01.m4a", date: "9/09 (三)", highYield: "頸外動脈 8 大分支口訣、鎖骨下動脈分支 (椎動脈、內胸動脈、甲狀頸幹)、腋動脈三段分支" },
+          { id: 10, part: "下", title: "靜脈回流系統、海綿竇與門脈 (下)", file: "10. 2016DF05 02.m4a", date: "9/10 (四)", highYield: "海綿竇內容物 (CN III, IV, V1, V2, VI, ICA)、門靜脈三大側支吻合處 (痔瘡、食道曲張、海蛇頭)" }
+        ]
+      },
+      {
+        lessonId: 6,
+        classNum: "第 6 節課",
+        title: "大腦皮質、內囊與基底核路徑",
+        targetWeek: "第 2 週 (9/11-9/12)",
+        weekKey: "W2",
+        unitTag: "Unit 5 神經系統 (大腦/基底核)",
+        note: "趙俊彥核心：Brodmann 皮質區、內囊各部位纖維、基底核直接與間接路徑、邊緣系統 Papez 迴路。",
+        lectures: [
+          { id: 11, part: "上", title: "大腦皮質功能區與內囊路徑 (上)", file: "11. 2016DF06-01.m4a", date: "9/11 (五)", highYield: "皮質功能區 (Area 4, 3-1-2, 44-45, 22, 17)、內囊前肢/膝部/後肢通過纖維" },
+          { id: 12, part: "下", title: "基底核迴路與邊緣系統 (下)", file: "12. 2016DF06 02.m4a", date: "9/12 (六)", highYield: "基底核構造 (尾狀核、殼核、蒼白球、視丘下核、黑質)、邊緣系統 Papez 迴路" }
+        ]
+      },
+      {
+        lessonId: 7,
+        classNum: "第 7 節課",
+        title: "間腦、腦幹與小腦解剖生理",
+        targetWeek: "第 3 週 (9/14-9/15)",
+        weekKey: "W3",
+        unitTag: "Unit 5 神經系統 (間腦/腦幹/小腦)",
+        note: "趙俊彥核心：視丘各核區功能 (VPL/VPM/LGN/MGN)、中腦/橋腦/延腦橫切面、小腦三腳傳入傳出路徑。",
+        lectures: [
+          { id: 13, part: "上", title: "間腦視丘核團與下視丘 (上)", file: "13. 2016DF07-01.m4a", date: "9/14 (一)", highYield: "視丘核群 (VPL 軀幹感覺, VPM 面部感覺, LGN 視覺, MGN 聽覺)、下視丘體溫飽食中樞" },
+          { id: 14, part: "下", title: "腦幹橫切面與小腦傳導 (下)", file: "14. 2016DF07-02.m4a", date: "9/15 (二)", highYield: "中腦/橋腦/延腦切面 (紅核、黑質、內側蹄系、錐體交叉)、小腦上中下腳纖維" }
+        ]
+      },
+      {
+        lessonId: 8,
+        classNum: "第 8 節課",
+        title: "脊髓傳導、腦神經與臂神經叢",
+        targetWeek: "第 3 週 (9/16-9/17)",
+        weekKey: "W3",
+        unitTag: "Unit 5 神經系統 (傳導束/腦神經/臂叢)",
+        note: "趙俊彥核心：12 對腦神經功能成分、臂神經叢 (C5-T1) 各幹/股/束分支與上/下神經叢受損徵象。",
+        lectures: [
+          { id: 15, part: "上", title: "12 對腦神經核與走行路徑 (上)", file: "15. 2016DF08 01.m4a", date: "9/16 (三)", highYield: "腦神經核成分 (GSA, GVA, GSE, GVE, SSA, SVA, SVE) 與出顱路徑" },
+          { id: 16, part: "下", title: "脊髓傳導束與臂神經叢分支 (下)", file: "16. 2016DF08 02.m4a", date: "9/17 (四)", highYield: "臂神經叢 (根幹股束支)、肌皮/腋/橈/正中/尺神經受損徵象 (垂腕、猿手、爪手)" }
+        ]
+      },
+      {
+        lessonId: 9,
+        classNum: "第 9 節課",
+        title: "周邊、自律神經與視覺系統",
+        targetWeek: "第 3 週 (9/18-9/19)",
+        weekKey: "W3",
+        unitTag: "Unit 6 組織學 ＆ 視覺/自律神經",
+        note: "趙俊彥核心：眼球壁三層結構、房水循環、交感神經鏈 vs 副交感神經節 (睫狀、翼顎、下頜下、耳神經節)。",
+        lectures: [
+          { id: 17, part: "上", title: "眼球構造、房水循環與視覺傳導 (上)", file: "17. 2016DF09 01.m4a", date: "9/18 (五)", highYield: "眼球壁三層 (纖維膜、血管膜、視網膜)、房水循環 (Schlemm 氏管) 與眼外肌支配" },
+          { id: 18, part: "下", title: "自律神經系統與周邊神經節 (下)", file: "18. 2016DF09 02.m4a", date: "9/19 (六)", highYield: "交感星狀神經節 vs 副交感 4 大神經節 (CN III, VII, IX 支配標的)" }
+        ]
+      },
+      {
+        lessonId: 10,
+        classNum: "第 10 節課",
+        title: "聽覺、平衡覺、嗅覺與腦垂體",
+        targetWeek: "第 4 週 (9/21-9/22)",
+        weekKey: "W4",
+        unitTag: "Unit 7 感覺器官 ＆ 內分泌",
+        note: "趙俊彥核心：中耳鼓室與聽小骨、內耳 Corti 器與半規管、嗅覺路徑、腦垂體前後葉組織學。",
+        lectures: [
+          { id: 19, part: "上", title: "聽覺平衡覺 (內耳耳蝸/半規管) (上)", file: "19. 2016DF10-01.m4a", date: "9/21 (一)", highYield: "鼓室壁結構、聽小骨 (槌/砧/鐙骨)、耳咽管、內耳迷路與內外淋巴液" },
+          { id: 20, part: "下", title: "嗅覺器官與腦垂體組織解剖 (下)", file: "20. 2016DF10 02.m4a", date: "9/22 (二)", highYield: "腦垂體腺葉 (前葉嗜酸/嗜鹼) vs 神經葉 (後葉 Herring 體)、嗅球與嗅神經" }
+        ]
+      },
+      {
+        lessonId: 11,
+        classNum: "第 11 節課",
+        title: "細胞連接與淋巴引流系統",
+        targetWeek: "第 4 週 (9/23-9/24)",
+        weekKey: "W4",
+        unitTag: "Unit 8 淋巴系統 ＆ 組織連接",
+        note: "趙俊彥核心：緊密連接/橋粒/間隙連接蛋白、胸導管 vs 右淋巴導管引流區域、脾臟/淋巴結/胸腺組織切片特徵。",
+        lectures: [
+          { id: 21, part: "上", title: "細胞連接型態與膜特化構造 (上)", file: "21. 2016DF11 01.m4a", date: "9/23 (三)", highYield: "Tight junction (Claudin/Occludin)、Desmosome (Cadherin)、Gap junction (Connexon)" },
+          { id: 22, part: "下", title: "淋巴器官 (脾臟/胸腺/胸導管) (下)", file: "22. 2016DF11 02.m4a", date: "9/24 (四)", highYield: "胸導管 (乳糜池 L1-L2 ➔ 左靜脈角) vs 右淋巴導管、胸腺皮質/髓質血胸障壁" }
+        ]
+      },
+      {
+        lessonId: 12,
+        classNum: "第 12 節課",
+        title: "呼吸系統、脾臟與心臟解剖",
+        targetWeek: "第 4 週 (9/25-9/26)",
+        weekKey: "W4",
+        unitTag: "Unit 9 呼吸系統 ＆ Unit 10 心臟",
+        note: "趙俊彥核心：喉軟骨與喉內肌神經支配、肺葉段支氣管、心臟四腔室/瓣膜/傳導系統與冠狀循環。",
+        lectures: [
+          { id: 23, part: "上", title: "呼吸系統 (喉/氣管/肺葉/胸膜) (上)", file: "23. 2016DF12 01.m4a", date: "9/25 (五)", highYield: "喉軟骨 (甲狀/環狀/會厭/杓狀)、環甲肌 (喉外神經) vs 喉返神經支配" },
+          { id: 24, part: "下", title: "心臟解剖、瓣膜與傳導系統 (下)", file: "24. 2016DF12 02.m4a", date: "9/26 (六)", highYield: "心臟傳導系統 (SA node ➔ AV node ➔ His bundle ➔ Purkinje)、冠狀動脈 (LAD, LCx, RCA)" }
+        ]
+      },
+      {
+        lessonId: 13,
+        classNum: "第 13 節課",
+        title: "胚胎三胚層與咽器器官發育",
+        targetWeek: "第 5 週 (9/28-9/29)",
+        weekKey: "W5",
+        unitTag: "Unit 15 胚胎學概論",
+        note: "趙俊彥核心：三胚層分化來源 (神經脊演變)、1-6 咽弓神經肌肉軟骨骨骼演變、1-4 咽囊分化 (胸腺、副甲狀腺)。",
+        lectures: [
+          { id: 25, part: "上", title: "胚胎三胚層起源與神經脊分化 (上)", file: "25. 2016DF13 01.m4a", date: "9/28 (一)", highYield: "神經脊 (Neural crest) 分化器官清單、三胚層器官速記、體節 (Somite) 分化" },
+          { id: 26, part: "下", title: "咽弓、咽囊與咽溝器官發育 (下)", file: "26. 2016DF13 02.m4a", date: "9/29 (二)", highYield: "第 1 咽弓 (CN V3, 咀嚼肌, 槌骨/砧骨)、第 2 咽弓 (CN VII, 鐙骨)、第 3 咽弓 (CN IX)、第 4/6 咽弓 (CN X)" }
+        ]
+      },
+      {
+        lessonId: 14,
+        classNum: "第 14 節課",
+        title: "消化系統：腹膜與腸胃道解剖",
+        targetWeek: "第 5 週 (9/30-10/01)",
+        weekKey: "W5",
+        unitTag: "Unit 11 消化系統",
+        note: "趙俊彥核心：腹膜後器官口訣 (SAD PUCKER)、胃床構造、十二指腸四段與 Treitz 韌帶、肝門三聯管、空腸 vs 迴腸特徵。",
+        lectures: [
+          { id: 27, part: "上", title: "消化系統：腹膜腔與胃腸解剖 (上)", file: "27. 2016DF14 01.m4a", date: "9/30 (三)", highYield: "腹膜後器官口訣 (SAD PUCKER)、胃床構造、十二指腸四段與 Treitz 韌帶" },
+          { id: 28, part: "下", title: "肝膽胰、小腸大腸與組織特徵 (下)", file: "28. 2016DF14 02.m4a", date: "10/01 (四)", highYield: "空腸 vs 迴腸組織學比較 (Peyer's patch, 血管弓)、肝門三聯管 (門靜脈, 肝動脈, 總膽管)" }
+        ]
+      },
+      {
+        lessonId: 15,
+        classNum: "第 15 節課",
+        title: "泌尿與男女生殖系統解剖 [完課]",
+        targetWeek: "第 5 週 (10/02-10/03)",
+        weekKey: "W5",
+        unitTag: "Unit 12 泌尿 ＆ Unit 14 生殖",
+        note: "趙俊彥核心：腎臟筋膜與輸尿管生理狹窄、精索被膜層次對照腹壁各層、子宮闊韌帶/主韌帶、前列腺分區與會陰解剖。",
+        lectures: [
+          { id: 29, part: "上", title: "泌尿系統 (腎臟/輸尿管/膀胱) (上)", file: "29. 2016DF15 01.m4a", date: "10/02 (五)", highYield: "腎小球足細胞裂孔膜、近曲/遠曲小管組織切片鑑別、輸尿管三個狹窄處" },
+          { id: 30, part: "下", title: "男女生殖系統與會陰解剖 (下) [完課]", file: "30. 2016DF15 02.m4a", date: "10/03 (六)", highYield: "精索層次對照腹壁、前列腺分區 (BPH vs CA)、子宮血供與輸尿管關係 (水走橋下)" }
+        ]
+      }
     ];
 
-    const videoContainer = document.getElementById('video-checklist-container');
-    const searchInput = document.getElementById('video-search-input');
+    let currentAnatomyWeekFilter = 'ALL';
     let savedVideoState = JSON.parse(localStorage.getItem('med_exam_videos_cloud') || '{}');
-
-    function getWeekLabel(num) {
-      if (num <= 6) return 'W1';
-      if (num <= 12) return 'W2';
-      if (num <= 18) return 'W3';
-      if (num <= 24) return 'W4';
-      return 'W5';
-    }
 
     function updateVideoProgress() {
       const checkedCount = Object.values(savedVideoState).filter(Boolean).length;
       const percent = Math.round((checkedCount / totalVideos) * 100);
-      document.getElementById('video-progress-bar').style.width = percent + '%';
-      document.getElementById('video-progress-text').innerText = `${checkedCount}/${totalVideos} (${percent}%)`;
+      const bar = document.getElementById('video-progress-bar');
+      const text = document.getElementById('video-progress-text');
+      if (bar) bar.style.width = percent + '%';
+      if (text) text.innerText = `${checkedCount}/${totalVideos} (${percent}%)`;
+
+      // 計算已完全完成的節課數 (共 15 節課)
+      let completedLessons = 0;
+      anatomyLessonsData.forEach(l => {
+        const allDone = l.lectures.every(lec => !!savedVideoState[lec.id]);
+        if (allDone) completedLessons++;
+      });
+      const statEl = document.getElementById('anatomy-unit-stat');
+      if (statEl) statEl.innerText = `已完成 ${completedLessons} / ${anatomyLessonsData.length} 節課 (${checkedCount} / 30 講)`;
     }
 
-    function renderVideoChecklist() {
-      const filter = (searchInput.value || '').toLowerCase().trim();
-      videoContainer.innerHTML = '';
+    window.filterAnatomyWeek = function(wKey) {
+      currentAnatomyWeekFilter = wKey;
+      document.querySelectorAll('.anatomy-filter-btn').forEach(btn => {
+        if (btn.innerText.includes(wKey) || (wKey === 'ALL' && btn.innerText.includes('全部'))) {
+          btn.classList.add('active', 'bg-rose-500/20', 'text-rose-300', 'border-rose-500/40');
+          btn.classList.remove('bg-slate-900', 'text-slate-400');
+        } else {
+          btn.classList.remove('active', 'bg-rose-500/20', 'text-rose-300', 'border-rose-500/40');
+          btn.classList.add('bg-slate-900', 'text-slate-400');
+        }
+      });
+      renderAnatomyLessons();
+    };
 
-      videoData.forEach(item => {
-        const matchText = `${item.id} ${item.file} ${item.classNum} ${item.title}`.toLowerCase();
-        if (filter && !matchText.includes(filter)) return;
+    window.toggleAnatomyLesson = function(lessonId, selectAll) {
+      const lesson = anatomyLessonsData.find(l => l.lessonId === lessonId);
+      if (!lesson) return;
+      lesson.lectures.forEach(lec => {
+        savedVideoState[lec.id] = selectAll;
+      });
+      localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
+      if (db) db.ref('videos').set(savedVideoState);
+      renderAnatomyLessons();
+    };
 
-        const isChecked = !!savedVideoState[item.id];
-        const weekTag = getWeekLabel(item.id);
+    function renderAnatomyLessons() {
+      const container = document.getElementById('anatomy-units-container');
+      if (!container) return;
+      const searchInput = document.getElementById('video-search-input');
+      const query = (searchInput?.value || '').toLowerCase().trim();
+
+      container.innerHTML = '';
+
+      anatomyLessonsData.forEach(lesson => {
+        if (currentAnatomyWeekFilter !== 'ALL' && lesson.weekKey !== currentAnatomyWeekFilter) {
+          return;
+        }
+
+        // 搜尋過濾
+        let matchesLesson = `${lesson.classNum} ${lesson.title} ${lesson.unitTag} ${lesson.note} ${lesson.targetWeek}`.toLowerCase().includes(query);
+        let matchingLectures = lesson.lectures.filter(l => 
+          matchesLesson || `${l.part} ${l.title} ${l.file} ${l.highYield} ${l.date}`.toLowerCase().includes(query)
+        );
+
+        if (query && !matchesLesson && matchingLectures.length === 0) {
+          return;
+        }
+
+        const lecturesToDisplay = query ? (matchesLesson ? lesson.lectures : matchingLectures) : lesson.lectures;
+        const totalCount = lesson.lectures.length;
+        const doneCount = lesson.lectures.filter(l => !!savedVideoState[l.id]).length;
+        const isLessonDone = doneCount === totalCount;
+
         const card = document.createElement('div');
-        card.className = `lecture-card p-3.5 rounded-xl border transition-all cursor-pointer ${
-          isChecked ? 'completed bg-slate-900/40 border-slate-700/40' : 'bg-slate-900/80 border-slate-700 hover:border-rose-500/50'
+        card.className = `p-4 rounded-2xl border transition-all ${
+          isLessonDone
+            ? 'bg-slate-900/50 border-rose-500/30'
+            : 'bg-slate-800/80 border-slate-700'
         }`;
-        card.id = `video-card-${item.id}`;
 
         card.innerHTML = `
-          <div class="flex items-center gap-3">
-            <input type="checkbox" class="video-custom-checkbox rounded bg-slate-800 border-slate-600 text-rose-500 focus:ring-0 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <span class="text-[10px] font-bold font-mono text-rose-400">第 ${String(item.id).padStart(2, '0')} 講 ｜ ${item.classNum}</span>
-                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">${weekTag}</span>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
+            <div class="flex items-center gap-2.5">
+              <span class="px-2.5 py-0.5 rounded-lg bg-rose-500/10 text-rose-300 font-bold font-mono text-xs border border-rose-500/30">
+                ${lesson.classNum}
+              </span>
+              <div>
+                <h3 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+                  ${lesson.title}
+                  <span class="text-xs text-rose-400 font-mono font-medium hidden sm:inline">｜ ${lesson.unitTag}</span>
+                </h3>
               </div>
-              <div class="title-text text-xs md:text-sm font-semibold text-slate-100 mt-0.5">${item.title}</div>
-              <div class="text-[10px] text-slate-500 font-mono mt-0.5">${item.file}</div>
             </div>
+            <div class="flex items-center gap-3">
+              <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-900 text-sky-300 border border-slate-700">
+                ${lesson.targetWeek}
+              </span>
+              <span class="text-xs font-mono font-bold ${isLessonDone ? 'text-rose-400' : 'text-slate-400'}">
+                ${doneCount}/${totalCount} 講
+              </span>
+              <div class="flex items-center gap-1 text-[11px]">
+                <button onclick="toggleAnatomyLesson(${lesson.lessonId}, true)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 text-[10px] transition">全選</button>
+                <button onclick="toggleAnatomyLesson(${lesson.lessonId}, false)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 text-[10px] transition">重置</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 核心重點提示備註 -->
+          <div class="my-3 p-2.5 bg-slate-900/80 border border-rose-500/20 rounded-xl text-xs flex items-start gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>
+            <div class="text-slate-300 text-[11px] leading-relaxed">
+              <span class="text-rose-300 font-semibold">趙醫師重點：</span> ${lesson.note}
+            </div>
+          </div>
+
+          <!-- (上)(下) 兩講列表 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
+            ${lecturesToDisplay.map(lec => {
+              const isChecked = !!savedVideoState[lec.id];
+              return `
+                <div class="anatomy-lec-card p-3 rounded-xl border transition-all cursor-pointer ${
+                  isChecked 
+                    ? 'completed bg-slate-950/60 border-rose-500/30' 
+                    : 'bg-slate-900/90 border-slate-700/80 hover:border-rose-500/40'
+                }" data-id="${lec.id}">
+                  <div class="flex items-start gap-2.5">
+                    <input type="checkbox" class="mt-1 rounded bg-slate-800 border-slate-600 text-rose-500 focus:ring-0 cursor-pointer" data-id="${lec.id}" ${isChecked ? 'checked' : ''}>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between gap-1">
+                        <span class="text-xs font-bold text-rose-400 font-mono">第 ${String(lec.id).padStart(2, '0')} 講 (${lec.part})</span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-sky-400 border border-slate-700">${lec.date}</span>
+                      </div>
+                      <div class="title-text text-xs font-semibold text-slate-100 mt-1 truncate ${isChecked ? 'line-through text-slate-500' : ''}">${lec.title}</div>
+                      <div class="text-[10px] text-slate-500 font-mono mt-0.5 truncate">${lec.file}</div>
+                      <div class="text-[10px] text-slate-400 bg-slate-950/60 rounded px-2 py-1 mt-1.5 border border-slate-800 leading-tight">
+                        <span class="text-rose-300 font-medium">考點：</span> ${lec.highYield}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
         `;
 
-        card.addEventListener('click', (e) => {
-          if (e.target.tagName !== 'INPUT') {
-            const checkbox = card.querySelector('input');
-            checkbox.checked = !checkbox.checked;
-          }
-          const checkbox = card.querySelector('input');
-          savedVideoState[item.id] = checkbox.checked;
-          localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
-          if (db) db.ref('videos').set(savedVideoState);
-          renderVideoChecklist();
+        // 綁定打勾事件
+        card.querySelectorAll('.anatomy-lec-card').forEach(itemEl => {
+          const lecId = Number(itemEl.getAttribute('data-id'));
+          itemEl.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT') {
+              const cb = itemEl.querySelector('input');
+              if (cb) cb.checked = !cb.checked;
+            }
+            const cb = itemEl.querySelector('input');
+            savedVideoState[lecId] = cb.checked;
+            localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
+            if (db) db.ref('videos').set(savedVideoState);
+            renderAnatomyLessons();
+          });
         });
 
-        videoContainer.appendChild(card);
+        container.appendChild(card);
       });
 
       updateVideoProgress();
       lucide.createIcons();
     }
 
-    searchInput.addEventListener('input', renderVideoChecklist);
-    renderVideoChecklist();
+    const searchInput = document.getElementById('video-search-input');
+    if (searchInput) searchInput.addEventListener('input', renderAnatomyLessons);
+    renderAnatomyLessons();
 
     if (db) {
       db.ref('videos').on('value', snap => {
@@ -846,53 +1389,154 @@
         if (val) {
           savedVideoState = val;
           localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
-          renderVideoChecklist();
+          renderAnatomyLessons();
         }
       });
     }
 
     // ==========================================
-    // 4. 鐸鐸生化學（全 8 堂）進度與檢核
+    // 4. 鐸鐸生化學（全 8 堂 · 18:00-22:00 正課班）進度與檢核
     // ==========================================
     const biochemData = [
-      { id: 1, date: "11/06 (五)", title: "酵素學 ＋ 醣類代謝(上)", tag: "第 1 堂" },
-      { id: 2, date: "11/13 (五)", title: "醣類代謝(下)", tag: "第 2 堂" },
-      { id: 3, date: "11/18 (三)", title: "脂肪代謝 ＋ 膜化學 ＋ 訊息傳遞", tag: "第 3 堂" },
-      { id: 4, date: "11/27 (五)", title: "蛋白質化學", tag: "第 4 堂" },
-      { id: 5, date: "12/04 (五)", title: "分子生物學(上)", tag: "第 5 堂" },
-      { id: 6, date: "12/11 (五)", title: "分子生物學(中)", tag: "第 6 堂" },
-      { id: 7, date: "12/23 (三)", title: "分子生物學(下) ＋ 生物科技", tag: "第 7 堂" },
-      { id: 8, date: "12/28 (一)", title: "細胞週期等冷僻題型整理 [完課]", tag: "第 8 堂" }
+      {
+        id: 1,
+        date: "11/06 (五)",
+        targetWeek: "第 10 週",
+        tag: "第 1 堂 (18:00-22:00)",
+        title: "酵素學 ＋ 醣類代謝 (上)",
+        focus: "Michaelis-Menten 方程式 (Km, Vmax)、Lineweaver-Burk 圖、競爭/非競爭抑制、糖解作用 (Glycolysis) 10 步與三大限速酵素 (Hexokinase, PFK-1, Pyruvate kinase)。",
+        reviewGuide: "何宣/FC 骨幹對照：計算題必背 Km 定義、副反應 2,3-BPG 生成與紅血球氧氣解離。"
+      },
+      {
+        id: 2,
+        date: "11/13 (五)",
+        targetWeek: "第 11 週",
+        tag: "第 2 堂 (18:00-22:00)",
+        title: "醣類代謝 (下) ＋ 檸檬酸循環 (TCA)",
+        focus: "Pyruvate dehydrogenase (PDH) 複合體 5 種輔酶 (Tender Loving Care For Nancy)、TCA 循環限速酵素 (Isocitrate DH)、糖質新生 (Gluconeogenesis)、肝醣合成/分解與 G6PD 缺乏症。",
+        reviewGuide: "何宣/FC 骨幹對照：肝醣儲積症 (Von Gierke, Pompe, Cori, McArdle) 口訣速記。"
+      },
+      {
+        id: 3,
+        date: "11/18 (三)",
+        targetWeek: "第 12 週",
+        tag: "第 3 堂 (18:00-22:00)",
+        title: "脂肪代謝 ＋ 膜化學 ＋ 訊息傳遞",
+        focus: "脂肪酸 β-氧化 (Carnitine shuttle) vs 脂肪酸合成 (Citrate shuttle, ACC 酵素)、酮體生成 (HMG-CoA synthase)、膽固醇合成 (HMG-CoA reductase)、脂蛋白 (Chylomicron, VLDL, LDL, HDL) 與 GPCR 訊息傳遞路徑。",
+        reviewGuide: "何宣/FC 骨幹對照：高血脂症分類 (Fredrickson) 與 Statin 類藥理靶點。"
+      },
+      {
+        id: 4,
+        date: "11/27 (五)",
+        targetWeek: "第 13 週",
+        tag: "第 4 堂 (18:00-22:00)",
+        title: "蛋白質化學 ＋ 胺基酸代謝 ＋ 尿素循環",
+        focus: "20 種胺基酸結構特徵與等電點 (pI)、生糖 vs 生酮胺基酸、尿素循環 (Urea cycle) 限速酵素 CPS-I、一碳基團轉移 (SAM, Folate, B12)、苯酮尿症 (PKU) 與楓糖尿症 (MSUD)。",
+        reviewGuide: "何宣/FC 骨幹對照：高血氨症機轉、高胱胺酸尿症 (Homocystinuria) 鑑別診斷。"
+      },
+      {
+        id: 5,
+        date: "12/04 (五)",
+        targetWeek: "第 14 週",
+        tag: "第 5 堂 (18:00-22:00)",
+        title: "分子生物學 (上)：DNA 複製與修復",
+        focus: "原核 vs 真核 DNA 聚合酶 (Pol I/III vs α,δ,ε)、端粒酶 (Telomerase)、DNA 修復機制 (核苷酸切除修復 NER - 著色性乾皮症, 鹼基切除修復 BER, 錯配修復 MMR - Lynch syndrome)。",
+        reviewGuide: "何宣/FC 骨幹對照：DNA 拓撲異構酶 (Topoisomerase) 抑制劑與化療藥機轉。"
+      },
+      {
+        id: 6,
+        date: "12/11 (五)",
+        targetWeek: "第 15 週",
+        tag: "第 6 堂 (18:00-22:00)",
+        title: "分子生物學 (中)：RNA 轉錄與後修飾",
+        focus: "原核 RNA 聚合酶 vs 真核 RNA Pol I(rRNA), II(mRNA), III(tRNA)、啟動子 (TATA box, Pribnow box)、mRNA 5' Cap, 3' Poly-A tail, Splicing (剪接體 snRNP - Lupus 抗 Sm 抗體)。",
+        reviewGuide: "何宣/FC 骨幹對照：Lac operon 乳糖操縱組調控機制 (CAP-cAMP 促進 / Repressor 抑制)。"
+      },
+      {
+        id: 7,
+        date: "12/23 (三)",
+        targetWeek: "第 17 週",
+        tag: "第 7 堂 (18:00-22:00)",
+        title: "分子生物學 (下) ＋ 生物科技",
+        focus: "蛋白質轉譯 (起始、延伸、終止)、密碼子與 Wobble 假說、轉譯抑制劑 (抗生素作用機轉)、PCR 原理、Southern / Northern / Western blot、CRISPR-Cas9 基因編輯技術。",
+        reviewGuide: "何宣/FC 骨幹對照：抗生素抑制蛋白質合成口訣 (30S: Aminoglycosides, Tetracyclines; 50S: Chloramphenicol, Macrolides, Clindamycin)。"
+      },
+      {
+        id: 8,
+        date: "12/28 (一)",
+        targetWeek: "第 18 週",
+        tag: "第 8 堂 (18:00-22:00)",
+        title: "細胞週期 ＋ 腫瘤生物學 ＋ 冷僻題型整理 [完課]",
+        focus: "Cyclin / CDK 複合體調控細胞週期檢查點 (G1/S, G2/M)、腫瘤抑制基因 (p53, Rb) 與致癌基因 (Ras, Myc, Her2)、細胞凋亡 (Apoptosis) 內/外源路徑、維生素與微量元素冷僻精華題型。",
+        reviewGuide: "何宣/FC 骨幹對照：鐸鐸生化總完課！全面進入考古題衝刺與全真模擬考。"
+      }
     ];
 
-    const biochemContainer = document.getElementById('biochem-checklist-container');
     let savedBiochemState = JSON.parse(localStorage.getItem('med_exam_biochem_cloud') || '{}');
 
     function updateBiochemProgress() {
       const checkedCount = Object.values(savedBiochemState).filter(Boolean).length;
       const percent = Math.round((checkedCount / biochemData.length) * 100);
-      document.getElementById('biochem-progress-bar').style.width = percent + '%';
-      document.getElementById('biochem-progress-text').innerText = `${checkedCount}/${biochemData.length} (${percent}%)`;
+      const bar = document.getElementById('biochem-progress-bar');
+      const text = document.getElementById('biochem-progress-text');
+      if (bar) bar.style.width = percent + '%';
+      if (text) text.innerText = `${checkedCount}/${biochemData.length} (${percent}%)`;
+      const timeStat = document.getElementById('biochem-time-stat');
+      if (timeStat) timeStat.innerText = `已完成 ${checkedCount} / ${biochemData.length} 堂課 (${checkedCount * 4} / 32 小時)`;
     }
 
-    function renderBiochemChecklist() {
-      biochemContainer.innerHTML = '';
+    function renderBiochemUnits() {
+      const container = document.getElementById('biochem-units-container');
+      if (!container) return;
+      const searchInput = document.getElementById('biochem-search-input');
+      const query = (searchInput?.value || '').toLowerCase().trim();
+
+      container.innerHTML = '';
+
       biochemData.forEach(item => {
+        const matchText = `${item.id} ${item.date} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase();
+        if (query && !matchText.includes(query)) return;
+
         const isChecked = !!savedBiochemState[item.id];
         const card = document.createElement('div');
-        card.className = `biochem-card p-3.5 rounded-xl border transition-all cursor-pointer ${
-          isChecked ? 'completed bg-slate-900/40 border-slate-700/40' : 'bg-slate-900/80 border-slate-700 hover:border-amber-500/50'
+        card.className = `p-4 rounded-2xl border transition-all cursor-pointer ${
+          isChecked 
+            ? 'completed bg-slate-900/50 border-amber-500/30' 
+            : 'bg-slate-800/80 border-slate-700 hover:border-amber-500/50'
         }`;
 
         card.innerHTML = `
-          <div class="flex items-start gap-3">
-            <input type="checkbox" class="biochem-custom-checkbox mt-1 rounded bg-slate-800 border-slate-600 text-amber-500 focus:ring-0 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-amber-400">${item.tag}</span>
-                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">${item.date}</span>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" class="biochem-custom-checkbox rounded bg-slate-800 border-slate-600 text-amber-500 focus:ring-0 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-amber-400 font-mono">${item.tag}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-slate-900 text-sky-400 border border-slate-700">${item.targetWeek}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">${item.date}</span>
+                </div>
+                <h3 class="title-text text-sm md:text-base font-bold text-slate-100 mt-1 ${isChecked ? 'line-through text-slate-500' : ''}">${item.title}</h3>
               </div>
-              <div class="title-text text-sm font-semibold text-slate-100 mt-1">${item.title}</div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-semibold ${isChecked ? 'text-emerald-400' : 'text-slate-400'}">
+                ${isChecked ? '✓ 已完課 & 刷題完畢' : '⏳ 待上課 / 複習'}
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-xs">
+            <div class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl leading-relaxed">
+              <span class="text-amber-300 font-bold flex items-center gap-1 mb-1">
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i> 本堂核心考點：
+              </span>
+              <span class="text-slate-300 text-[11px]">${item.focus}</span>
+            </div>
+            <div class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl leading-relaxed">
+              <span class="text-sky-300 font-bold flex items-center gap-1 mb-1">
+                <i data-lucide="compass" class="w-3.5 h-3.5 text-sky-400"></i> 課後複習指引：
+              </span>
+              <span class="text-slate-300 text-[11px]">${item.reviewGuide}</span>
             </div>
           </div>
         `;
@@ -906,16 +1550,19 @@
           savedBiochemState[item.id] = checkbox.checked;
           localStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
           if (db) db.ref('biochem').set(savedBiochemState);
-          renderBiochemChecklist();
+          renderBiochemUnits();
         });
 
-        biochemContainer.appendChild(card);
+        container.appendChild(card);
       });
 
       updateBiochemProgress();
       lucide.createIcons();
     }
-    renderBiochemChecklist();
+
+    const biochemSearchInput = document.getElementById('biochem-search-input');
+    if (biochemSearchInput) biochemSearchInput.addEventListener('input', renderBiochemUnits);
+    renderBiochemUnits();
 
     if (db) {
       db.ref('biochem').on('value', snap => {
@@ -923,7 +1570,356 @@
         if (val) {
           savedBiochemState = val;
           localStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
-          renderBiochemChecklist();
+          renderBiochemUnits();
+        }
+      });
+    }
+
+    // ==========================================
+    // 4.5 First Choice 生理學（配合何宣翻閱）資料與邏輯
+    // ==========================================
+    const physioChaptersData = [
+      {
+        chapterId: '甲',
+        title: '甲、細胞生理',
+        pages: 'p.1 - p.38 (共 38 頁)',
+        totalPages: 38,
+        targetWeek: '第 6 週 10/05 (週一)',
+        hoHsuanNote: '何宣精華對照：離子平衡 Nernst 方程式速解、骨骼肌 vs 心肌 vs 平滑肌興奮收縮偶聯全彩超級比較大表、動作電位離子流圖解。',
+        sections: [
+          { id: 'fc_p_1_a', code: 'A', title: '細胞膜構造', en: 'Cell membrane structure', page: 3, highYield: '磷脂雙層、膜蛋白、流體鑲嵌模型、膽固醇與膜流動性', hoHsuan: '對照何宣：細胞膜脂溶性與穿透性速率比較' },
+          { id: 'fc_p_1_b', code: 'B', title: '穿透細胞膜的方法：擴散', en: 'Diffusion & Transport', page: 4, highYield: '簡單擴散 (Fick 定律)、易化擴散 (GLUT)、初級主動 (Na+/K+ ATPase, Ca2+ pump)、次級主動 (SGLT, NCX)', hoHsuan: '對照何宣：載體運輸動力學 (Km, Vmax) 及強心苷 (Digoxin) 抑制機轉' },
+          { id: 'fc_p_1_c', code: 'C', title: '穿透細胞膜的程度', en: 'Permeability & Osmosis', page: 9, highYield: '滲透壓 (Osmolarity vs Tonicity)、反射係數 (Reflection coefficient σ)、Van\'t Hoff 定律', hoHsuan: '對照何宣：等張 vs 等滲溶液對紅血球體積之計算題型' },
+          { id: 'fc_p_1_d', code: 'D', title: '膜電位', en: 'Membrane potential', page: 12, highYield: 'Nernst equation 61.5 log([out]/[in])、Goldman-Hodgkin-Katz 方程式、靜止膜電位 (RMP 由 K+ 決定)', hoHsuan: '對照何宣：各離子平衡電位 (ENa +65mV, EK -90mV, ECa +120mV, ECl -85mV) 必背值' },
+          { id: 'fc_p_1_e', code: 'E', title: '神經細胞的膜電位、訊息傳遞', en: 'Action potential & Synaptic transmission', page: 20, highYield: '去極化 (Na+ VGC)、再極化 (K+ VGC)、絕對/相對不反應期、跳躍傳導、EPSP/IPSP 空間與時間加成', hoHsuan: '對照何宣：TTX/TEA 阻斷劑效應、神經纖維直徑與傳導速度 (Aα > Aβ > Aγ > Aδ > B > C)' },
+          { id: 'fc_p_1_f', code: 'F', title: '肌肉細胞的膜電位、收縮', en: 'Excitation-contraction coupling', page: 32, highYield: '骨骼肌 (Troponin C, T管, DHPR-RyR1) vs 心肌 (RyR2, CICR) vs 平滑肌 (Calmodulin, MLCK, MLCP)', hoHsuan: '對照何宣：三種肌肉結構 (多核/單核、閏盤、橫紋) 與收縮機制全彩超級比較大表' }
+        ]
+      },
+      {
+        chapterId: '乙',
+        title: '乙、神經生理',
+        pages: 'p.39 - p.126 (共 88 頁)',
+        totalPages: 88,
+        targetWeek: '第 6 週 10/06 - 10/07 (週二~三)',
+        hoHsuanNote: '何宣精華對照：基底核直接/間接路徑手繪圖、感覺路徑交叉位置、視覺缺損神解題法、EEG 睡眠波型記憶訣。',
+        sections: [
+          { id: 'fc_p_2_a', code: 'A', title: '神經組織：神經元、神經膠細胞', en: 'Neurons & Glial cells', page: 41, highYield: '星狀膠細胞 (血腦屏障 BBB)、寡突膠細胞 (CNS 髓鞘) vs 許旺細胞 (PNS 髓鞘)、微小膠細胞 (吞噬)、室管膜細胞 (CSF)', hoHsuan: '對照何宣：膠細胞功能分類與多發性硬化症 (MS) / Guillain-Barré 關聯' },
+          { id: 'fc_p_2_b', code: 'B', title: '中樞神經', en: 'Central nervous system', page: 45, highYield: '大腦皮層功能區 (Broca/Wernicke 失語症)、基底核路徑 (Parkinson/Huntington)、邊緣系統 (海馬迴/杏仁核)、下視丘功能中樞、EEG 波與睡眠 (REM vs NREM)', hoHsuan: '對照何宣：基底核直接 (促進運動) / 間接 (抑制運動) 路徑圖與下視丘各核區功能口訣' },
+          { id: 'fc_p_2_c', code: 'C', title: '感覺輸入', en: 'Sensory systems', page: 67, highYield: '後索內側蹄系 (DCML: 觸覺/振動/本體) vs 前外側系統 (ALS: 痛溫覺)、視覺光受器 (Rods/Cones, Rhodopsin, cGMP 下降去極化終止)、聽覺 (Corti 器毛細胞)、前庭平衡', hoHsuan: '對照何宣：感覺神經交叉平面 (延腦 vs 脊髓)、視神經交叉各部位病灶視野缺損圖、痛覺門閥管制理論' },
+          { id: 'fc_p_2_d', code: 'D', title: '運動輸出', en: 'Motor systems & Reflexes', page: 95, highYield: '皮質脊髓束 (上/下運動神經元徵象)、肌梭 (Ia/II 牽張反射) vs 高爾基腱器 (Ib 逆牽張反射)、小腦功能迴路、自主神經受體 (α1, α2, β1, β2, M1-M3)', hoHsuan: '對照何宣：牽張反射與屈曲-交叉伸肌反射圖解、交感 vs 副交感神經節前/節後傳導物質與受體總整理' }
+        ]
+      },
+      {
+        chapterId: '丙',
+        title: '丙、心血管生理',
+        pages: 'p.127 - p.176 (共 50 頁)',
+        totalPages: 50,
+        targetWeek: '第 6 週 10/08 - 10/09 (週四~五)',
+        hoHsuanNote: '何宣精華對照：心肌動作電位 5 階段動態圖、Wiggers 心動週期神級解析線、PV loop 壓力容積環前/後負荷變化、凝血瀑布數字口訣。',
+        sections: [
+          { id: 'fc_p_3_a', code: 'A', title: '心臟電生理', en: 'Cardiac electrophysiology', page: 128, highYield: 'SA node 節律電位 (Phase 0 Ca2+ T/L, Phase 3 K+, Phase 4 If funny current) vs 心室肌電位 (Phase 0 Na+, Phase 1 Ito, Phase 2 Ca2+ L-type, Phase 3 Kr/Ks, Phase 4 Kir)、ECG (P, QRS, T, PR, QT)', hoHsuan: '對照何宣：心肌各期離子流向總結、Class I~IV 抗心律不整藥作用標位' },
+          { id: 'fc_p_3_b', code: 'B', title: '心臟收縮週期', en: 'Cardiac cycle & Wiggers diagram', page: 141, highYield: 'Wiggers diagram、等容收縮/舒張、心音 (S1 房室瓣關, S2 半月瓣關, S3 快速充盈, S4 心房收縮)、心輸出量 CO = HR x SV、Frank-Starling 機制、PV loop (Preload/Afterload/Inotropy)', hoHsuan: '對照何宣：Wiggers 圖 7 個時期心房壓/心室壓/主動脈壓/容積曲線神對照' },
+          { id: 'fc_p_3_c', code: 'C', title: '血管、血壓', en: 'Hemodynamics & BP regulation', page: 152, highYield: 'Poiseuille 定律 (阻力 R ∝ 1/r^4)、MAP = DBP + 1/3(SBP-DBP)、感壓反射 (Carotid sinus CN IX, Aortic arch CN X)、RAAS 系統、Starling 微循環 (濾過力 vs 吸回力、水腫四大成因)', hoHsuan: '對照何宣：出血/姿勢性低血壓神經體液反饋代償路徑圖' },
+          { id: 'fc_p_3_d', code: 'D', title: '凝血、血小板', en: 'Hemostasis & Coagulation', page: 166, highYield: '初級止血 (vWF-GpIb, GpIIb/IIIa, TXA2/ADP)、次級止血內源 (12,11,9,8 ➔ aPTT) 與外源 (Tissue factor, 7 ➔ PT)、共同路徑 (10,5,2,1)、抗凝 (AT-III, Protein C/S, tPA)', hoHsuan: '對照何宣：凝血因子羅馬數字記憶口訣 (門牌號碼速算法) 與 Warfarin / Heparin 機轉' },
+          { id: 'fc_p_3_e', code: 'E', title: '紅血球', en: 'Erythrocytes & Blood types', page: 172, highYield: 'EPO 調控機制 (腎皮質間質細胞, 低氧刺激 HIF-1α)、紅血球生命週期 (120天)、ABO/Rh 血型抗原與新生兒溶血症 (HDN)', hoHsuan: '對照何宣：紅血球生成誘導與血紅素代謝/黃疸生理鑑別' },
+          { id: 'fc_p_3_f', code: 'F', title: '免疫球蛋白', en: 'Immunoglobulins', page: 172, highYield: 'IgG (唯一過胎盤, 含量最高), IgM (五聚體, 初次免疫), IgA (雙聚體, 分泌型黏膜), IgE (肥大細胞脫顆粒, 過敏/寄生蟲), IgD (B細胞受體)', hoHsuan: '對照何宣：五大抗體結構、功能、半衰期與補體活化途徑' }
+        ]
+      },
+      {
+        chapterId: '丁',
+        title: '丁、呼吸生理',
+        pages: 'p.177 - p.214 (共 38 頁)',
+        totalPages: 38,
+        targetWeek: '第 6 週 10/10 (週六)',
+        hoHsuanNote: '何宣精華對照：肺容積箱型圖與 FEV1/FVC、氧合血紅素解離曲線 (OHDC) 右移口訣、V/Q 不均與 A-a gradient 判讀三步驟。',
+        sections: [
+          { id: 'fc_p_4_a', code: 'A', title: '肺容積與呼吸壓力變化', en: 'Lung volumes & Mechanics', page: 178, highYield: '肺容積 (TV, IRV, ERV, RV, VC, TLC, FRC, 氦稀釋法/體箱計量 RV)、表面活性劑 (Surfactant, DPPC, Type II 肺泡細胞, Laplace 定律 P=2T/r)、順應性 Compliance (肺纖維化↓ vs 肺氣腫↑)', hoHsuan: '對照何宣：阻塞型 (FEV1/FVC < 70%) vs 限制型 (FEV1/FVC 正常/↑, TLC < 80%) 肺病鑑別圖' },
+          { id: 'fc_p_4_b', code: 'B', title: '氣體交換生理', en: 'Gas exchange & V/Q matching', page: 193, highYield: 'Fick 擴散定律、分壓計算、V/Q 比值 (肺尖 > 3, 肺底 ~0.6, 全肺平均 0.8)、分流 (Shunt: V/Q=0, 給氧無效) vs 死腔 (Dead space: V/Q=∞)、A-a gradient 計算 (PAO2 - PaO2)', hoHsuan: '對照何宣：五大低血氧機制與 A-a gradient 鑑別診斷決策樹' },
+          { id: 'fc_p_4_c', code: 'C', title: '氣體的輸送', en: 'Gas transport (O2 & CO2)', page: 199, highYield: '氧合血紅素解離曲線 (OHDC)、Bohr 效應 (右移釋氧: 溫度↑, 2,3-DPG↑, CO2↑, H+↑/pH↓)、Haldane 效應、CO2 運送形式 (70% 重碳酸根 HCO3-, 20% 胺甲血紅素, 10% 溶解)、氯轉移 (Chloride shift)', hoHsuan: '對照何宣：OHDC 右移口訣「在組織熱情如火 (高溫/酸/高CO2) 放出氧氣」' },
+          { id: 'fc_p_4_d', code: 'D', title: '血氧低下', en: 'Hypoxemia mechanisms', page: 208, highYield: '五大成因：1.吸入低氧分壓 (高山) 2.通氣不足 (中樞抑制) 3.擴散障礙 (纖維化) 4.V/Q mismatch (COPD) 5.Right-to-left shunt (先天發紺心臟病)', hoHsuan: '對照何宣：給予 100% O2 是否能改善低血氧 (Shunt 給純氧 PaO2 仍無法顯著上升)' },
+          { id: 'fc_p_4_e', code: 'E', title: '發紺', en: 'Cyanosis', page: 208, highYield: '去氧血紅素 > 5 g/dL 出現發紺、中心型 (低 PaO2, 溫暖黏膜) vs 周邊型 (血流遲緩, 肢端冰冷)、變性血紅素血症 (Methemoglobinemia, Fe3+, 巧克力血, Methylene blue 治療)', hoHsuan: '對照何宣：嚴重貧血 (Hb 4 g/dL) 即使極度缺氧也不易出現發紺之陷阱題' },
+          { id: 'fc_p_4_f', code: 'F', title: '呼吸的調節', en: 'Control of breathing', page: 210, highYield: '延腦 DRG (吸氣基礎節律) / VRG (用力呼吸氣)、橋腦長吸中樞 (Apneustic) / 呼吸調整中樞 (Pneumotaxic)、中樞化學受器 (延腦表面, 偵測 CSF [H+]/CO2) vs 周邊化學受器 (頸動脈體/主動脈體, 偵測 PaO2 < 60 mmHg)', hoHsuan: '對照何宣：中樞 vs 周邊化學感受器反應閾值與高山適應過度換氣生理' }
+        ]
+      },
+      {
+        chapterId: '戊',
+        title: '戊、腎臟生理',
+        pages: 'p.215 - p.258 (共 44 頁)',
+        totalPages: 44,
+        targetWeek: '第 7 週 10/12 - 10/13 (週一~二)',
+        hoHsuanNote: '何宣精華對照：入球/出球動脈收縮舒張九宮格、各段腎小管離子通道與五大利尿劑作用點神圖、逆流倍增系統逐步解析、血氣分析 ABG 六步法。',
+        sections: [
+          { id: 'fc_p_5_a', code: 'A', title: '腎元', en: 'Nephron & Renal hemodynamics', page: 216, highYield: '皮質腎元 vs 傍髓腎元、濾過屏障 (內皮窗孔, GBM 帶負電硫酸乙醯肝素, 足細胞裂隙膜)、GFR / RPF 計算、清除率 (Inulin/Creatinine = GFR, PAH = RPF, FF = GFR/RPF)、入球 vs 出球動脈阻力對 GFR 的影響', hoHsuan: '對照何宣：入球縮 (GFR↓ RPF↓ FF-), 出球縮 (GFR↑ RPF↓ FF↑) 必考九宮格' },
+          { id: 'fc_p_5_b', code: 'B', title: '腎小管的再吸收、分泌', en: 'Tubular transport & Diuretics', page: 228, highYield: '近曲小管 (SGLT2, NHE3, CA 吸收 65% Na/水/HCO3, 100% 糖/胺基酸)、亨利氏環粗上升支 (NKCC2 吸收 25% Na, Lumen-positive 電位驅動 Ca2+/Mg2+)、遠曲小管 (NCC 吸收 5% Na, PTH 保鈣)、集尿管 (Principal cell: ENaC/ROMK, Aldosterone / Intercalated cell: H+ ATPase)', hoHsuan: '對照何宣：五大利尿劑 (Acetazolamide, Furosemide, Thiazide, Spironolactone/Amiloride, SGLT2i) 標位及血鉀/酸鹼副作用圖表' },
+          { id: 'fc_p_5_c', code: 'C', title: '尿液的濃縮與稀釋', en: 'Countercurrent system & ADH', page: 240, highYield: '逆流倍增系統 (亨利氏環降支透水不透鹽, 升支主動抽鹽不透水)、逆流交換系統 (直體血管 Vasa recta 維持高滲透度)、ADH (V2 受體 ➔ cAMP ➔ AQP2 轉位到管腔膜)、尿素循環 (Urea recycling 貢獻髓質 50% 滲透壓)', hoHsuan: '對照何宣：髓質滲透壓階梯 (300 ➔ 1200 mOsm/L) 逆流倍增動態步驟拆解圖' },
+          { id: 'fc_p_5_d', code: 'D', title: '酸鹼平衡', en: 'Acid-base balance & RTA', page: 248, highYield: 'Henderson-Hasselbalch 公式、代謝性酸中毒 (Anion Gap = Na - Cl - HCO3, 正常 10-12, MUDPILES)、呼吸性酸/鹼中毒代償計算、腎小管酸中毒 (Type 1 遠端排酸障礙/尿pH>5.5, Type 2 近端重碳酸再吸收障礙, Type 4 低醛固酮/高血鉀)', hoHsuan: '對照何宣：血氣分析六步法 (pH ➔ PaCO2/HCO3 ➔ 代償公式 ➔ Anion Gap ➔ Delta-Delta)' },
+          { id: 'fc_p_5_e', code: 'E', title: '膀胱功能', en: 'Bladder function & Micturition', page: 256, highYield: '逼尿肌 (副交感 M3, 骨盆神經 ➔ 收縮排尿)、內括約肌 (交感 α1, 下腹神經 ➔ 緊閉儲尿)、外括約肌 (隨意神經, 陰部神經 ➔ 自主憋尿)、排尿中樞 (橋腦 PMC vs 薦髓 S2-S4 排尿反射中樞)', hoHsuan: '對照何宣：神經性膀胱 (痙攣性 upper motor vs 無張力性 lower motor) 鑑別表' }
+        ]
+      },
+      {
+        chapterId: '己',
+        title: '己、腸胃生理',
+        pages: 'p.259 - p.298 (共 40 頁)',
+        totalPages: 40,
+        targetWeek: '第 7 週 10/14 (週三)',
+        hoHsuanNote: '何宣精華對照：腸胃荷爾蒙分泌細胞與刺激物口訣、壁細胞質子幫浦活化路徑 (cAMP vs IP3)、三大營養素消化吸收部位總整理。',
+        sections: [
+          { id: 'fc_p_6_a', code: 'A', title: '調節腸胃道的物質', en: 'GI regulatory hormones', page: 261, highYield: 'Gastrin (胃幽門 G cell, 促胃酸/黏膜生長)、CCK (十二指腸/空腸 I cell, 促膽囊收縮/胰酵素, 抑制胃排空)、Secretin (S cell, 促胰臟 HCO3- 分泌)、GIP (K cell, 葡萄糖依賴性胰島素促泌)、Somatostatin (D cell, 全面抑制劑)、Motilin (M cell, 促 MMC)', hoHsuan: '對照何宣：腸胃荷爾蒙大家族分類與分泌細胞位置速記口訣' },
+          { id: 'fc_p_6_b', code: 'B', title: '腸胃道的蠕動', en: 'GI motility & Electrophysiology', page: 267, highYield: 'Cajal 間質細胞 (ICC 慢波 Slow waves 起搏點, 胃 3次/分, 十二指腸 12次/分, 迴腸 9次/分)、胃容受性舒張 (迷走-迷走反射, VIP/NO 介導)、移行性複合運動 (MMC 空腹期清道夫, Motilin 調控)、大腸結腸集團運動 (Mass movement)', hoHsuan: '對照何宣：吞嚥反射三階段與胃排空抑制因子 (高脂肪/高酸/高滲透壓)' },
+          { id: 'fc_p_6_c', code: 'C', title: '消化液與消化', en: 'GI secretions & Digestion', page: 274, highYield: '唾液 (低張, 迷走/交感皆增加分泌)、胃酸分泌 (壁細胞 H+/K+ ATPase, Histamine H2 ➔ cAMP, ACh M3 & Gastrin CCK-B ➔ IP3/Ca2+)、胰液分泌 (兩相調控: 水相 HCO3- 由 Secretin 刺激, 酵素相由 CCK 刺激)、膽汁酸腸肝循環 (Enterohepatic circulation 95% 迴腸重吸收)', hoHsuan: '對照何宣：壁細胞酸分泌雙途徑與 PPI / H2 blocker / 抗膽鹼藥作用點' },
+          { id: 'fc_p_6_d', code: 'D', title: '腸胃道的吸收', en: 'GI absorption & Nutrition', page: 292, highYield: '醣類 (SGLT1 吸收葡萄糖/半乳糖, GLUT5 吸收果糖, 基底側 GLUT2 釋出)、蛋白質 (PepT1 吸收二/三肽, 胺基酸次級主動運輸)、脂質 (微膠粒 Micelle 擴散, 腸細胞合成乳糜微粒 Chylomicron 入乳糜管)、維生素 (Vit B12 需胃壁細胞內在因子 IF, 於迴腸末端結合吸收; 鐵/鈣主要於十二指腸吸收)', hoHsuan: '對照何宣：全消化管各段吸收專一性營養素大盤點' }
+        ]
+      },
+      {
+        chapterId: '庚',
+        title: '庚、內分泌生理',
+        pages: 'p.299 - p.368 (共 70 頁)',
+        totalPages: 70,
+        targetWeek: '第 7 週 10/15 - 10/16 (週四~五)',
+        hoHsuanNote: '何宣精華對照：荷爾蒙第二傳訊者分類口訣、下視丘-腦垂體軸線、甲狀腺荷爾蒙合成 7 步驟、鈣磷代謝三大荷爾蒙九宮格、腎上腺皮質類固醇合成酵素圖。',
+        sections: [
+          { id: 'fc_p_7_a', code: 'A', title: '荷爾蒙基礎生理', en: 'Hormone mechanisms & Receptors', page: 300, highYield: '荷爾蒙三大類 (胜肽類, 類固醇, 酪胺酸胺類)、受體路徑：cAMP 系統 (FLAT ChAMP) vs IP3/DAG 系統 (GOAT) vs 酪胺酸激酶 RTK (Insulin, IGF-1) vs 核內受體 (類固醇, 甲狀腺素)', hoHsuan: '對照何宣：荷爾蒙第二傳訊者超強口訣神圖' },
+          { id: 'fc_p_7_b', code: 'B', title: '下視丘、腦垂體', en: 'Hypothalamus & Pituitary', page: 311, highYield: '下視丘-腦垂體門脈系統、腦垂體前葉 (GH, TSH, ACTH, FSH, LH, PRL)、生長激素 GH (經肝臟分泌 IGF-1, 升血糖, 肢端肥大症/巨人症)、泌乳素 PRL (受 Dopamine 強力緊張性抑制)、腦垂體後葉 (ADH, Oxytocin 由下視丘視上核/室旁核製造)', hoHsuan: '對照何宣：下視丘刺激/抑制激素軸線反饋與腦垂體解剖胚胎起源' },
+          { id: 'fc_p_7_c', code: 'C', title: '甲狀腺－甲狀腺素', en: 'Thyroid hormone', page: 323, highYield: '甲狀腺素合成 7 步驟 (NIS 碘捕捉 ➔ TPO 氧化 ➔ 有機化 MIT/DIT ➔ 偶聯 T3/T4 ➔ 胞飲釋放)、T4 於周邊經 5\'-deiodinase 轉為活性 T3、Wolff-Chaikoff 效應、Graves vs Hashimoto', hoHsuan: '對照何宣：甲狀腺素生成步驟與 PTU / Methimazole 阻斷酵素標位圖' },
+          { id: 'fc_p_7_d', code: 'D', title: '鈣離子平衡－副甲狀腺素、維他命 D、抑鈣素', en: 'Calcium & Phosphate homeostasis', page: 331, highYield: '副甲狀腺素 PTH (升血鈣降血磷: 溶骨釋鈣、遠曲小管保鈣排磷、活化腎臟 1α-hydroxylase)、1,25-(OH)2-D3 (腸道吸鈣吸磷, 骨礦化)、抑鈣素 Calcitonin (甲狀腺 C cell, 降血鈣血磷)、低血鈣 (Chvostek & Trousseau signs)', hoHsuan: '對照何宣：血鈣與血磷在 PTH, Vit D, Calcitonin 作用下之昇降對照九宮格' },
+          { id: 'fc_p_7_e', code: 'E', title: '胰臟－胰島素、體抑素', en: 'Pancreatic endocrine hormones', page: 337, highYield: '胰島細胞 (β cell: 60% 胰島素, α cell: 25% 昇糖素, δ cell: 10% 體抑素)、β cell 葡萄糖感應 (GLUT2 ➔ ATP↑ ➔ K+ ATP 關閉 ➔ 去極化 ➔ Ca2+ 內流 ➔ 胞吐)、Insulin 促進 GLUT4 轉位、糖尿病 (DKA vs HHS)', hoHsuan: '對照何宣：胰島素分泌細胞機制與降血糖藥物 (Sulfonylurea 關閉 K+ ATP 通道) 作用靶點' },
+          { id: 'fc_p_7_f', code: 'F', title: '腎上腺', en: 'Adrenal cortex & Medulla', page: 346, highYield: '腎上腺皮質三層 GFR (球狀帶 G ➔ 醛固酮 / 束狀帶 F ➔ 皮質醇 / 網狀帶 R ➔ 雄性素 DHEA)、先天性腎上腺增生 CAH (21-hydroxylase 缺乏最常見)、Cushing vs Addison、腎上腺髓質 (嗜鉻細胞 ➔ Epinephrine)', hoHsuan: '對照何宣：腎上腺皮質類固醇合成生化酵素圖與 21 / 11 / 17 缺乏口訣' },
+          { id: 'fc_p_7_g', code: 'G', title: '男性性腺－男性荷爾蒙', en: 'Male reproduction & Androgens', page: 359, highYield: 'Leydig 氏細胞 (受 LH 刺激產生睪固酮 Testosterone)、Sertoli 氏細胞 (受 FSH 刺激, 營養精子, ABP, Inhibin B, 血睪屏障 BTB)、5α-reductase (Testosterone ➔ DHT)', hoHsuan: '對照何宣：男性下視丘-垂體-睪丸軸負回饋與雄性素作用標的比較' },
+          { id: 'fc_p_7_h', code: 'H', title: '女性性腺－女性荷爾蒙', en: 'Female reproduction & Menstrual cycle', page: 367, highYield: '卵巢週期 (濾泡期 ➔ 排卵 ➔ 黃體期)、子宮內膜週期 (月經期 ➔ 增生期 ➔ 分泌期)、排卵前 Estrogen 正回饋引起 LH surge、兩細胞兩促性腺激素理論 (Theca cell: LH ➔ Androgen ➔ Granulosa cell: FSH ➔ Estrogen)', hoHsuan: '對照何宣：女性 28 天月經週期 4 大荷爾蒙 (LH, FSH, Estrogen, Progesterone) 與體溫波動圖' }
+        ]
+      }
+    ];
+
+    const physioContainer = document.getElementById('physio-chapters-container');
+    let savedPhysioState = JSON.parse(localStorage.getItem('med_exam_physio_cloud') || '{}');
+    let currentPhysioFilter = 'ALL';
+    let currentPhysioSearch = '';
+
+    // 計算生理學總體進度與各章節進度
+    function updatePhysioProgress() {
+      let totalSections = 0;
+      let completedSections = 0;
+      let totalPages = 368;
+      let completedPages = 0;
+
+      physioChaptersData.forEach(chap => {
+        totalSections += chap.sections.length;
+        let chapCompletedSecs = 0;
+        chap.sections.forEach(sec => {
+          if (savedPhysioState[sec.id]) {
+            completedSections++;
+            chapCompletedSecs++;
+          }
+        });
+        if (chap.sections.length > 0) {
+          const ratio = chapCompletedSecs / chap.sections.length;
+          completedPages += Math.round(ratio * chap.totalPages);
+        }
+      });
+
+      const percent = totalSections > 0 ? Math.round((completedSections / totalSections) * 100) : 0;
+      const pBar = document.getElementById('physio-progress-bar');
+      const pText = document.getElementById('physio-progress-text');
+      const pStat = document.getElementById('physio-page-stat');
+
+      if (pBar) pBar.style.width = `${percent}%`;
+      if (pText) pText.innerText = `${completedSections}/${totalSections} (${percent}%)`;
+      if (pStat) pStat.innerText = `已讀 ${completedPages} / ${totalPages} 頁 · 全 7 大篇章`;
+    }
+
+    // 渲染 First Choice 生理學清單
+    function renderPhysioChecklist() {
+      if (!physioContainer) return;
+      physioContainer.innerHTML = '';
+
+      const query = currentPhysioSearch.trim().toLowerCase();
+
+      physioChaptersData.forEach(chap => {
+        // 篩選章節 (ALL 或 特定章節)
+        if (currentPhysioFilter !== 'ALL' && chap.chapterId !== currentPhysioFilter) {
+          return;
+        }
+
+        // 搜尋過濾子單元
+        const filteredSections = chap.sections.filter(sec => {
+          if (!query) return true;
+          return (
+            sec.title.toLowerCase().includes(query) ||
+            sec.en.toLowerCase().includes(query) ||
+            sec.highYield.toLowerCase().includes(query) ||
+            sec.hoHsuan.toLowerCase().includes(query) ||
+            chap.title.toLowerCase().includes(query) ||
+            String(sec.page).includes(query)
+          );
+        });
+
+        if (query && filteredSections.length === 0) {
+          return;
+        }
+
+        // 計算該章完成數
+        const chapCompletedCount = chap.sections.filter(s => savedPhysioState[s.id]).length;
+        const chapTotal = chap.sections.length;
+        const isChapAllCompleted = chapCompletedCount === chapTotal;
+        const chapPercent = Math.round((chapCompletedCount / chapTotal) * 100);
+
+        const chapCard = document.createElement('div');
+        chapCard.className = `bg-slate-800/80 border ${isChapAllCompleted ? 'border-teal-500/40 bg-teal-950/10' : 'border-slate-700'} rounded-2xl p-5 shadow-lg space-y-4 transition-all duration-200`;
+
+        chapCard.innerHTML = `
+          <!-- 章節頂部 Header -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-700/60 pb-3">
+            <div class="space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-300 text-xs font-bold border border-teal-500/30">
+                  ${chap.pages}
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300 text-xs font-medium">
+                  ${chap.targetWeek}
+                </span>
+                <span class="text-xs font-bold font-mono ${isChapAllCompleted ? 'text-teal-400' : 'text-slate-400'}">
+                  進度: ${chapCompletedCount}/${chapTotal} (${chapPercent}%)
+                </span>
+              </div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2 mt-1">
+                <i data-lucide="folder-check" class="w-4 h-4 text-teal-400"></i> ${chap.title}
+              </h3>
+            </div>
+
+            <!-- 操作按鈕 -->
+            <div class="flex items-center gap-2">
+              <button onclick="toggleAllChapter('${chap.chapterId}', ${!isChapAllCompleted})" class="px-2.5 py-1 rounded-lg text-xs font-medium ${isChapAllCompleted ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30 border border-teal-500/40'} transition flex items-center gap-1">
+                <i data-lucide="${isChapAllCompleted ? 'rotate-ccw' : 'check-circle-2'}" class="w-3.5 h-3.5"></i> ${isChapAllCompleted ? '取消全選' : '一鍵全選本章'}
+              </button>
+            </div>
+          </div>
+
+          <!-- 💡 何宣對照提示卡 -->
+          <div class="p-3 bg-sky-950/20 border border-sky-500/20 rounded-xl flex items-start gap-2.5 text-xs text-sky-200">
+            <i data-lucide="info" class="w-4 h-4 text-sky-400 shrink-0 mt-0.5"></i>
+            <div>
+              <span class="font-bold text-sky-300">何宣重點速記翻閱：</span>
+              <span class="text-slate-300">${chap.hoHsuanNote}</span>
+            </div>
+          </div>
+
+          <!-- 子單元卡片網格 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="sections-container-${chap.chapterId}"></div>
+        `;
+
+        const secContainer = chapCard.querySelector(`#sections-container-${chap.chapterId}`);
+
+        filteredSections.forEach(sec => {
+          const isDone = !!savedPhysioState[sec.id];
+          const secCard = document.createElement('div');
+          secCard.className = `physio-card p-3 rounded-xl border ${isDone ? 'completed border-teal-500/40 bg-teal-950/10' : 'border-slate-700/80 bg-slate-900/60 hover:border-slate-600'} flex flex-col justify-between gap-2.5 cursor-pointer transition-all duration-150`;
+
+          secCard.innerHTML = `
+            <div class="space-y-1.5">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-start gap-2.5">
+                  <input type="checkbox" id="${sec.id}" ${isDone ? 'checked' : ''} class="mt-0.5 rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-0 focus:ring-offset-0 cursor-pointer">
+                  <div>
+                    <span class="text-xs font-bold text-teal-400 font-mono mr-1">${sec.code}.</span>
+                    <span class="title-text text-sm font-semibold ${isDone ? 'text-slate-400 line-through' : 'text-slate-100'}">${sec.title}</span>
+                    <div class="text-[11px] text-slate-400 font-mono tracking-tight">${sec.en}</div>
+                  </div>
+                </div>
+                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-teal-300 border border-slate-700 shrink-0">
+                  p.${sec.page}
+                </span>
+              </div>
+
+              <!-- 考點與對照標籤 -->
+              <div class="space-y-1 pt-1 border-t border-slate-800/80 text-[11px]">
+                <div class="text-slate-300 flex items-start gap-1">
+                  <span class="text-amber-400 font-bold shrink-0">★ 考點:</span>
+                  <span>${sec.highYield}</span>
+                </div>
+                <div class="text-sky-300 flex items-start gap-1">
+                  <span class="text-sky-400 font-bold shrink-0">📖 對照:</span>
+                  <span>${sec.hoHsuan}</span>
+                </div>
+              </div>
+            </div>
+          `;
+
+          secCard.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT') {
+              const checkbox = secCard.querySelector('input');
+              checkbox.checked = !checkbox.checked;
+            }
+            const checkbox = secCard.querySelector('input');
+            savedPhysioState[sec.id] = checkbox.checked;
+            localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
+            if (db) db.ref('physiology').set(savedPhysioState);
+            renderPhysioChecklist();
+          });
+
+          secContainer.appendChild(secCard);
+        });
+
+        physioContainer.appendChild(chapCard);
+      });
+
+      if (physioContainer.children.length === 0) {
+        physioContainer.innerHTML = `
+          <div class="text-center py-12 bg-slate-800/40 border border-slate-700/60 rounded-2xl text-slate-400 text-xs">
+            <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-500 mb-2"></i>
+            找不到符合「${query}」的生理學章節或考點，請更換搜尋關鍵字。
+          </div>
+        `;
+      }
+
+      updatePhysioProgress();
+      lucide.createIcons();
+    }
+
+    // 章節一鍵全選 / 取消全選
+    window.toggleAllChapter = function(chapterId, forceState) {
+      const chap = physioChaptersData.find(c => c.chapterId === chapterId);
+      if (!chap) return;
+      chap.sections.forEach(sec => {
+        savedPhysioState[sec.id] = forceState;
+      });
+      localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
+      if (db) db.ref('physiology').set(savedPhysioState);
+      renderPhysioChecklist();
+    };
+
+    // 篩選章節標籤切換
+    window.filterPhysioChapter = function(chap) {
+      currentPhysioFilter = chap;
+      document.querySelectorAll('.physio-filter-btn').forEach(btn => {
+        if (btn.innerText.startsWith(chap) || (chap === 'ALL' && btn.innerText.startsWith('全部'))) {
+          btn.classList.add('active', 'bg-teal-500/20', 'text-teal-300', 'border-teal-500/40');
+          btn.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-700');
+        } else {
+          btn.classList.remove('active', 'bg-teal-500/20', 'text-teal-300', 'border-teal-500/40');
+          btn.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-700');
+        }
+      });
+      renderPhysioChecklist();
+    };
+
+    // 即時搜尋監聽
+    const physioSearchInput = document.getElementById('physio-search-input');
+    if (physioSearchInput) {
+      physioSearchInput.addEventListener('input', (e) => {
+        currentPhysioSearch = e.target.value;
+        renderPhysioChecklist();
+      });
+    }
+
+    renderPhysioChecklist();
+
+    if (db) {
+      db.ref('physiology').on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          savedPhysioState = val;
+          localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
+          renderPhysioChecklist();
         }
       });
     }
@@ -1114,8 +2110,8 @@
       { w: 3, start: '2026-09-14', end: '2026-09-19', date: "9/14-9/19", title: "趙俊彥 13-18：第7-9節 [間腦腦幹小腦 ➔ 脊髓傳導臂神經叢 ➔ 周邊自律視覺] ＋ 考古豹 ＋ 寄生蟲" },
       { w: 4, start: '2026-09-21', end: '2026-09-26', date: "9/21-9/26", title: "趙俊彥 19-24：第10-12節 [聽平衡嗅腦垂體 ➔ 細胞連接淋巴 ➔ 呼吸脾臟心臟] ＋ 考古豹 ＋ 生統" },
       { w: 5, start: '2026-09-28', end: '2026-10-03', date: "9/28-10/03", title: "趙俊彥 25-30：第13-15節 [胚胎咽器發育 ➔ 消化腹膜腸胃 ➔ 泌尿男女生殖 完課] ＋ 錯題清倉 ＋ [運動:走跑交替啟動]" },
-      { w: 6, start: '2026-10-05', end: '2026-10-10', date: "10/05-10/10", title: "何宣生理(上)：心血管/呼吸/神經肌肉 ＋ 考古豹" },
-      { w: 7, start: '2026-10-12', end: '2026-10-17', date: "10/12-10/17", title: "何宣生理(下)：腎臟酸鹼/內分泌 ＋ 考古豹 [★ 10/6-15 國考線上報名]" },
+      { w: 6, start: '2026-10-05', end: '2026-10-10', date: "10/05-10/10", title: "FC 生理(上)：[甲.細胞生理 ➔ 乙.神經生理 ➔ 丙.心血管 ➔ 丁.呼吸]（配合何宣重點翻閱對照）＋ 考古豹 50+ 題" },
+      { w: 7, start: '2026-10-12', end: '2026-10-17', date: "10/12-10/17", title: "FC 生理(下)：[戊.腎臟酸鹼 ➔ 己.腸胃 ➔ 庚.內分泌與性腺]（配合何宣重點翻閱對照）＋ 考古豹 [★ 10/6-15 國考線上報名]" },
       { w: 8, start: '2026-10-19', end: '2026-10-24', date: "10/19-10/24", title: "小美免疫 ＋ Winner 免疫架構 ＋ 考古豹" },
       { w: 9, start: '2026-10-26', end: '2026-10-31', date: "10/26-10/31", title: "Winner 細菌學/真菌學 ＋ 考古豹" },
       { w: 10, start: '2026-11-02', end: '2026-11-07', date: "11/02-11/07", title: "Winner 病毒/寄生蟲熟背 ＋ 鐸鐸生化第1堂(11/6)" },
