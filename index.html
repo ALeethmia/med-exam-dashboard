@@ -16,6 +16,11 @@
     .calendar-day-class { background-color: rgba(250, 204, 21, 0.2); color: #fde047; font-weight: bold; }
     .calendar-day-today { border: 2px solid #38bdf8 !important; box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
     .current-week-card { border-color: #38bdf8 !important; background-color: rgba(14, 165, 233, 0.15) !important; box-shadow: 0 0 12px rgba(56, 189, 248, 0.25); }
+    .lecture-card.completed { border-color: rgba(16, 185, 129, 0.4) !important; background-color: rgba(16, 185, 129, 0.05) !important; }
+    .lecture-card.completed .title-text { text-decoration: line-through; color: #64748b; }
+    .biochem-card.completed { border-color: rgba(245, 158, 11, 0.4) !important; background-color: rgba(245, 158, 11, 0.05) !important; }
+    .biochem-card.completed .title-text { text-decoration: line-through; color: #64748b; }
+    .tab-btn.active { color: #38bdf8; border-bottom: 2px solid #38bdf8; background-color: rgba(56, 189, 248, 0.08); }
   </style>
 </head>
 <body class="p-4 md:p-6">
@@ -56,7 +61,7 @@
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pt-3 border-t border-slate-700/60">
         <div class="flex flex-wrap items-center gap-2">
           <a href="https://youtube.com/playlist?list=PL-PlecnICedO0RMacJnAnyYRIHlf0M01t&si=ZY2_G7f2lz2d8srV" target="_blank" class="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 transition">
-            <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> 趙俊彥解剖播放清單
+            <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> 趙俊彥解剖清單
           </a>
           <a href="https://cougarbot.cc/" target="_blank" class="text-xs flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition">
             <i data-lucide="zap" class="w-3.5 h-3.5"></i> 考古豹 (CougarBot)
@@ -83,261 +88,291 @@
       </div>
     </header>
 
-    <!-- 趙俊彥 人體解剖學（全 30 講）純數字 Check list -->
-    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-            <i data-lucide="video" class="w-4 h-4 text-rose-400"></i> 趙俊彥解剖影片進度（1–30 講）
-          </h2>
-          <a href="https://youtube.com/playlist?list=PL-PlecnICedO0RMacJnAnyYRIHlf0M01t&si=ZY2_G7f2lz2d8srV" target="_blank" class="text-[11px] text-rose-400 hover:underline flex items-center gap-0.5">
-            開啟 YT 清單 <i data-lucide="external-link" class="w-3 h-3"></i>
-          </a>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
-            <div id="video-progress-bar" class="bg-rose-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-          </div>
-          <span id="video-progress-text" class="text-xs font-bold font-mono text-rose-400">0/30 (0%)</span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-2" id="video-checklist-container"></div>
+    <!-- 主分頁導覽按鈕 (Tab Navigation) -->
+    <div class="flex border-b border-slate-700/80 gap-2 overflow-x-auto">
+      <button onclick="switchTab('plan')" id="tab-btn-plan" class="tab-btn active px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 text-slate-300 transition-all whitespace-nowrap">
+        <i data-lucide="compass" class="w-4 h-4"></i> 作戰總覽 ＆ 20 週衝刺
+      </button>
+      <button onclick="switchTab('anatomy')" id="tab-btn-anatomy" class="tab-btn px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap">
+        <i data-lucide="book-open" class="w-4 h-4"></i> 趙俊彥解剖學
+      </button>
+      <button onclick="switchTab('biochem')" id="tab-btn-biochem" class="tab-btn px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap">
+        <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> 鐸鐸生化學
+      </button>
     </div>
 
-    <!-- 備考月曆 ＆ 作息課表雙欄 -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-3 border-b border-slate-700/60 pb-2">
-            <h2 class="text-sm font-bold flex items-center gap-1.5 text-white">
-              <i data-lucide="calendar-days" class="w-4 h-4 text-sky-400"></i> 備考月曆
-            </h2>
-            <div class="flex items-center gap-1">
-              <button id="prev-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
-              <span id="calendar-title" class="text-xs font-mono font-semibold px-1.5 text-slate-200">2026 / 09</span>
-              <button id="next-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </div>
+    <!-- ========================================== -->
+    <!-- 📌 分頁 1：作戰總覽 ＆ 20 週衝刺進度 -->
+    <!-- ========================================== -->
+    <div id="tab-content-plan" class="space-y-6">
+
+      <!-- 備考月曆 ＆ 作息課表雙欄 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
           <div>
-            <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-slate-400 mb-1">
-              <span class="text-rose-400">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+            <div class="flex items-center justify-between mb-3 border-b border-slate-700/60 pb-2">
+              <h2 class="text-sm font-bold flex items-center gap-1.5 text-white">
+                <i data-lucide="calendar-days" class="w-4 h-4 text-sky-400"></i> 備考月曆
+              </h2>
+              <div class="flex items-center gap-1">
+                <button id="prev-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+                <span id="calendar-title" class="text-xs font-mono font-semibold px-1.5 text-slate-200">2026 / 09</span>
+                <button id="next-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+              </div>
             </div>
-            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+            <div>
+              <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-slate-400 mb-1">
+                <span class="text-rose-400">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+              </div>
+              <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-700/60 flex flex-wrap items-center justify-between text-[10px] text-slate-400 gap-1.5">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded calendar-day-today bg-slate-800"></span> 今天</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500/40 border border-purple-500"></span> 報名日 (10/6-15)</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-yellow-400/40 border border-yellow-400"></span> 鐸鐸生化</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500/40 border border-rose-500"></span> 國考 (1/16-18)</span>
           </div>
         </div>
-        <div class="mt-4 pt-3 border-t border-slate-700/60 flex flex-wrap items-center justify-between text-[10px] text-slate-400 gap-1.5">
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded calendar-day-today bg-slate-800"></span> 今天</span>
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500/40 border border-purple-500"></span> 報名日 (10/6-15)</span>
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-yellow-400/40 border border-yellow-400"></span> 鐸鐸生化</span>
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500/40 border border-rose-500"></span> 國考 (1/16-18)</span>
+
+        <!-- 每週作息課表 -->
+        <div class="lg:col-span-2 bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg overflow-x-auto">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+              <i data-lucide="clock" class="w-4 h-4 text-sky-400"></i> 日常作息表（含三餐、運動與讀書）
+            </h2>
+            <span class="text-[10px] text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">週六下午為法定彈性緩衝區</span>
+          </div>
+          <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+            <tbody class="divide-y divide-slate-700/50 text-slate-300">
+              <tr>
+                <td class="py-2 px-2 font-mono text-slate-400 w-24">07:15 - 08:00</td>
+                <td class="py-2 px-2 text-amber-300 font-medium">晨光運動（快走/慢跑 + Fitness+ 4階段漸進菜單）</td>
+              </tr>
+              <tr class="bg-amber-950/20">
+                <td class="py-2 px-2 font-mono text-amber-400 font-semibold">08:00 - 08:45</td>
+                <td class="py-2 px-2 text-amber-200 font-medium">🍳【淋浴 ＋ 營養早餐】整裝開機、準備翻開講義</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-2 font-mono text-slate-400">08:45 - 11:45</td>
+                <td class="py-2 px-2 text-sky-300 font-medium">【區塊 A】主科進度（看影片 / 精讀核心觀念 3 hr）</td>
+              </tr>
+              <tr class="bg-amber-950/20">
+                <td class="py-2 px-2 font-mono text-amber-400 font-semibold">11:45 - 13:15</td>
+                <td class="py-2 px-2 text-amber-200 font-medium">🍱【午餐 ＋ 徹底午休】小憩 20-30 分鐘，重置下午專注力</td>
+              </tr>
+              <tr class="bg-sky-950/20">
+                <td class="py-2 px-2 font-mono text-sky-400 font-bold">13:15 - 16:15</td>
+                <td class="py-2 px-2 text-sky-200 font-bold">【區塊 B】實戰推進 / 考古豹以題帶念（週六為彈性進度緩衝）</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-2 font-mono text-slate-400">16:45 - 18:00</td>
+                <td class="py-2 px-2 text-emerald-400 font-medium">【區塊 C1】深度訂正錯題 ＋ 考古豹收藏星號</td>
+              </tr>
+              <tr class="bg-amber-950/20">
+                <td class="py-2 px-2 font-mono text-amber-400 font-semibold">18:00 - 19:15</td>
+                <td class="py-2 px-2 text-amber-200 font-medium">🍲【晚餐 ＋ 散步休息】身心降溫放鬆 <em>(鐸鐸上課日 16:45 提早吃洗)</em></td>
+              </tr>
+              <tr>
+                <td class="py-2 px-2 font-mono text-slate-400">19:15 - 20:15</td>
+                <td class="py-2 px-2 text-indigo-300">【區塊 C2】副科調劑（寄生蟲表/生統）<em>[鐸鐸課日 18-22 上課]</em></td>
+              </tr>
+              <tr class="bg-pink-950/20">
+                <td class="py-2 px-2 font-mono text-pink-400 font-bold">20:15 - 23:15</td>
+                <td class="py-2 px-2 text-pink-300 font-bold">🎮【無罪惡感休閒 3 hr】打遊戲、追番，大腦徹底關機</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- 每週作息課表 -->
-      <div class="lg:col-span-2 bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg overflow-x-auto">
-        <div class="flex items-center justify-between mb-3">
+      <!-- 20 週 4 階段漸進式運動菜單專區 -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="flex items-center justify-between">
           <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-            <i data-lucide="clock" class="w-4 h-4 text-sky-400"></i> 日常作息表（含三餐、運動與讀書）
+            <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> 20 週 4 階段漸進式運動菜單（晨光陽光 ＋ Apple Fitness+）
           </h2>
-          <span class="text-[10px] text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">週六下午為法定彈性緩衝區</span>
+          <span class="text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">每日 07:15 - 08:00</span>
         </div>
-        <table class="w-full text-left text-xs border-collapse min-w-[500px]">
-          <tbody class="divide-y divide-slate-700/50 text-slate-300">
-            <tr>
-              <td class="py-2 px-2 font-mono text-slate-400 w-24">07:15 - 08:00</td>
-              <td class="py-2 px-2 text-amber-300 font-medium">晨光運動（快走/慢跑 + Fitness+ 4階段漸進菜單）</td>
-            </tr>
-            <tr class="bg-amber-950/20">
-              <td class="py-2 px-2 font-mono text-amber-400 font-semibold">08:00 - 08:45</td>
-              <td class="py-2 px-2 text-amber-200 font-medium">🍳【淋浴 ＋ 營養早餐】整裝開機、準備翻開講義</td>
-            </tr>
-            <tr>
-              <td class="py-2 px-2 font-mono text-slate-400">08:45 - 11:45</td>
-              <td class="py-2 px-2 text-sky-300 font-medium">【區塊 A】主科進度（看影片 / 精讀核心觀念 3 hr）</td>
-            </tr>
-            <tr class="bg-amber-950/20">
-              <td class="py-2 px-2 font-mono text-amber-400 font-semibold">11:45 - 13:15</td>
-              <td class="py-2 px-2 text-amber-200 font-medium">🍱【午餐 ＋ 徹底午休】小憩 20-30 分鐘，重置下午專注力</td>
-            </tr>
-            <tr class="bg-sky-950/20">
-              <td class="py-2 px-2 font-mono text-sky-400 font-bold">13:15 - 16:15</td>
-              <td class="py-2 px-2 text-sky-200 font-bold">【區塊 B】實戰推進 / 考古豹以題帶念（週六為彈性進度緩衝）</td>
-            </tr>
-            <tr>
-              <td class="py-2 px-2 font-mono text-slate-400">16:45 - 18:00</td>
-              <td class="py-2 px-2 text-emerald-400 font-medium">【區塊 C1】深度訂正錯題 ＋ 考古豹收藏星號</td>
-            </tr>
-            <tr class="bg-amber-950/20">
-              <td class="py-2 px-2 font-mono text-amber-400 font-semibold">18:00 - 19:15</td>
-              <td class="py-2 px-2 text-amber-200 font-medium">🍲【晚餐 ＋ 散步休息】身心降溫放鬆 <em>(鐸鐸上課日 16:45 提早吃洗)</em></td>
-            </tr>
-            <tr>
-              <td class="py-2 px-2 font-mono text-slate-400">19:15 - 20:15</td>
-              <td class="py-2 px-2 text-indigo-300">【區塊 C2】副科調劑（寄生蟲表/生統）<em>[鐸鐸課日 18-22 上課]</em></td>
-            </tr>
-            <tr class="bg-pink-950/20">
-              <td class="py-2 px-2 font-mono text-pink-400 font-bold">20:15 - 23:15</td>
-              <td class="py-2 px-2 text-pink-300 font-bold">🎮【無罪惡感休閒 3 hr】打遊戲、追番，大腦徹底關機</td>
-            </tr>
-          </tbody>
-        </table>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-sky-400">階段一 ｜ 第 1–4 週</span>
+              <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">9月</span>
+            </div>
+            <div class="text-xs font-semibold text-white">喚醒與低衝擊適應</div>
+            <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+              <li><strong>戶外</strong>：純快走 15–20 分鐘（曬太陽）</li>
+              <li><strong>一三五</strong>：Fitness+ 徒手肌力（看左邊示範）</li>
+              <li><strong>二四</strong>：Fitness+ 核心 10m + 伸展 5m</li>
+              <li><strong>週六</strong>：慢流動瑜伽 20m 放鬆開髖</li>
+            </ul>
+          </div>
+
+          <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400">階段二 ｜ 第 5–10 週</span>
+              <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">10月</span>
+            </div>
+            <div class="text-xs font-semibold text-white">肌力與核心強化</div>
+            <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+              <li><strong>戶外</strong>：走跑交替（跑 1 分 + 走 2 分）</li>
+              <li><strong>一三五</strong>：Total/Upper Body 20m 救駝背</li>
+              <li><strong>二四</strong>：核心 10m + HIIT 10m（低衝擊）</li>
+              <li><strong>週六</strong>：慢流動瑜伽 30m 深層修復</li>
+            </ul>
+          </div>
+
+          <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-purple-400">階段三 ｜ 第 11–16 週</span>
+              <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">11-12月</span>
+            </div>
+            <div class="text-xs font-semibold text-white">體能與多巴胺巔峰</div>
+            <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+              <li><strong>戶外</strong>：輕鬆慢跑 20 分鐘（排解壓力）</li>
+              <li><strong>一三五</strong>：Strength 全身循環 20m</li>
+              <li><strong>二四</strong>：Kickboxing 或 Dance 20m 抒壓</li>
+              <li><strong>週六</strong>：瑜伽 30m 舒緩久坐腰椎</li>
+            </ul>
+          </div>
+
+          <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-rose-400">階段四 ｜ 第 17–20 週</span>
+              <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">12底-1月</span>
+            </div>
+            <div class="text-xs font-semibold text-white">考前減量與神經保溫</div>
+            <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+              <li><strong>戶外</strong>：陽光散步 15–20 分鐘（純放空）</li>
+              <li><strong>週一至五</strong>：輕量肌力 10m + 伸展放鬆 10m</li>
+              <li><strong>考前一週</strong>：純散步曬太陽 + 呼吸冥想</li>
+              <li><strong>目標</strong>：防受傷、降皮質醇、保證考場精力</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 免動腦自主循環備用動作 -->
+        <div class="p-2.5 bg-slate-900/50 border border-slate-700/40 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+          <span class="text-amber-300 font-semibold flex items-center gap-1.5">
+            <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i> 免看影片自主循環（各 3 組）：
+          </span>
+          <div class="flex flex-wrap gap-1.5 text-[11px]">
+            <span class="px-2 py-0.5 bg-slate-800 rounded">徒手深蹲 10-12下</span>
+            <span class="px-2 py-0.5 bg-slate-800 rounded">跪姿伏地挺身 8-10下</span>
+            <span class="px-2 py-0.5 bg-slate-800 rounded text-emerald-300 font-medium">臀橋（救久坐必做）12-15下</span>
+            <span class="px-2 py-0.5 bg-slate-800 rounded">死蟲式 每側8下</span>
+            <span class="px-2 py-0.5 bg-slate-800 rounded">鳥狗式 每側8下</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 20 週 Checklist -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+              <i data-lucide="check-square" class="w-4 h-4 text-emerald-400"></i> 20 週衝刺進度檢核
+            </h2>
+            <button id="jump-today-week-btn" class="text-[11px] flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition">
+              <i data-lucide="locate" class="w-3.5 h-3.5"></i> 定位當週
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
+              <div id="progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span id="progress-text" class="text-xs font-bold font-mono text-emerald-400">0%</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="checklist-container"></div>
       </div>
     </div>
 
-    <!-- 鐸鐸生化課表專區 -->
-    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-          <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> 2027 寒假鐸鐸生化班課表（18:00 - 22:00，共 8 堂）
-        </h2>
-        <span class="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">2026 最新趨勢對應</span>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
-          <div class="text-xs font-semibold text-sky-400">第 1 堂 ｜ 11/06 (五)</div>
-          <div class="text-sm font-medium text-slate-200 mt-0.5">酵素學 ＋ 醣類代謝(上)</div>
+    <!-- ========================================== -->
+    <!-- 📌 分頁 2：趙俊彥解剖學 30 講獨立專區 -->
+    <!-- ========================================== -->
+    <div id="tab-content-anatomy" class="space-y-6 hidden">
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+              <i data-lucide="video" class="w-4 h-4 text-rose-400"></i> 趙俊彥解剖學（全 15 節課 / 30 講進度）
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">每兩部音訊為一節課，點擊卡片可即時打勾標記進度。</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
+              <div id="video-progress-bar" class="bg-rose-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span id="video-progress-text" class="text-xs font-bold font-mono text-rose-400">0/30 (0%)</span>
+          </div>
         </div>
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
-          <div class="text-xs font-semibold text-sky-400">第 2 堂 ｜ 11/13 (五)</div>
-          <div class="text-sm font-medium text-slate-200 mt-0.5">醣類代謝(下)</div>
+
+        <!-- 搜尋列 -->
+        <div class="relative w-full">
+          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
+          <input type="text" id="video-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition" placeholder="搜尋章節名稱、第幾講或檔名...">
         </div>
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
-          <div class="text-xs font-semibold text-amber-400">第 3 堂 ｜ 11/18 (三)</div>
-          <div class="text-sm font-medium text-slate-200 mt-0.5">脂肪代謝 ＋ 膜化學 ＋ 訊息傳遞</div>
-        </div>
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
-          <div class="text-xs font-semibold text-sky-400">第 4 堂 ｜ 11/27 (五)</div>
-          <div class="text-sm font-medium text-slate-200 mt-0.5">蛋白質化學</div>
-        </div>
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
-          <div class="text-xs font-semibold text-sky-400">第 5 堂 ｜ 12/04 (五)</div>
-          <div class="text-sm font-medium text-slate-200 mt-0.5">分子生物學(上)</div>
-        </div>
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
-          <div class="text-xs font-semibold text-sky-400">第 6 堂 ｜ 12/11 (五)</div>
-          <div class="text-sm font-medium text-slate-200 mt-0.5">分子生物學(中)</div>
-        </div>
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
-          <div class="text-xs font-semibold text-amber-400">第 7 堂 ｜ 12/23 (三)</div>
-          <div class="text-sm font-medium text-slate-200 mt-0.5">分子生物學(下) ＋ 生物科技</div>
-        </div>
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl">
-          <div class="text-xs font-semibold text-emerald-400">第 8 堂 ｜ 12/28 (一) [完課]</div>
-          <div class="text-sm font-medium text-slate-200 mt-0.5">細胞週期等冷僻題型整理</div>
-        </div>
+
+        <!-- 30 講卡片列表容器 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="video-checklist-container"></div>
       </div>
     </div>
 
-    <!-- 20 週 4 階段漸進式運動菜單專區 -->
-    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-          <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> 20 週 4 階段漸進式運動菜單（晨光陽光 ＋ Apple Fitness+）
-        </h2>
-        <span class="text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">每日 07:15 - 08:00</span>
+    <!-- ========================================== -->
+    <!-- 📌 分頁 3：鐸鐸生化學 獨立專區 -->
+    <!-- ========================================== -->
+    <div id="tab-content-biochem" class="space-y-6 hidden">
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> 鐸鐸生化學（2027 寒假班 · 全 8 堂）
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">上課時間：18:00 - 22:00，點擊卡片可即時打勾標記完課狀態。</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
+              <div id="biochem-progress-bar" class="bg-amber-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span id="biochem-progress-text" class="text-xs font-bold font-mono text-amber-400">0/8 (0%)</span>
+          </div>
+        </div>
+
+        <!-- 8 堂生化卡片容器 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="biochem-checklist-container"></div>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-sky-400">階段一 ｜ 第 1–4 週</span>
-            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">9月</span>
-          </div>
-          <div class="text-xs font-semibold text-white">喚醒與低衝擊適應</div>
-          <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
-            <li><strong>戶外</strong>：純快走 15–20 分鐘（曬太陽）</li>
-            <li><strong>一三五</strong>：Fitness+ 徒手肌力（看左邊示範）</li>
-            <li><strong>二四</strong>：Fitness+ 核心 10m + 伸展 5m</li>
-            <li><strong>週六</strong>：慢流動瑜伽 20m 放鬆開髖</li>
-          </ul>
-        </div>
-
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-emerald-400">階段二 ｜ 第 5–10 週</span>
-            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">10月</span>
-          </div>
-          <div class="text-xs font-semibold text-white">肌力與核心強化</div>
-          <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
-            <li><strong>戶外</strong>：走跑交替（跑 1 分 + 走 2 分）</li>
-            <li><strong>一三五</strong>：Total/Upper Body 20m 救駝背</li>
-            <li><strong>二四</strong>：核心 10m + HIIT 10m（低衝擊）</li>
-            <li><strong>週六</strong>：慢流動瑜伽 30m 深層修復</li>
-          </ul>
-        </div>
-
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-purple-400">階段三 ｜ 第 11–16 週</span>
-            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">11-12月</span>
-          </div>
-          <div class="text-xs font-semibold text-white">體能與多巴胺巔峰</div>
-          <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
-            <li><strong>戶外</strong>：輕鬆慢跑 20 分鐘（排解壓力）</li>
-            <li><strong>一三五</strong>：Strength 全身循環 20m</li>
-            <li><strong>二四</strong>：Kickboxing 或 Dance 20m 抒壓</li>
-            <li><strong>週六</strong>：瑜伽 30m 舒緩久坐腰椎</li>
-          </ul>
-        </div>
-
-        <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-rose-400">階段四 ｜ 第 17–20 週</span>
-            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">12底-1月</span>
-          </div>
-          <div class="text-xs font-semibold text-white">考前減量與神經保溫</div>
-          <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
-            <li><strong>戶外</strong>：陽光散步 15–20 分鐘（純放空）</li>
-            <li><strong>週一至五</strong>：輕量肌力 10m + 伸展放鬆 10m</li>
-            <li><strong>考前一週</strong>：純散步曬太陽 + 呼吸冥想</li>
-            <li><strong>目標</strong>：防受傷、降皮質醇、保證考場精力</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- 免動腦自主循環備用動作 -->
-      <div class="p-2.5 bg-slate-900/50 border border-slate-700/40 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
-        <span class="text-amber-300 font-semibold flex items-center gap-1.5">
-          <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i> 免看影片自主循環（各 3 組）：
-        </span>
-        <div class="flex flex-wrap gap-1.5 text-[11px]">
-          <span class="px-2 py-0.5 bg-slate-800 rounded">徒手深蹲 10-12下</span>
-          <span class="px-2 py-0.5 bg-slate-800 rounded">跪姿伏地挺身 8-10下</span>
-          <span class="px-2 py-0.5 bg-slate-800 rounded text-emerald-300 font-medium">臀橋（救久坐必做）12-15下</span>
-          <span class="px-2 py-0.5 bg-slate-800 rounded">死蟲式 每側8下</span>
-          <span class="px-2 py-0.5 bg-slate-800 rounded">鳥狗式 每側8下</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 20 週 Checklist -->
-    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-            <i data-lucide="check-square" class="w-4 h-4 text-emerald-400"></i> 20 週衝刺進度檢核
-          </h2>
-          <button id="jump-today-week-btn" class="text-[11px] flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition">
-            <i data-lucide="locate" class="w-3 h-3"></i> 定位當週
-          </button>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <div class="w-28 bg-slate-700 rounded-full h-2 overflow-hidden">
-            <div id="progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-          </div>
-          <span id="progress-text" class="text-xs font-bold font-mono text-emerald-400">0%</span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="checklist-container"></div>
     </div>
 
   </div>
 
   <script>
     lucide.createIcons();
+
+    // ==========================================
+    // 🔀 分頁切換邏輯 (支援 3 個分頁)
+    // ==========================================
+    window.switchTab = function(tabName) {
+      const tabs = ['plan', 'anatomy', 'biochem'];
+      tabs.forEach(t => {
+        const content = document.getElementById(`tab-content-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabName) {
+          content.classList.remove('hidden');
+          btn.classList.add('active', 'text-slate-200');
+          btn.classList.remove('text-slate-400');
+        } else {
+          content.classList.add('hidden');
+          btn.classList.remove('active', 'text-slate-200');
+          btn.classList.add('text-slate-400');
+        }
+      });
+      lucide.createIcons();
+    };
 
     // ==========================================
     // 🔧 Firebase 雲端即時同步設定
@@ -429,17 +464,51 @@
     calculateStreak();
 
     // ==========================================
-    // 3. 趙俊彥 人體解剖學（1–30 講）純數字 Check list
+    // 3. 趙俊彥 人體解剖學（15 節課 / 30 講）
     // ==========================================
     const totalVideos = 30;
+    const videoData = [
+      { id: 1, file: "01. 2016DF01-01.m4a", classNum: "第 1 節課 (上)", title: "頭顱骨與面部結構解剖(上)" },
+      { id: 2, file: "02. 2016DF01-02.m4a", classNum: "第 1 節課 (下)", title: "頭顱骨與面部結構解剖(下)" },
+      { id: 3, file: "03. 2016DF02-01.m4a", classNum: "第 2 節課 (上)", title: "軀幹與四肢骨骼關節韌帶(上)" },
+      { id: 4, file: "04. 2016DF02-02.m4a", classNum: "第 2 節課 (下)", title: "軀幹與四肢骨骼關節韌帶(下)" },
+      { id: 5, file: "05. 2016DF03-01.m4a", classNum: "第 3 節課 (上)", title: "頭頸、背部與腹壁肌群結構(上)" },
+      { id: 6, file: "06. 2016DF03-02.m4a", classNum: "第 3 節課 (下)", title: "頭頸、背部與腹壁肌群結構(下)" },
+      { id: 7, file: "07. 2016DF04-01.m4a", classNum: "第 4 節課 (上)", title: "盆底與四肢肌群神經分布(上)" },
+      { id: 8, file: "08. 2016DF04-02.m4a", classNum: "第 4 節課 (下)", title: "盆底與四肢肌群神經分布(下)" },
+      { id: 9, file: "09. 2016DF05-01.m4a", classNum: "第 5 節課 (上)", title: "全身血管分布與靜脈回流系統(上)" },
+      { id: 10, file: "10. 2016DF05 02.m4a", classNum: "第 5 節課 (下)", title: "全身血管分布與靜脈回流系統(下)" },
+      { id: 11, file: "11. 2016DF06-01.m4a", classNum: "第 6 節課 (上)", title: "大腦皮質、內囊與基底核路徑(上)" },
+      { id: 12, file: "12. 2016DF06 02.m4a", classNum: "第 6 節課 (下)", title: "大腦皮質、內囊與基底核路徑(下)" },
+      { id: 13, file: "13. 2016DF07-01.m4a", classNum: "第 7 節課 (上)", title: "間腦、腦幹與小腦解剖生理(上)" },
+      { id: 14, file: "14. 2016DF07-02.m4a", classNum: "第 7 節課 (下)", title: "間腦、腦幹與小腦解剖生理(下)" },
+      { id: 15, file: "15. 2016DF08 01.m4a", classNum: "第 8 節課 (上)", title: "脊髓傳導、腦神經與臂神經叢(上)" },
+      { id: 16, file: "16. 2016DF08 02.m4a", classNum: "第 8 節課 (下)", title: "脊髓傳導、腦神經與臂神經叢(下)" },
+      { id: 17, file: "17. 2016DF09 01.m4a", classNum: "第 9 節課 (上)", title: "周邊、自律神經與視覺系統(上)" },
+      { id: 18, file: "18. 2016DF09 02.m4a", classNum: "第 9 節課 (下)", title: "周邊、自律神經與視覺系統(下)" },
+      { id: 19, file: "19. 2016DF10-01.m4a", classNum: "第 10 節課 (上)", title: "聽覺、平衡覺、嗅覺與腦垂體(上)" },
+      { id: 20, file: "20. 2016DF10 02.m4a", classNum: "第 10 節課 (下)", title: "聽覺、平衡覺、嗅覺與腦垂體(下)" },
+      { id: 21, file: "21. 2016DF11 01.m4a", classNum: "第 11 節課 (上)", title: "細胞連接與淋巴引流系統(上)" },
+      { id: 22, file: "22. 2016DF11 02.m4a", classNum: "第 11 節課 (下)", title: "細胞連接與淋巴引流系統(下)" },
+      { id: 23, file: "23. 2016DF12 01.m4a", classNum: "第 12 節課 (上)", title: "呼吸系統、脾臟與心臟解剖(上)" },
+      { id: 24, file: "24. 2016DF12 02.m4a", classNum: "第 12 節課 (下)", title: "呼吸系統、脾臟與心臟解剖(下)" },
+      { id: 25, file: "25. 2016DF13 01.m4a", classNum: "第 13 節課 (上)", title: "胚胎三胚層與咽器器官發育(上)" },
+      { id: 26, file: "26. 2016DF13 02.m4a", classNum: "第 13 節課 (下)", title: "胚胎三胚層與咽器器官發育(下)" },
+      { id: 27, file: "27. 2016DF14 01.m4a", classNum: "第 14 節課 (上)", title: "消化系統：腹膜與腸胃道解剖(上)" },
+      { id: 28, file: "28. 2016DF14 02.m4a", classNum: "第 14 節課 (下)", title: "消化系統：腹膜與腸胃道解剖(下)" },
+      { id: 29, file: "29. 2016DF15 01.m4a", classNum: "第 15 節課 (上)", title: "泌尿與男女生殖系統解剖(上)" },
+      { id: 30, file: "30. 2016DF15 02.m4a", classNum: "第 15 節課 (下)", title: "泌尿與男女生殖系統解剖(下)" }
+    ];
+
     const videoContainer = document.getElementById('video-checklist-container');
+    const searchInput = document.getElementById('video-search-input');
     let savedVideoState = JSON.parse(localStorage.getItem('med_exam_videos_cloud') || '{}');
 
     function getWeekLabel(num) {
-      if (num <= 5) return 'W1';
-      if (num <= 11) return 'W2';
-      if (num <= 17) return 'W3';
-      if (num <= 23) return 'W4';
+      if (num <= 6) return 'W1';
+      if (num <= 12) return 'W2';
+      if (num <= 18) return 'W3';
+      if (num <= 24) return 'W4';
       return 'W5';
     }
 
@@ -451,39 +520,55 @@
     }
 
     function renderVideoChecklist() {
+      const filter = (searchInput.value || '').toLowerCase().trim();
       videoContainer.innerHTML = '';
-      for (let i = 1; i <= totalVideos; i++) {
-        const isChecked = !!savedVideoState[i];
-        const weekTag = getWeekLabel(i);
-        const div = document.createElement('div');
-        div.className = `p-2 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 select-none ${
-          isChecked 
-            ? 'bg-slate-900/40 border-slate-700/40 text-slate-500' 
-            : 'bg-slate-900/80 border-slate-700 text-slate-200 hover:border-rose-500/50 hover:bg-slate-800/80'
+
+      videoData.forEach(item => {
+        const matchText = `${item.id} ${item.file} ${item.classNum} ${item.title}`.toLowerCase();
+        if (filter && !matchText.includes(filter)) return;
+
+        const isChecked = !!savedVideoState[item.id];
+        const weekTag = getWeekLabel(item.id);
+        const card = document.createElement('div');
+        card.className = `lecture-card p-3.5 rounded-xl border transition-all cursor-pointer ${
+          isChecked ? 'completed bg-slate-900/40 border-slate-700/40' : 'bg-slate-900/80 border-slate-700 hover:border-rose-500/50'
         }`;
-        
-        div.innerHTML = `
-          <div class="flex items-center gap-1">
-            <span class="text-xs font-bold font-mono ${isChecked ? 'line-through text-slate-500' : 'text-rose-400'}">${i}</span>
-            <i data-lucide="${isChecked ? 'check-circle-2' : 'circle'}" class="w-3.5 h-3.5 ${isChecked ? 'text-slate-500' : 'text-slate-600'}"></i>
+        card.id = `video-card-${item.id}`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <input type="checkbox" class="video-custom-checkbox rounded bg-slate-800 border-slate-600 text-rose-500 focus:ring-0 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold font-mono text-rose-400">第 ${String(item.id).padStart(2, '0')} 講 ｜ ${item.classNum}</span>
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">${weekTag}</span>
+              </div>
+              <div class="title-text text-xs md:text-sm font-semibold text-slate-100 mt-0.5">${item.title}</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-0.5">${item.file}</div>
+            </div>
           </div>
-          <span class="text-[9px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-400">${weekTag}</span>
         `;
 
-        div.addEventListener('click', () => {
-          savedVideoState[i] = !savedVideoState[i];
+        card.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const checkbox = card.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+          }
+          const checkbox = card.querySelector('input');
+          savedVideoState[item.id] = checkbox.checked;
           localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
           if (db) db.ref('videos').set(savedVideoState);
           renderVideoChecklist();
-          updateVideoProgress();
-          lucide.createIcons();
         });
 
-        videoContainer.appendChild(div);
-      }
+        videoContainer.appendChild(card);
+      });
+
       updateVideoProgress();
       lucide.createIcons();
     }
+
+    searchInput.addEventListener('input', renderVideoChecklist);
     renderVideoChecklist();
 
     if (db) {
@@ -497,7 +582,84 @@
       });
     }
 
-    // 4. 備考月曆
+    // ==========================================
+    // 4. 鐸鐸生化學（全 8 堂）進度與檢核
+    // ==========================================
+    const biochemData = [
+      { id: 1, date: "11/06 (五)", title: "酵素學 ＋ 醣類代謝(上)", tag: "第 1 堂" },
+      { id: 2, date: "11/13 (五)", title: "醣類代謝(下)", tag: "第 2 堂" },
+      { id: 3, date: "11/18 (三)", title: "脂肪代謝 ＋ 膜化學 ＋ 訊息傳遞", tag: "第 3 堂" },
+      { id: 4, date: "11/27 (五)", title: "蛋白質化學", tag: "第 4 堂" },
+      { id: 5, date: "12/04 (五)", title: "分子生物學(上)", tag: "第 5 堂" },
+      { id: 6, date: "12/11 (五)", title: "分子生物學(中)", tag: "第 6 堂" },
+      { id: 7, date: "12/23 (三)", title: "分子生物學(下) ＋ 生物科技", tag: "第 7 堂" },
+      { id: 8, date: "12/28 (一)", title: "細胞週期等冷僻題型整理 [完課]", tag: "第 8 堂" }
+    ];
+
+    const biochemContainer = document.getElementById('biochem-checklist-container');
+    let savedBiochemState = JSON.parse(localStorage.getItem('med_exam_biochem_cloud') || '{}');
+
+    function updateBiochemProgress() {
+      const checkedCount = Object.values(savedBiochemState).filter(Boolean).length;
+      const percent = Math.round((checkedCount / biochemData.length) * 100);
+      document.getElementById('biochem-progress-bar').style.width = percent + '%';
+      document.getElementById('biochem-progress-text').innerText = `${checkedCount}/${biochemData.length} (${percent}%)`;
+    }
+
+    function renderBiochemChecklist() {
+      biochemContainer.innerHTML = '';
+      biochemData.forEach(item => {
+        const isChecked = !!savedBiochemState[item.id];
+        const card = document.createElement('div');
+        card.className = `biochem-card p-3.5 rounded-xl border transition-all cursor-pointer ${
+          isChecked ? 'completed bg-slate-900/40 border-slate-700/40' : 'bg-slate-900/80 border-slate-700 hover:border-amber-500/50'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-start gap-3">
+            <input type="checkbox" class="biochem-custom-checkbox mt-1 rounded bg-slate-800 border-slate-600 text-amber-500 focus:ring-0 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-400">${item.tag}</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">${item.date}</span>
+              </div>
+              <div class="title-text text-sm font-semibold text-slate-100 mt-1">${item.title}</div>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const checkbox = card.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+          }
+          const checkbox = card.querySelector('input');
+          savedBiochemState[item.id] = checkbox.checked;
+          localStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
+          if (db) db.ref('biochem').set(savedBiochemState);
+          renderBiochemChecklist();
+        });
+
+        biochemContainer.appendChild(card);
+      });
+
+      updateBiochemProgress();
+      lucide.createIcons();
+    }
+    renderBiochemChecklist();
+
+    if (db) {
+      db.ref('biochem').on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          savedBiochemState = val;
+          localStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
+          renderBiochemChecklist();
+        }
+      });
+    }
+
+    // 5. 備考月曆
     const classDates = ['2026-11-06', '2026-11-13', '2026-11-18', '2026-11-27', '2026-12-04', '2026-12-11', '2026-12-23', '2026-12-28'];
     const examDatesList = ['2027-01-16', '2027-01-17', '2027-01-18'];
     const regDatesList = [
@@ -542,13 +704,15 @@
     });
     renderCalendar();
 
-    // 5. 20 週清單資料
+    // ==========================================
+    // 6. 20 週清單資料（已對齊 15 節課 / 30 講名稱）
+    // ==========================================
     const weeksData = [
-      { w: 1, start: '2026-09-01', end: '2026-09-05', date: "9/01-9/05", title: "趙俊彥 01-05：骨骼/肌肉 ＋ 考古豹刷題 ＋ 寄生蟲表 ＋ [運動:快走+徒手]" },
-      { w: 2, start: '2026-09-07', end: '2026-09-12', date: "9/07-9/12", title: "趙俊彥 06-11：循環血管/脊髓/腦幹 ＋ 考古豹 ＋ 生統計算" },
-      { w: 3, start: '2026-09-14', end: '2026-09-19', date: "9/14-9/19", title: "趙俊彥 12-17：皮質/腦神經/自律/神經叢 ＋ 考古豹 ＋ 寄生蟲" },
-      { w: 4, start: '2026-09-21', end: '2026-09-26', date: "9/21-9/26", title: "趙俊彥 18-23：內臟系統解剖 ＋ 考古豹 ＋ 生統" },
-      { w: 5, start: '2026-09-28', end: '2026-10-03', date: "9/28-10/03", title: "趙俊彥 24-30：組織胚胎全通關 ＋ 考古豹解剖錯題清倉 ＋ [運動:走跑交替啟動]" },
+      { w: 1, start: '2026-09-01', end: '2026-09-05', date: "9/01-9/05", title: "趙俊彥 01-06：第1-3節 [頭顱面部 ➔ 軀幹四肢骨 ➔ 頭頸背腹肌] ＋ 考古豹刷題 ＋ [運動:快走+徒手]" },
+      { w: 2, start: '2026-09-07', end: '2026-09-12', date: "9/07-9/12", title: "趙俊彥 07-12：第4-6節 [盆底四肢肌 ➔ 全身血管回流 ➔ 大腦皮質內囊基底核] ＋ 考古豹 ＋ 生統計算" },
+      { w: 3, start: '2026-09-14', end: '2026-09-19', date: "9/14-9/19", title: "趙俊彥 13-18：第7-9節 [間腦腦幹小腦 ➔ 脊髓傳導臂神經叢 ➔ 周邊自律視覺] ＋ 考古豹 ＋ 寄生蟲" },
+      { w: 4, start: '2026-09-21', end: '2026-09-26', date: "9/21-9/26", title: "趙俊彥 19-24：第10-12節 [聽平衡嗅腦垂體 ➔ 細胞連接淋巴 ➔ 呼吸脾臟心臟] ＋ 考古豹 ＋ 生統" },
+      { w: 5, start: '2026-09-28', end: '2026-10-03', date: "9/28-10/03", title: "趙俊彥 25-30：第13-15節 [胚胎咽器發育 ➔ 消化腹膜腸胃 ➔ 泌尿男女生殖 完課] ＋ 錯題清倉 ＋ [運動:走跑交替啟動]" },
       { w: 6, start: '2026-10-05', end: '2026-10-10', date: "10/05-10/10", title: "何宣生理(上)：心血管/呼吸/神經肌肉 ＋ 考古豹" },
       { w: 7, start: '2026-10-12', end: '2026-10-17', date: "10/12-10/17", title: "何宣生理(下)：腎臟酸鹼/內分泌 ＋ 考古豹 [★ 10/6-15 國考線上報名]" },
       { w: 8, start: '2026-10-19', end: '2026-10-24', date: "10/19-10/24", title: "小美免疫 ＋ Winner 免疫架構 ＋ 考古豹" },
@@ -558,7 +722,7 @@
       { w: 12, start: '2026-11-16', end: '2026-11-21', date: "11/16-11/21", title: "子翔藥理(CNS/抗生素) ＋ 鐸鐸生化第3堂(11/18)" },
       { w: 13, start: '2026-11-23', end: '2026-11-28', date: "11/23-11/28", title: "子翔藥理收尾 ＋ FC 生統 ＋ 鐸鐸生化第4堂(11/27)" },
       { w: 14, start: '2026-11-30', end: '2026-12-05', date: "11/30-12/05", title: "FC 公衛流病法規 ＋ 鐸鐸生化第5堂(12/4)" },
-      { w: 15, start: '2026-12-07', end: '2026-12-12', date: "12/07-12/12", title: "考古豹病理 8 年題庫 ＋ 鐸鐸生化第6堂(12/11)" },
+      { id: 15, w: 15, start: '2026-12-07', end: '2026-12-12', date: "12/07-12/12", title: "考古豹病理 8 年題庫 ＋ 鐸鐸生化第6堂(12/11)" },
       { w: 16, start: '2026-12-14', end: '2026-12-19', date: "12/14-12/19", title: "考古豹病理刷題（腫瘤/心血管/腎絲球）＋ 生化複習" },
       { w: 17, start: '2026-12-21', end: '2026-12-26', date: "12/21-12/26", title: "考古豹病理收尾 ＋ 鐸鐸生化第7堂[分生下+生技](12/23) ＋ [運動:考前減量伸展]" },
       { w: 18, start: '2026-12-28', end: '2027-01-02', date: "12/28-01/02", title: "鐸鐸生化第8堂[冷僻題完課](12/28) ＋ 考古豹歷史錯題總清倉" },
@@ -626,7 +790,7 @@
       });
     }
 
-    // 6. 定位當週速跳功能
+    // 7. 定位當週速跳功能
     document.getElementById('jump-today-week-btn').addEventListener('click', () => {
       let targetWeek = weeksData.find(w => todayStr >= w.start && todayStr <= w.end) || weeksData[0];
       const card = document.getElementById(`week-card-${targetWeek.w}`);
