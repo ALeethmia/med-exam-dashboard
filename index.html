@@ -21,6 +21,29 @@
     .biochem-card.completed { border-color: rgba(245, 158, 11, 0.4) !important; background-color: rgba(245, 158, 11, 0.05) !important; }
     .biochem-card.completed .title-text { text-decoration: line-through; color: #64748b; }
     .tab-btn.active { color: #38bdf8; border-bottom: 2px solid #38bdf8; background-color: rgba(56, 189, 248, 0.08); }
+    .schedule-subtab.active { background-color: #0284c7 !important; color: #ffffff !important; }
+    
+    .current-schedule-row {
+      background-color: rgba(56, 189, 248, 0.15) !important;
+      border-left: 3px solid #38bdf8 !important;
+      box-shadow: inset 0 0 12px rgba(56, 189, 248, 0.15);
+    }
+    @keyframes pulse-arrow {
+      0%, 100% { transform: translateX(0); opacity: 1; }
+      50% { transform: translateX(3px); opacity: 0.6; }
+    }
+    .current-pointer-arrow {
+      display: inline-block;
+      color: #38bdf8;
+      font-weight: bold;
+      animation: pulse-arrow 1.2s infinite ease-in-out;
+    }
+
+    .current-sport-phase {
+      border-color: #10b981 !important;
+      background-color: rgba(16, 185, 129, 0.12) !important;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+    }
   </style>
 </head>
 <body class="p-4 md:p-6">
@@ -88,7 +111,7 @@
       </div>
     </header>
 
-    <!-- 主分頁導覽按鈕 (Tab Navigation) -->
+    <!-- 主分頁導覽按鈕 -->
     <div class="flex border-b border-slate-700/80 gap-2 overflow-x-auto">
       <button onclick="switchTab('plan')" id="tab-btn-plan" class="tab-btn active px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 text-slate-300 transition-all whitespace-nowrap">
         <i data-lucide="compass" class="w-4 h-4"></i> 作戰總覽 ＆ 20 週衝刺
@@ -108,12 +131,16 @@
 
       <!-- 備考月曆 ＆ 作息課表雙欄 -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 升級版備考月曆 -->
         <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-3 border-b border-slate-700/60 pb-2">
-              <h2 class="text-sm font-bold flex items-center gap-1.5 text-white">
-                <i data-lucide="calendar-days" class="w-4 h-4 text-sky-400"></i> 備考月曆
-              </h2>
+              <div class="flex items-center gap-1.5">
+                <h2 class="text-sm font-bold flex items-center gap-1.5 text-white">
+                  <i data-lucide="calendar-days" class="w-4 h-4 text-sky-400"></i> 備考月曆
+                </h2>
+                <span class="text-[9px] bg-slate-700/80 text-slate-300 px-1.5 py-0.2 rounded font-mono">點日期可自訂區間</span>
+              </div>
               <div class="flex items-center gap-1">
                 <button id="prev-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
                 <span id="calendar-title" class="text-xs font-mono font-semibold px-1.5 text-slate-200">2026 / 09</span>
@@ -132,57 +159,140 @@
             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500/40 border border-purple-500"></span> 報名日 (10/6-15)</span>
             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-yellow-400/40 border border-yellow-400"></span> 鐸鐸生化</span>
             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500/40 border border-rose-500"></span> 國考 (1/16-18)</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 自訂標記</span>
           </div>
         </div>
 
         <!-- 每週作息課表 -->
         <div class="lg:col-span-2 bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg overflow-x-auto">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-              <i data-lucide="clock" class="w-4 h-4 text-sky-400"></i> 日常作息表（含三餐、運動與讀書）
-            </h2>
-            <span class="text-[10px] text-sky-300 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">週六下午為法定彈性緩衝區</span>
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm font-bold flex items-center gap-2 text-white">
+                <i data-lucide="clock" class="w-4 h-4 text-sky-400"></i> 日常作息表
+              </h2>
+              <span id="today-day-badge" class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded border border-sky-500/30 font-mono">今日</span>
+            </div>
+            <!-- 子分頁切換按鈕 -->
+            <div class="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-700/80 text-xs">
+              <button onclick="switchSchedule('weekday')" id="sched-btn-weekday" class="schedule-subtab px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-medium">
+                週一～五（衝刺）
+              </button>
+              <button onclick="switchSchedule('sat')" id="sched-btn-sat" class="schedule-subtab px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-medium">
+                週六（彈性緩衝）
+              </button>
+              <button onclick="switchSchedule('sun')" id="sched-btn-sun" class="schedule-subtab px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-medium">
+                週日（修復休閒）
+              </button>
+            </div>
           </div>
-          <table class="w-full text-left text-xs border-collapse min-w-[500px]">
-            <tbody class="divide-y divide-slate-700/50 text-slate-300">
-              <tr>
-                <td class="py-2 px-2 font-mono text-slate-400 w-24">07:15 - 08:00</td>
-                <td class="py-2 px-2 text-amber-300 font-medium">晨光運動（快走/慢跑 + Fitness+ 4階段漸進菜單）</td>
-              </tr>
-              <tr class="bg-amber-950/20">
-                <td class="py-2 px-2 font-mono text-amber-400 font-semibold">08:00 - 08:45</td>
-                <td class="py-2 px-2 text-amber-200 font-medium">🍳【淋浴 ＋ 營養早餐】整裝開機、準備翻開講義</td>
-              </tr>
-              <tr>
-                <td class="py-2 px-2 font-mono text-slate-400">08:45 - 11:45</td>
-                <td class="py-2 px-2 text-sky-300 font-medium">【區塊 A】主科進度（看影片 / 精讀核心觀念 3 hr）</td>
-              </tr>
-              <tr class="bg-amber-950/20">
-                <td class="py-2 px-2 font-mono text-amber-400 font-semibold">11:45 - 13:15</td>
-                <td class="py-2 px-2 text-amber-200 font-medium">🍱【午餐 ＋ 徹底午休】小憩 20-30 分鐘，重置下午專注力</td>
-              </tr>
-              <tr class="bg-sky-950/20">
-                <td class="py-2 px-2 font-mono text-sky-400 font-bold">13:15 - 16:15</td>
-                <td class="py-2 px-2 text-sky-200 font-bold">【區塊 B】實戰推進 / 考古豹以題帶念（週六為彈性進度緩衝）</td>
-              </tr>
-              <tr>
-                <td class="py-2 px-2 font-mono text-slate-400">16:45 - 18:00</td>
-                <td class="py-2 px-2 text-emerald-400 font-medium">【區塊 C1】深度訂正錯題 ＋ 考古豹收藏星號</td>
-              </tr>
-              <tr class="bg-amber-950/20">
-                <td class="py-2 px-2 font-mono text-amber-400 font-semibold">18:00 - 19:15</td>
-                <td class="py-2 px-2 text-amber-200 font-medium">🍲【晚餐 ＋ 散步休息】身心降溫放鬆 <em>(鐸鐸上課日 16:45 提早吃洗)</em></td>
-              </tr>
-              <tr>
-                <td class="py-2 px-2 font-mono text-slate-400">19:15 - 20:15</td>
-                <td class="py-2 px-2 text-indigo-300">【區塊 C2】副科調劑（寄生蟲表/生統）<em>[鐸鐸課日 18-22 上課]</em></td>
-              </tr>
-              <tr class="bg-pink-950/20">
-                <td class="py-2 px-2 font-mono text-pink-400 font-bold">20:15 - 23:15</td>
-                <td class="py-2 px-2 text-pink-300 font-bold">🎮【無罪惡感休閒 3 hr】打遊戲、追番，大腦徹底關機</td>
-              </tr>
-            </tbody>
-          </table>
+
+          <!-- 1. 週一至週五課表 -->
+          <div id="sched-content-weekday" class="hidden">
+            <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+              <tbody class="divide-y divide-slate-700/50 text-slate-300">
+                <tr data-start="07:15" data-end="08:00" class="schedule-row">
+                  <td class="py-2 px-2 font-mono text-slate-400 w-32"><span class="pointer-slot mr-1"></span>07:15 - 08:00</td>
+                  <td class="py-2 px-2 text-amber-300 font-medium">晨光運動（快走/慢跑 + Fitness+ 4階段漸進菜單）</td>
+                </tr>
+                <tr data-start="08:00" data-end="08:45" class="schedule-row bg-amber-950/20">
+                  <td class="py-2 px-2 font-mono text-amber-400 font-semibold w-32"><span class="pointer-slot mr-1"></span>08:00 - 08:45</td>
+                  <td class="py-2 px-2 text-amber-200 font-medium">🍳【淋浴 ＋ 營養早餐】整裝開機、準備翻開講義</td>
+                </tr>
+                <tr data-start="08:45" data-end="11:45" class="schedule-row">
+                  <td class="py-2 px-2 font-mono text-slate-400 w-32"><span class="pointer-slot mr-1"></span>08:45 - 11:45</td>
+                  <td class="py-2 px-2 text-sky-300 font-medium">【區塊 A】主科進度（看影片 / 精讀核心觀念 3 hr）</td>
+                </tr>
+                <tr data-start="11:45" data-end="13:15" class="schedule-row bg-amber-950/20">
+                  <td class="py-2 px-2 font-mono text-amber-400 font-semibold w-32"><span class="pointer-slot mr-1"></span>11:45 - 13:15</td>
+                  <td class="py-2 px-2 text-amber-200 font-medium">🍱【午餐 ＋ 徹底午休】小憩 20-30 分鐘，重置下午專注力</td>
+                </tr>
+                <tr data-start="13:15" data-end="16:15" class="schedule-row bg-sky-950/20">
+                  <td class="py-2 px-2 font-mono text-sky-400 font-bold w-32"><span class="pointer-slot mr-1"></span>13:15 - 16:15</td>
+                  <td class="py-2 px-2 text-sky-200 font-bold">【區塊 B】實戰推進 / 考古豹以題帶念（50+ 題）</td>
+                </tr>
+                <tr data-start="16:45" data-end="18:00" class="schedule-row">
+                  <td class="py-2 px-2 font-mono text-slate-400 w-32"><span class="pointer-slot mr-1"></span>16:45 - 18:00</td>
+                  <td class="py-2 px-2 text-emerald-400 font-medium">【區塊 C1】深度訂正錯題 ＋ 考古豹收藏星號</td>
+                </tr>
+                <tr data-start="18:00" data-end="19:15" class="schedule-row bg-amber-950/20">
+                  <td class="py-2 px-2 font-mono text-amber-400 font-semibold w-32"><span class="pointer-slot mr-1"></span>18:00 - 19:15</td>
+                  <td class="py-2 px-2 text-amber-200 font-medium">🍲【晚餐 ＋ 散步休息】身心降溫 <em>(鐸鐸生化日 16:45 提早吃洗)</em></td>
+                </tr>
+                <tr data-start="19:15" data-end="20:15" class="schedule-row">
+                  <td class="py-2 px-2 font-mono text-slate-400 w-32"><span class="pointer-slot mr-1"></span>19:15 - 20:15</td>
+                  <td class="py-2 px-2 text-indigo-300">【區塊 C2】副科調劑（寄生蟲表/生統）<em>[鐸鐸課日 18-22 上課]</em></td>
+                </tr>
+                <tr data-start="20:15" data-end="23:15" class="schedule-row bg-pink-950/20">
+                  <td class="py-2 px-2 font-mono text-pink-400 font-bold w-32"><span class="pointer-slot mr-1"></span>20:15 - 23:15</td>
+                  <td class="py-2 px-2 text-pink-300 font-bold">🎮【無罪惡感休閒 3 hr】打遊戲、追番，大腦徹底關機</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 2. 週六課表 -->
+          <div id="sched-content-sat" class="hidden">
+            <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+              <tbody class="divide-y divide-slate-700/50 text-slate-300">
+                <tr data-start="07:15" data-end="08:00" class="schedule-row">
+                  <td class="py-2 px-2 font-mono text-slate-400 w-32"><span class="pointer-slot mr-1"></span>07:15 - 08:00</td>
+                  <td class="py-2 px-2 text-amber-300 font-medium">晨光運動（慢流動瑜伽 20-30m 開髖與深層伸展）</td>
+                </tr>
+                <tr data-start="08:00" data-end="08:45" class="schedule-row bg-amber-950/20">
+                  <td class="py-2 px-2 font-mono text-amber-400 font-semibold w-32"><span class="pointer-slot mr-1"></span>08:00 - 08:45</td>
+                  <td class="py-2 px-2 text-amber-200 font-medium">🍳【悠閒早餐 ＋ 整理筆記】回顧本週進度完成度</td>
+                </tr>
+                <tr data-start="08:45" data-end="11:45" class="schedule-row">
+                  <td class="py-2 px-2 font-mono text-slate-400 w-32"><span class="pointer-slot mr-1"></span>08:45 - 11:45</td>
+                  <td class="py-2 px-2 text-sky-300 font-medium">【上午補強】本週落後進度追趕 / 難點單元重讀</td>
+                </tr>
+                <tr data-start="11:45" data-end="13:15" class="schedule-row bg-amber-950/20">
+                  <td class="py-2 px-2 font-mono text-amber-400 font-semibold w-32"><span class="pointer-slot mr-1"></span>11:45 - 13:15</td>
+                  <td class="py-2 px-2 text-amber-200 font-medium">🍱【午餐 ＋ 休息】</td>
+                </tr>
+                <tr data-start="13:15" data-end="17:00" class="schedule-row bg-emerald-950/20">
+                  <td class="py-2 px-2 font-mono text-emerald-400 font-bold w-32"><span class="pointer-slot mr-1"></span>13:15 - 17:00</td>
+                  <td class="py-2 px-2 text-emerald-200 font-bold">🛡️【法定進度彈性緩衝區】補齊週一至五未完任務；若已達標則可外出自由活動</td>
+                </tr>
+                <tr data-start="17:00" data-end="19:30" class="schedule-row bg-amber-950/20">
+                  <td class="py-2 px-2 font-mono text-amber-400 font-semibold w-32"><span class="pointer-slot mr-1"></span>17:00 - 19:30</td>
+                  <td class="py-2 px-2 text-amber-200 font-medium">🍲【大餐 ＋ 自由散步】</td>
+                </tr>
+                <tr data-start="19:30" data-end="23:30" class="schedule-row bg-pink-950/20">
+                  <td class="py-2 px-2 font-mono text-pink-400 font-bold w-32"><span class="pointer-slot mr-1"></span>19:30 - 23:30</td>
+                  <td class="py-2 px-2 text-pink-300 font-bold">🎮【暢玩放鬆】無壓力娛樂、遊戲連線、心靈充電</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 3. 週日課表 -->
+          <div id="sched-content-sun" class="hidden">
+            <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+              <tbody class="divide-y divide-slate-700/50 text-slate-300">
+                <tr data-start="08:00" data-end="09:00" class="schedule-row">
+                  <td class="py-2 px-2 font-mono text-slate-400 w-32"><span class="pointer-slot mr-1"></span>08:00 - 09:00</td>
+                  <td class="py-2 px-2 text-amber-300 font-medium">自然醒 ＋ 陽光散步 15m 呼吸新鮮空氣</td>
+                </tr>
+                <tr data-start="09:00" data-end="11:30" class="schedule-row bg-indigo-950/20">
+                  <td class="py-2 px-2 font-mono text-indigo-400 font-semibold w-32"><span class="pointer-slot mr-1"></span>09:00 - 11:30</td>
+                  <td class="py-2 px-2 text-indigo-200 font-medium">🧠【本週錯題清盤】輕鬆翻閱本週考古豹收藏星號題目（不開新進度）</td>
+                </tr>
+                <tr data-start="11:30" data-end="19:30" class="schedule-row bg-purple-950/20">
+                  <td class="py-2 px-2 font-mono text-purple-400 font-bold w-32"><span class="pointer-slot mr-1"></span>11:30 - 19:30</td>
+                  <td class="py-2 px-2 text-purple-200 font-bold">🌿【完全離線 · 陪伴與戶外】約會、家庭聚餐、出門踏青、徹底脫離書本</td>
+                </tr>
+                <tr data-start="19:30" data-end="21:00" class="schedule-row bg-sky-950/20">
+                  <td class="py-2 px-2 font-mono text-sky-400 font-medium w-32"><span class="pointer-slot mr-1"></span>19:30 - 21:00</td>
+                  <td class="py-2 px-2 text-sky-200 font-medium">📋【下週作戰盤點】檢視下週 20 週檢核目標、整理書桌開機環境</td>
+                </tr>
+                <tr data-start="21:00" data-end="23:00" class="schedule-row bg-pink-950/20">
+                  <td class="py-2 px-2 font-mono text-pink-400 font-bold w-32"><span class="pointer-slot mr-1"></span>21:00 - 23:00</td>
+                  <td class="py-2 px-2 text-pink-300 font-bold">🛌【睡前放鬆】泡熱水澡、聽音樂，早點就寢迎接週一</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -196,10 +306,10 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+          <div id="sport-phase-1" data-start="2026-09-01" data-end="2026-09-26" class="sport-phase-card p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-sky-400">階段一 ｜ 第 1–4 週</span>
-              <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">9月</span>
+              <span class="phase-tag text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">9月</span>
             </div>
             <div class="text-xs font-semibold text-white">喚醒與低衝擊適應</div>
             <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
@@ -210,10 +320,10 @@
             </ul>
           </div>
 
-          <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+          <div id="sport-phase-2" data-start="2026-09-28" data-end="2026-11-07" class="sport-phase-card p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-emerald-400">階段二 ｜ 第 5–10 週</span>
-              <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">10月</span>
+              <span class="phase-tag text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">10月</span>
             </div>
             <div class="text-xs font-semibold text-white">肌力與核心強化</div>
             <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
@@ -224,10 +334,10 @@
             </ul>
           </div>
 
-          <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+          <div id="sport-phase-3" data-start="2026-11-09" data-end="2026-12-19" class="sport-phase-card p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-purple-400">階段三 ｜ 第 11–16 週</span>
-              <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">11-12月</span>
+              <span class="phase-tag text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">11-12月</span>
             </div>
             <div class="text-xs font-semibold text-white">體能與多巴胺巔峰</div>
             <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
@@ -238,10 +348,10 @@
             </ul>
           </div>
 
-          <div class="p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5">
+          <div id="sport-phase-4" data-start="2026-12-21" data-end="2027-01-16" class="sport-phase-card p-3 bg-slate-900/70 border border-slate-700/60 rounded-xl space-y-1.5 transition-all">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-rose-400">階段四 ｜ 第 17–20 週</span>
-              <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">12底-1月</span>
+              <span class="phase-tag text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">12底-1月</span>
             </div>
             <div class="text-xs font-semibold text-white">考前減量與神經保溫</div>
             <ul class="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
@@ -350,11 +460,61 @@
 
   </div>
 
+  <!-- 🌟 臨時/區間行程新增/管理彈窗 (Modal) -->
+  <div id="event-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
+          <h3 class="text-sm font-bold text-white" id="modal-date-title">行程管理</h3>
+        </div>
+        <button onclick="closeEventModal()" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <!-- 當日已存行程列表 -->
+      <div class="space-y-2">
+        <span class="text-xs text-slate-400 block font-medium">當日行程清單：</span>
+        <div id="modal-events-list" class="space-y-1.5 max-h-36 overflow-y-auto"></div>
+      </div>
+
+      <!-- 新增行程輸入框與區間選取 -->
+      <div class="pt-2 border-t border-slate-700/60 space-y-2.5">
+        <span class="text-xs text-slate-300 font-medium block">新增單日 / 區間標註：</span>
+        <input type="text" id="modal-event-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500" placeholder="如：9/18-9/27 衝刺解剖複習...">
+        
+        <!-- 區間設定 -->
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">起始日期</label>
+            <input type="date" id="modal-start-date" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-sky-500 font-mono">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">結束日期 (可選)</label>
+            <input type="date" id="modal-end-date" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-sky-500 font-mono">
+          </div>
+        </div>
+
+        <!-- 標記顏色選擇 -->
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center gap-2" id="color-picker-group">
+            <label class="cursor-pointer"><input type="radio" name="event-color" value="emerald" checked class="hidden peer"><span class="w-4 h-4 rounded-full bg-emerald-400 block border-2 border-transparent peer-checked:border-white shadow"></span></label>
+            <label class="cursor-pointer"><input type="radio" name="event-color" value="amber" class="hidden peer"><span class="w-4 h-4 rounded-full bg-amber-400 block border-2 border-transparent peer-checked:border-white shadow"></span></label>
+            <label class="cursor-pointer"><input type="radio" name="event-color" value="purple" class="hidden peer"><span class="w-4 h-4 rounded-full bg-purple-400 block border-2 border-transparent peer-checked:border-white shadow"></span></label>
+            <label class="cursor-pointer"><input type="radio" name="event-color" value="rose" class="hidden peer"><span class="w-4 h-4 rounded-full bg-rose-400 block border-2 border-transparent peer-checked:border-white shadow"></span></label>
+          </div>
+          <button onclick="saveCustomEvent()" class="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold transition flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增標註
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     lucide.createIcons();
 
     // ==========================================
-    // 🔀 分頁切換邏輯 (支援 3 個分頁)
+    // 🔀 分頁切換邏輯 (主導覽 Tab)
     // ==========================================
     window.switchTab = function(tabName) {
       const tabs = ['plan', 'anatomy', 'biochem'];
@@ -373,6 +533,112 @@
       });
       lucide.createIcons();
     };
+
+    // ==========================================
+    // 📅 作息表子分頁切換
+    // ==========================================
+    window.switchSchedule = function(schedType) {
+      const types = ['weekday', 'sat', 'sun'];
+      types.forEach(t => {
+        const content = document.getElementById(`sched-content-${t}`);
+        const btn = document.getElementById(`sched-btn-${t}`);
+        if (t === schedType) {
+          content.classList.remove('hidden');
+          btn.classList.add('active');
+        } else {
+          content.classList.add('hidden');
+          btn.classList.remove('active');
+        }
+      });
+      updateCurrentSchedulePointer();
+    };
+
+    function initAutoScheduleByDay() {
+      const dayOfWeek = new Date().getDay();
+      const dayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const badge = document.getElementById('today-day-badge');
+      if (badge) badge.innerText = `今日：${dayNames[dayOfWeek]}`;
+
+      if (dayOfWeek === 0) {
+        switchSchedule('sun');
+      } else if (dayOfWeek === 6) {
+        switchSchedule('sat');
+      } else {
+        switchSchedule('weekday');
+      }
+    }
+
+    // ==========================================
+    // ⏱️ 即時時間箭頭指針演算法
+    // ==========================================
+    function parseTimeToMinutes(timeStr) {
+      const [h, m] = timeStr.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function updateCurrentSchedulePointer() {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      document.querySelectorAll('.schedule-row').forEach(row => {
+        const startStr = row.getAttribute('data-start');
+        const endStr = row.getAttribute('data-end');
+        const pointerSlot = row.querySelector('.pointer-slot');
+
+        if (startStr && endStr) {
+          const startMin = parseTimeToMinutes(startStr);
+          const endMin = parseTimeToMinutes(endStr);
+
+          if (currentMinutes >= startMin && currentMinutes < endMin) {
+            row.classList.add('current-schedule-row');
+            if (pointerSlot) pointerSlot.innerHTML = `<span class="current-pointer-arrow">▶</span>`;
+          } else {
+            row.classList.remove('current-schedule-row');
+            if (pointerSlot) pointerSlot.innerHTML = '';
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // 🏃 運動菜單當前階段自動比對標示
+    // ==========================================
+    function updateCurrentSportPhase() {
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      
+      const cards = document.querySelectorAll('.sport-phase-card');
+      let matched = false;
+
+      cards.forEach(card => {
+        const start = card.getAttribute('data-start');
+        const end = card.getAttribute('data-end');
+        const tag = card.querySelector('.phase-tag');
+
+        if (todayStr >= start && todayStr <= end) {
+          card.classList.add('current-sport-phase');
+          if (tag) {
+            tag.innerHTML = `<span class="text-emerald-300 font-bold flex items-center gap-0.5"><span class="current-pointer-arrow">▶</span> 執行中</span>`;
+            tag.className = 'phase-tag text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full font-semibold';
+          }
+          matched = true;
+        } else {
+          card.classList.remove('current-sport-phase');
+        }
+      });
+
+      if (!matched && todayStr < '2026-09-01') {
+        const phase1 = document.getElementById('sport-phase-1');
+        if (phase1) {
+          phase1.classList.add('current-sport-phase');
+          const tag = phase1.querySelector('.phase-tag');
+          if (tag) {
+            tag.innerHTML = `<span class="text-sky-300 font-bold">即將啟動</span>`;
+            tag.className = 'phase-tag text-[10px] px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/40 rounded-full font-semibold';
+          }
+        }
+      }
+    }
 
     // ==========================================
     // 🔧 Firebase 雲端即時同步設定
@@ -406,11 +672,14 @@
       document.getElementById('current-clock').innerText = now.toTimeString().split(' ')[0];
       const diffDays = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
       document.getElementById('countdown-days').innerText = diffDays > 0 ? diffDays : 0;
+      updateCurrentSchedulePointer();
     }
     setInterval(updateClock, 1000);
     updateClock();
+    initAutoScheduleByDay();
+    updateCurrentSportPhase();
 
-    // 2. 每日三大自律習慣（跨日重置 + 連續打卡天數 Streak）
+    // 2. 每日三大自律習慣
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const habits = ['daily-sport', 'daily-exam', 'daily-game'];
@@ -659,7 +928,9 @@
       });
     }
 
-    // 5. 備考月曆
+    // ==========================================
+    // 5. 備考月曆 ＆ 區間/單日臨時行程標註系統
+    // ==========================================
     const classDates = ['2026-11-06', '2026-11-13', '2026-11-18', '2026-11-27', '2026-12-04', '2026-12-11', '2026-12-23', '2026-12-28'];
     const examDatesList = ['2027-01-16', '2027-01-17', '2027-01-18'];
     const regDatesList = [
@@ -667,6 +938,8 @@
       '2026-10-11', '2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15'
     ];
     let currentCalDate = new Date(2026, 8, 1);
+    let customEvents = JSON.parse(localStorage.getItem('med_exam_custom_events') || '{}');
+    let selectedModalDate = '';
 
     function renderCalendar() {
       const year = currentCalDate.getFullYear();
@@ -683,14 +956,25 @@
 
       for (let d = 1; d <= totalDays; d++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        let classes = 'p-1.5 rounded text-[11px] transition ';
+        let classes = 'p-1.5 rounded text-[11px] transition relative cursor-pointer flex flex-col items-center justify-center ';
         if (examDatesList.includes(dateStr)) classes += 'calendar-day-exam ';
         else if (regDatesList.includes(dateStr)) classes += 'calendar-day-reg ';
         else if (classDates.includes(dateStr)) classes += 'calendar-day-class ';
-        else classes += 'text-slate-300 hover:bg-slate-700/50 ';
+        else classes += 'text-slate-300 hover:bg-slate-700/60 ';
 
         if (dateStr === todayStr) classes += 'calendar-day-today ';
-        grid.innerHTML += `<div class="${classes}">${d}</div>`;
+
+        // 檢查是否有自訂行程小圓點標記
+        let dotsHtml = '';
+        if (customEvents[dateStr] && customEvents[dateStr].length > 0) {
+          dotsHtml = `<div class="flex items-center gap-0.5 mt-0.5">` + 
+            customEvents[dateStr].map(ev => {
+              const colorMap = { emerald: 'bg-emerald-400', amber: 'bg-amber-400', purple: 'bg-purple-400', rose: 'bg-rose-400' };
+              return `<span class="w-1.5 h-1.5 rounded-full ${colorMap[ev.color] || 'bg-emerald-400'}"></span>`;
+            }).join('') + `</div>`;
+        }
+
+        grid.innerHTML += `<div class="${classes}" onclick="openEventModal('${dateStr}')"><span>${d}</span>${dotsHtml}</div>`;
       }
     }
 
@@ -704,8 +988,125 @@
     });
     renderCalendar();
 
+    // 彈窗操作函數 (支援區間)
+    window.openEventModal = function(dateStr) {
+      selectedModalDate = dateStr;
+      document.getElementById('modal-date-title').innerText = `${dateStr} 行程管理`;
+      document.getElementById('modal-event-input').value = '';
+      document.getElementById('modal-start-date').value = dateStr;
+      document.getElementById('modal-end-date').value = dateStr;
+      renderModalEventsList();
+      document.getElementById('event-modal').classList.remove('hidden');
+      lucide.createIcons();
+    };
+
+    window.closeEventModal = function() {
+      document.getElementById('event-modal').classList.add('hidden');
+    };
+
+    function renderModalEventsList() {
+      const container = document.getElementById('modal-events-list');
+      const events = customEvents[selectedModalDate] || [];
+      if (events.length === 0) {
+        container.innerHTML = `<span class="text-xs text-slate-500 italic block py-1">尚無自訂行程</span>`;
+        return;
+      }
+      container.innerHTML = events.map((ev, idx) => {
+        const colorMap = {
+          emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+          amber: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+          purple: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+          rose: 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+        };
+        const rangeText = (ev.startDate && ev.endDate && ev.startDate !== ev.endDate) 
+          ? `<span class="text-[10px] opacity-75 font-mono ml-1">(${ev.startDate.slice(5)}~${ev.endDate.slice(5)})</span>` 
+          : '';
+
+        return `
+          <div class="flex items-center justify-between p-2 rounded-lg border ${colorMap[ev.color] || colorMap.emerald} text-xs">
+            <span class="truncate">${ev.text} ${rangeText}</span>
+            <button onclick="deleteCustomEvent('${ev.id || ''}', ${idx})" class="text-slate-400 hover:text-rose-400 p-0.5 ml-2"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    // 儲存行程（支援單日及跨日連續區間）
+    window.saveCustomEvent = function() {
+      const input = document.getElementById('modal-event-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const startDateStr = document.getElementById('modal-start-date').value || selectedModalDate;
+      const endDateStr = document.getElementById('modal-end-date').value || startDateStr;
+      const color = document.querySelector('input[name="event-color"]:checked')?.value || 'emerald';
+
+      let start = new Date(startDateStr);
+      let end = new Date(endDateStr);
+      if (start > end) {
+        let temp = start;
+        start = end;
+        end = temp;
+      }
+
+      const eventId = 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+      let cur = new Date(start);
+
+      while (cur <= end) {
+        const curDateStr = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+        if (!customEvents[curDateStr]) customEvents[curDateStr] = [];
+        customEvents[curDateStr].push({
+          id: eventId,
+          text: text,
+          color: color,
+          startDate: startDateStr,
+          endDate: endDateStr
+        });
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
+      if (db) db.ref('custom_events').set(customEvents);
+
+      input.value = '';
+      renderModalEventsList();
+      renderCalendar();
+    };
+
+    // 刪除行程（若是區間建立的則一併刪除全部天數標記）
+    window.deleteCustomEvent = function(eventId, index) {
+      if (eventId) {
+        Object.keys(customEvents).forEach(dateKey => {
+          customEvents[dateKey] = customEvents[dateKey].filter(ev => ev.id !== eventId);
+          if (customEvents[dateKey].length === 0) delete customEvents[dateKey];
+        });
+      } else {
+        if (customEvents[selectedModalDate]) {
+          customEvents[selectedModalDate].splice(index, 1);
+          if (customEvents[selectedModalDate].length === 0) delete customEvents[selectedModalDate];
+        }
+      }
+
+      localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
+      if (db) db.ref('custom_events').set(customEvents);
+      renderModalEventsList();
+      renderCalendar();
+    };
+
+    if (db) {
+      db.ref('custom_events').on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          customEvents = val;
+          localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
+          renderCalendar();
+        }
+      });
+    }
+
     // ==========================================
-    // 6. 20 週清單資料（已對齊 15 節課 / 30 講名稱）
+    // 6. 20 週清單資料
     // ==========================================
     const weeksData = [
       { w: 1, start: '2026-09-01', end: '2026-09-05', date: "9/01-9/05", title: "趙俊彥 01-06：第1-3節 [頭顱面部 ➔ 軀幹四肢骨 ➔ 頭頸背腹肌] ＋ 考古豹刷題 ＋ [運動:快走+徒手]" },
