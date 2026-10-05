@@ -29,6 +29,10 @@
     .physio-card.completed .title-text { text-decoration: line-through; color: #64748b; }
     .physio-sub-card.completed { border-color: rgba(20, 184, 166, 0.3) !important; background-color: rgba(20, 184, 166, 0.06) !important; }
     .physio-sub-card.completed .sub-title-text { text-decoration: line-through; color: #64748b; }
+    .pharm-card.completed { border-color: rgba(139, 92, 246, 0.4) !important; background-color: rgba(139, 92, 246, 0.05) !important; }
+    .pharm-card.completed .title-text { text-decoration: line-through; color: #64748b; }
+    .pharm-lec-card.completed { border-color: rgba(139, 92, 246, 0.3) !important; background-color: rgba(139, 92, 246, 0.08) !important; }
+    .pharm-lec-card.completed .title-text { text-decoration: line-through; color: #64748b; }
     .tab-btn.active { color: #38bdf8; border-bottom: 2px solid #38bdf8; background-color: rgba(56, 189, 248, 0.08); }
     .tab-btn.drag-over { border-left: 2px dashed #38bdf8; transform: scale(0.98); }
     .tab-btn.dragging { opacity: 0.4; }
@@ -521,12 +525,15 @@
       <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 text-[11px] font-bold border border-rose-500/30">
-                15 節課上課順序
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 text-[11px] font-bold border border-rose-500/30">
+                全 15 節課 · 30 講完整上課順序
               </span>
-              <span class="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
+              <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
                 精讀期：第 3-7 週 (10/15-11/18)
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-medium border border-emerald-500/30 flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> 整體總時長：59:35:11 (約 59.6 小時)
               </span>
             </div>
             <h2 class="text-base md:text-lg font-bold flex items-center gap-2 text-white mt-1.5">
@@ -534,14 +541,15 @@
             </h2>
             <p class="text-xs text-slate-400 mt-1">完全依照趙俊彥老師正式上課順序（第 1 課至第 15 課）編排，每節課含 (上)(下) 兩講。聽課 ➔ 筆記繪圖 ➔ 考古題驗收。</p>
           </div>
-          <div class="flex flex-col items-end gap-1.5 min-w-[160px]">
+          <div class="flex flex-col items-end gap-1.5 min-w-[200px]">
             <div class="flex items-center gap-3 w-full justify-end">
-              <div class="w-32 bg-slate-700 rounded-full h-2.5 overflow-hidden">
-                <div id="video-progress-bar" class="bg-rose-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              <div class="w-36 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                <div id="video-progress-bar" class="bg-gradient-to-r from-rose-500 to-pink-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
               </div>
-              <span id="video-progress-text" class="text-xs font-bold font-mono text-rose-400">0/30 (0%)</span>
+              <span id="video-progress-text" class="text-xs font-bold font-mono text-rose-400">0/30 講 (0%)</span>
             </div>
-            <div class="text-[11px] text-slate-400 font-mono" id="anatomy-unit-stat">已完成 0 / 15 節課 (0 / 30 講)</div>
+            <div class="text-[11px] text-slate-300 font-mono" id="anatomy-time-stat">已研讀 00:00:00 / 59:35:11 (約 0 小時 0 分鐘 · 0%)</div>
+            <div class="text-[10px] text-slate-400 font-mono" id="anatomy-unit-stat">已完成 0 / 15 節課 (0 / 30 講)</div>
           </div>
         </div>
 
@@ -574,7 +582,7 @@
         <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1">
           <div class="relative flex-1">
             <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
-            <input type="text" id="video-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition" placeholder="搜尋第幾節課、單元名稱、講次考點 (如：第 1 節課、骨骼、臂神經叢、腹膜、胚胎...)">
+            <input type="text" id="video-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition" placeholder="搜尋第幾節課、單元名稱、講次主題 (如：第 1 節課、骨骼、臂神經叢、腹膜、胚胎...)">
           </div>
           <div class="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 text-xs" id="anatomy-filter-chips">
             <button onclick="filterAnatomyWeek('ALL')" class="anatomy-filter-btn active px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[11px] font-medium whitespace-nowrap">全部 (15節課/30講)</button>
@@ -739,6 +747,112 @@
       <div class="space-y-4" id="physio-chapters-container"></div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- 📌 分頁 5：子翔藥理學 獨立專區 -->
+    <!-- ========================================== -->
+    <div id="tab-content-pharmacology" class="space-y-6 hidden">
+      <!-- 頂部進度與作戰指引 -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-violet-500/10 text-violet-400 text-[11px] font-bold border border-violet-500/30">
+                全 19 單元 · 38 講完整課程
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
+                攻堅期：第 8-13 週 (11/19-12/30)
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-medium border border-emerald-500/30 flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> 整體總時長：23:07:34 (約 23.1 小時)
+              </span>
+            </div>
+            <h2 class="text-base md:text-lg font-bold flex items-center gap-2 text-white mt-1.5">
+              <i data-lucide="pill" class="w-5 h-5 text-violet-400"></i> 子翔藥理學（按正規 19 單元 · 38 講上課順序）
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              由子翔老師親授之完整 19 大單元正課精講與各單元醫師國考歷屆考古題專屬解析。配合每週微免、生化主題系統化吸收，聽課 ➔ 考古題 ➔ 建立藥物作用反射！
+            </p>
+          </div>
+          <div class="flex flex-col items-end gap-1.5 min-w-[200px]">
+            <div class="flex items-center gap-3 w-full justify-end">
+              <div class="w-36 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                <div id="pharm-progress-bar" class="bg-gradient-to-r from-violet-500 to-indigo-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <span id="pharm-progress-text" class="text-xs font-bold font-mono text-violet-400">0/38 講 (0%)</span>
+            </div>
+            <div class="text-[11px] text-slate-300 font-mono" id="pharm-time-stat">已研讀 00:00:00 / 23:07:34 (約 0 小時 0 分鐘 · 0%)</div>
+            <div class="text-[10px] text-slate-400 font-mono" id="pharm-unit-stat">已完成 0 / 19 單元 (0 / 38 講)</div>
+          </div>
+        </div>
+
+        <!-- 6 大週次進度規劃導航 -->
+        <div class="p-3.5 bg-slate-900/70 border border-violet-500/30 rounded-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-violet-500/10 text-violet-300 shrink-0 mt-0.5"><i data-lucide="shield" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-violet-300">W8：前言 ＆ 藥動藥效 ＆ 免疫</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">Unit 1 前言、Unit 12 藥動藥效、Unit 19 免疫藥物（約 2.2h，配合免疫週）</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-sky-500/10 text-sky-300 shrink-0 mt-0.5"><i data-lucide="biohazard" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-sky-300">W9：抗生素 ＆ 抗黴菌藥物</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">Unit 15 抗生素 (128m)、Unit 16 抗黴菌 (26m)（約 2.6h，配合細菌真菌週）</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-amber-500/10 text-amber-300 shrink-0 mt-0.5"><i data-lucide="zap" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-amber-300">W10：抗病毒 ＆ 抗癌 ＆ 解毒劑</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">Unit 17 抗病毒、Unit 18 抗癌、Unit 14 解毒劑（約 3.0h，配合病毒週）</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-rose-500/10 text-rose-300 shrink-0 mt-0.5"><i data-lucide="heart" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-rose-300">W11：心血管 ＆ 自律 ＆ 腎臟血液</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">Unit 6 自主神經、Unit 2 心血管、Unit 3 利尿劑、Unit 10 血液（約 5.8h，大科核心）</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-300 shrink-0 mt-0.5"><i data-lucide="activity" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-indigo-300">W12：中樞神經 ＆ 止痛 ＆ 腸胃呼吸</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">Unit 8 神經遞質、Unit 9 中樞抑制、Unit 11 止痛、Unit 4 腸胃、Unit 5 呼吸（約 5.9h）</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <div class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-300 shrink-0 mt-0.5"><i data-lucide="check-circle" class="w-4 h-4"></i></div>
+            <div>
+              <div class="font-bold text-emerald-300">W13：內分泌 ＆ 自泌素 [完課]</div>
+              <div class="text-[11px] text-slate-300 mt-0.5">Unit 7 內分泌 (164m)、Unit 13 自泌素 (53m)（約 3.6h，藥理學全 19 單元總完課）</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 搜尋與週次篩選按鈕列 -->
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
+            <input type="text" id="pharm-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-violet-500 transition" placeholder="搜尋藥理課程、單元名稱、主題 (如：心血管、抗生素、自主神經、抗癌、利尿劑...)">
+          </div>
+          <div class="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 text-xs" id="pharm-filter-chips">
+            <button onclick="filterPharmWeek('ALL')" data-week="ALL" class="pharm-filter-btn active px-2.5 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/40 text-[11px] font-medium whitespace-nowrap">全部 (19單元/38講)</button>
+            <button onclick="filterPharmWeek('W8')" data-week="W8" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W8 (Unit 1, 12, 19 · 11/19-11/25)</button>
+            <button onclick="filterPharmWeek('W9')" data-week="W9" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W9 (Unit 15, 16 · 11/26-12/02)</button>
+            <button onclick="filterPharmWeek('W10')" data-week="W10" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W10 (Unit 14, 17, 18 · 12/03-12/09)</button>
+            <button onclick="filterPharmWeek('W11')" data-week="W11" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W11 (Unit 2, 3, 6, 10 · 12/10-12/16)</button>
+            <button onclick="filterPharmWeek('W12')" data-week="W12" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W12 (Unit 4, 5, 8, 9, 11 · 12/17-12/23)</button>
+            <button onclick="filterPharmWeek('W13')" data-week="W13" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W13 (Unit 7, 13 · 12/24-12/30)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 藥理學 19 單元與細項卡片容器 -->
+      <div class="space-y-4" id="pharm-units-container"></div>
+    </div>
+
   </div>
 
   <!-- 🌟 臨時/區間行程新增/管理彈窗 (Modal) -->
@@ -801,7 +915,8 @@
       { id: 'plan', title: '作戰總覽 ＆ 20 週衝刺', icon: 'compass', color: 'text-sky-400' },
       { id: 'physiology', title: 'First Choice 生理學', icon: 'activity', color: 'text-teal-400' },
       { id: 'anatomy', title: '趙俊彥解剖學', icon: 'book-open', color: 'text-rose-400' },
-      { id: 'biochem', title: '鐸鐸生化學', icon: 'sparkles', color: 'text-amber-400' }
+      { id: 'biochem', title: '鐸鐸生化學', icon: 'sparkles', color: 'text-amber-400' },
+      { id: 'pharmacology', title: '子翔藥理學', icon: 'pill', color: 'text-violet-400' }
     ];
 
     let currentActiveTab = localStorage.getItem('med_exam_active_tab') || 'plan';
@@ -889,7 +1004,7 @@
     window.switchTab = function(tabName) {
       currentActiveTab = tabName;
       localStorage.setItem('med_exam_active_tab', tabName);
-      const allTabIds = ['plan', 'physiology', 'anatomy', 'biochem'];
+      const allTabIds = defaultTabs.map(t => t.id);
       allTabIds.forEach(t => {
         const content = document.getElementById(`tab-content-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
@@ -1124,6 +1239,9 @@
     // 3. 趙俊彥 人體解剖學（按 15 節課 / 30 講 正式上課順序排列）
     // ==========================================
     const totalVideos = 30;
+    const TOTAL_ANATOMY_SECONDS = 214511; // 59小時 35分鐘 11秒
+    const TOTAL_ANATOMY_TIME_STR = "59:35:11";
+
     const anatomyLessonsData = [
       {
         lessonId: 1,
@@ -1132,10 +1250,12 @@
         targetWeek: "第 3 週 (10/15-10/16)",
         weekKey: "W3",
         unitTag: "Unit 1 解剖緒論 ＆ 顱骨",
+        totalDuration: "03:47:29",
+        totalSec: 13649,
         note: "趙俊彥核心：顱骨各骨縫、蝶骨翼顎窩結構、面部神經血管走形與孔洞 (眶上孔、眶下孔、頦孔、卵圓孔、棘孔)。",
         lectures: [
-          { id: 1, part: "上", title: "頭顱骨與面部結構解剖 (上)", file: "01. 2016DF01-01.m4a", date: "10/15 (四)", highYield: "顱骨孔洞與通過結構 (篩板 CN I、視神經管 CN II、眶上裂 CN III,IV,V1,VI、頸靜脈孔 CN IX,X,XI)" },
-          { id: 2, part: "下", title: "頭顱骨與面部結構解剖 (下)", file: "02. 2016DF01-02.m4a", date: "10/16 (五)", highYield: "顳骨岩部、內耳門 CN VII,VIII、莖乳突孔 CN VII、翼顎窩神經血管交通" }
+          { id: 1, part: "上", title: "頭顱骨與面部結構解剖 (上)", file: "01. 2016DF01-01", duration: "01:53:41", durationSec: 6821, date: "10/15 (四)" },
+          { id: 2, part: "下", title: "頭顱骨與面部結構解剖 (下)", file: "02. 2016DF01-02", duration: "01:53:48", durationSec: 6828, date: "10/16 (五)" }
         ]
       },
       {
@@ -1145,10 +1265,12 @@
         targetWeek: "第 3 週 (10/17-10/19)",
         weekKey: "W3",
         unitTag: "Unit 2 骨骼系統",
+        totalDuration: "03:41:42",
+        totalSec: 13302,
         note: "趙俊彥核心：脊椎骨構造差異 (頸椎橫突孔、胸椎肋凹、腰椎乳突)、肩關節/髖關節/膝關節韌帶與半月板。",
         lectures: [
-          { id: 3, part: "上", title: "軀幹與四肢骨骼關節韌帶 (上)", file: "03. 2016DF02-01.m4a", date: "10/17 (六)", highYield: "椎間盤結構、前縱韌帶 vs 後縱韌帶、黃韌帶、肩關節旋轉肌袖 (SITS) 附著點" },
-          { id: 4, part: "下", title: "軀幹與四肢骨骼關節韌帶 (下)", file: "04. 2016DF02-02.m4a", date: "10/19 (一)", highYield: "骨盆骨骼 (真骨盆 vs 假骨盆)、膝關節前後十字韌帶 (ACL/PCL) 與副韌帶、足弓" }
+          { id: 3, part: "上", title: "軀幹與四肢骨骼關節韌帶 (上)", file: "03. 2016DF02-01", duration: "01:53:42", durationSec: 6822, date: "10/17 (六)" },
+          { id: 4, part: "下", title: "軀幹與四肢骨骼關節韌帶 (下)", file: "04. 2016DF02-02", duration: "01:48:00", durationSec: 6480, date: "10/19 (一)" }
         ]
       },
       {
@@ -1158,10 +1280,12 @@
         targetWeek: "第 3 週 (10/20-10/21)",
         weekKey: "W3",
         unitTag: "Unit 3 肌肉系統 (上)",
+        totalDuration: "03:48:49",
+        totalSec: 13729,
         note: "趙俊彥核心：咀嚼肌 CN V3 vs 表情肌 CN VII、斜角肌三角、腹直肌鞘與腹股溝管層次。",
         lectures: [
-          { id: 5, part: "上", title: "頭頸、背部與腹壁肌群結構 (上)", file: "05. 2016DF03-01.m4a", date: "10/20 (二)", highYield: "斜角肌間隙 (前/中斜角肌與第1肋骨)、背闊肌、斜方肌、腹直肌鞘與腹股溝管" },
-          { id: 6, part: "下", title: "頭頸、背部與腹壁肌群結構 (下)", file: "06. 2016DF03-02.m4a", date: "10/21 (三)", highYield: "三角肌、旋轉肌群、肱二頭/三頭肌、腕隧道結構 (正中神經與9條屈肌腱)" }
+          { id: 5, part: "上", title: "頭頸、背部與腹壁肌群結構 (上)", file: "05. 2016DF03-01", duration: "01:53:42", durationSec: 6822, date: "10/20 (二)" },
+          { id: 6, part: "下", title: "頭頸、背部與腹壁肌群結構 (下)", file: "06. 2016DF03-02", duration: "01:55:07", durationSec: 6907, date: "10/21 (三)" }
         ]
       },
       {
@@ -1171,10 +1295,12 @@
         targetWeek: "第 4 週 (10/22-10/23)",
         weekKey: "W4",
         unitTag: "Unit 3 肌肉系統 (下)",
+        totalDuration: "03:43:25",
+        totalSec: 13405,
         note: "趙俊彥核心：股三角、梨狀肌上下孔、會陰深淺袋、下肢各區支配神經 (股神經、閉孔神經、坐骨神經)。",
         lectures: [
-          { id: 7, part: "上", title: "盆底與四肢肌群神經分布 (上)", file: "07. 2016DF04-01.m4a", date: "10/22 (四)", highYield: "股三角邊界 (鼠蹊韌帶、縫匠肌、內收長肌) 與內容物 (NAVL)、會陰淺/深袋" },
-          { id: 8, part: "下", title: "盆底與四肢肌群神經分布 (下)", file: "08. 2016DF04-02.m4a", date: "10/23 (五)", highYield: "臀大/中/小肌、梨狀肌上下孔穿出結構 (坐骨神經、臀上/下神經血管)、小腿前後室肌群" }
+          { id: 7, part: "上", title: "盆底與四肢肌群神經分布 (上)", file: "07. 2016DF04-01", duration: "01:53:40", durationSec: 6820, date: "10/22 (四)" },
+          { id: 8, part: "下", title: "盆底與四肢肌群神經分布 (下)", file: "08. 2016DF04-02", duration: "01:49:45", durationSec: 6585, date: "10/23 (五)" }
         ]
       },
       {
@@ -1184,10 +1310,12 @@
         targetWeek: "第 4 週 (10/24-10/26)",
         weekKey: "W4",
         unitTag: "Unit 4 血液系統 ＆ 血管",
+        totalDuration: "03:53:35",
+        totalSec: 14015,
         note: "趙俊彥核心：主動脈弓三大分支、頸外動脈分支、腹腔動脈幹/SMA/IMA、海綿竇與門脈高壓側支循環。",
         lectures: [
-          { id: 9, part: "上", title: "全身動脈血管分布與主幹分支 (上)", file: "09. 2016DF05-01.m4a", date: "10/24 (六)", highYield: "頸外動脈 8 大分支口訣、鎖骨下動脈分支 (椎動脈、內胸動脈、甲狀頸幹)、腋動脈三段分支" },
-          { id: 10, part: "下", title: "靜脈回流系統、海綿竇與門脈 (下)", file: "10. 2016DF05 02.m4a", date: "10/26 (一)", highYield: "海綿竇內容物 (CN III, IV, V1, V2, VI, ICA)、門靜脈三大側支吻合處 (痔瘡、食道曲張、海蛇頭)" }
+          { id: 9, part: "上", title: "全身動脈血管分布與主幹分支 (上)", file: "09. 2016DF05-01", duration: "01:53:39", durationSec: 6819, date: "10/24 (六)" },
+          { id: 10, part: "下", title: "靜脈回流系統、海綿竇與門脈 (下)", file: "10. 2016DF05 02", duration: "01:59:56", durationSec: 7196, date: "10/26 (一)" }
         ]
       },
       {
@@ -1197,10 +1325,12 @@
         targetWeek: "第 4 週 (10/27-10/28)",
         weekKey: "W4",
         unitTag: "Unit 5 神經系統 (大腦/基底核)",
+        totalDuration: "03:48:20",
+        totalSec: 13700,
         note: "趙俊彥核心：Brodmann 皮質區、內囊各部位纖維、基底核直接與間接路徑、邊緣系統 Papez 迴路。",
         lectures: [
-          { id: 11, part: "上", title: "大腦皮質功能區與內囊路徑 (上)", file: "11. 2016DF06-01.m4a", date: "10/27 (二)", highYield: "皮質功能區 (Area 4, 3-1-2, 44-45, 22, 17)、內囊前肢/膝部/後肢通過纖維" },
-          { id: 12, part: "下", title: "基底核迴路與邊緣系統 (下)", file: "12. 2016DF06 02.m4a", date: "10/28 (三)", highYield: "基底核構造 (尾狀核、殼核、蒼白球、視丘下核、黑質)、邊緣系統 Papez 迴路" }
+          { id: 11, part: "上", title: "大腦皮質功能區與內囊路徑 (上)", file: "11. 2016DF06-01", duration: "01:53:40", durationSec: 6820, date: "10/27 (二)" },
+          { id: 12, part: "下", title: "基底核迴路與邊緣系統 (下)", file: "12. 2016DF06 02", duration: "01:54:40", durationSec: 6880, date: "10/28 (三)" }
         ]
       },
       {
@@ -1210,10 +1340,12 @@
         targetWeek: "第 5 週 (10/29-10/30)",
         weekKey: "W5",
         unitTag: "Unit 5 神經系統 (間腦/腦幹/小腦)",
+        totalDuration: "03:45:06",
+        totalSec: 13506,
         note: "趙俊彥核心：視丘各核區功能 (VPL/VPM/LGN/MGN)、中腦/橋腦/延腦橫切面、小腦三腳傳入傳出路徑。",
         lectures: [
-          { id: 13, part: "上", title: "間腦視丘核團與下視丘 (上)", file: "13. 2016DF07-01.m4a", date: "10/29 (四)", highYield: "視丘核群 (VPL 軀幹感覺, VPM 面部感覺, LGN 視覺, MGN 聽覺)、下視丘體溫飽食中樞" },
-          { id: 14, part: "下", title: "腦幹橫切面與小腦傳導 (下)", file: "14. 2016DF07-02.m4a", date: "10/30 (五)", highYield: "中腦/橋腦/延腦切面 (紅核、黑質、內側蹄系、錐體交叉)、小腦上中下腳纖維" }
+          { id: 13, part: "上", title: "間腦視丘核團與下視丘 (上)", file: "13. 2016DF07-01", duration: "01:53:41", durationSec: 6821, date: "10/29 (四)" },
+          { id: 14, part: "下", title: "腦幹橫切面與小腦傳導 (下)", file: "14. 2016DF07-02", duration: "01:51:25", durationSec: 6685, date: "10/30 (五)" }
         ]
       },
       {
@@ -1223,10 +1355,12 @@
         targetWeek: "第 5 週 (10/31-11/02)",
         weekKey: "W5",
         unitTag: "Unit 5 神經系統 (傳導束/腦神經/臂叢)",
+        totalDuration: "03:46:08",
+        totalSec: 13568,
         note: "趙俊彥核心：12 對腦神經功能成分、臂神經叢 (C5-T1) 各幹/股/束分支與上/下神經叢受損徵象。",
         lectures: [
-          { id: 15, part: "上", title: "12 對腦神經核與走行路徑 (上)", file: "15. 2016DF08 01.m4a", date: "10/31 (六)", highYield: "腦神經核成分 (GSA, GVA, GSE, GVE, SSA, SVA, SVE) 與出顱路徑" },
-          { id: 16, part: "下", title: "脊髓傳導束與臂神經叢分支 (下)", file: "16. 2016DF08 02.m4a", date: "11/02 (一)", highYield: "臂神經叢 (根幹股束支)、肌皮/腋/橈/正中/尺神經受損徵象 (垂腕、猿手、爪手)" }
+          { id: 15, part: "上", title: "12 對腦神經核與走行路徑 (上)", file: "15. 2016DF08 01", duration: "01:53:41", durationSec: 6821, date: "10/31 (六)" },
+          { id: 16, part: "下", title: "脊髓傳導束與臂神經叢分支 (下)", file: "16. 2016DF08 02", duration: "01:52:27", durationSec: 6747, date: "11/02 (一)" }
         ]
       },
       {
@@ -1236,10 +1370,12 @@
         targetWeek: "第 5 週 (11/03-11/04)",
         weekKey: "W5",
         unitTag: "Unit 6 組織學 ＆ 視覺/自律神經",
+        totalDuration: "03:55:32",
+        totalSec: 14132,
         note: "趙俊彥核心：眼球壁三層結構、房水循環、交感神經鏈 vs 副交感神經節 (睫狀、翼顎、下頜下、耳神經節)。",
         lectures: [
-          { id: 17, part: "上", title: "眼球構造、房水循環與視覺傳導 (上)", file: "17. 2016DF09 01.m4a", date: "11/03 (二)", highYield: "眼球壁三層 (纖維膜、血管膜、視網膜)、房水循環 (Schlemm 氏管) 與眼外肌支配" },
-          { id: 18, part: "下", title: "自律神經系統與周邊神經節 (下)", file: "18. 2016DF09 02.m4a", date: "11/04 (三)", highYield: "交感星狀神經節 vs 副交感 4 大神經節 (CN III, VII, IX 支配標的)" }
+          { id: 17, part: "上", title: "眼球構造、房水循環與視覺傳導 (上)", file: "17. 2016DF09 01", duration: "01:53:41", durationSec: 6821, date: "11/03 (二)" },
+          { id: 18, part: "下", title: "自律神經系統與周邊神經節 (下)", file: "18. 2016DF09 02", duration: "02:01:51", durationSec: 7311, date: "11/04 (三)" }
         ]
       },
       {
@@ -1249,10 +1385,12 @@
         targetWeek: "第 6 週 (11/05-11/06)",
         weekKey: "W6",
         unitTag: "Unit 7 感覺器官 ＆ 內分泌",
+        totalDuration: "03:45:43",
+        totalSec: 13543,
         note: "趙俊彥核心：中耳鼓室與聽小骨、內耳 Corti 器與半規管、嗅覺路徑、腦垂體前後葉組織學。",
         lectures: [
-          { id: 19, part: "上", title: "聽覺平衡覺 (內耳耳蝸/半規管) (上)", file: "19. 2016DF10-01.m4a", date: "11/05 (四)", highYield: "鼓室壁結構、聽小骨 (槌/砧/鐙骨)、耳咽管、內耳迷路與內外淋巴液" },
-          { id: 20, part: "下", title: "嗅覺器官與腦垂體組織解剖 (下)", file: "20. 2016DF10 02.m4a", date: "11/06 (五)", highYield: "腦垂體腺葉 (前葉嗜酸/嗜鹼) vs 神經葉 (後葉 Herring 體)、嗅球與嗅神經" }
+          { id: 19, part: "上", title: "聽覺平衡覺 (內耳耳蝸/半規管) (上)", file: "19. 2016DF10-01", duration: "01:53:41", durationSec: 6821, date: "11/05 (四)" },
+          { id: 20, part: "下", title: "嗅覺器官與腦垂體組織解剖 (下)", file: "20. 2016DF10 02", duration: "01:52:02", durationSec: 6722, date: "11/06 (五)" }
         ]
       },
       {
@@ -1262,10 +1400,12 @@
         targetWeek: "第 6 週 (11/07-11/09)",
         weekKey: "W6",
         unitTag: "Unit 8 淋巴系統 ＆ 組織連接",
+        totalDuration: "03:52:19",
+        totalSec: 13939,
         note: "趙俊彥核心：緊密連接/橋粒/間隙連接蛋白、胸導管 vs 右淋巴導管引流區域、脾臟/淋巴結/胸腺組織切片特徵。",
         lectures: [
-          { id: 21, part: "上", title: "細胞連接型態與膜特化構造 (上)", file: "21. 2016DF11 01.m4a", date: "11/07 (六)", highYield: "Tight junction (Claudin/Occludin)、Desmosome (Cadherin)、Gap junction (Connexon)" },
-          { id: 22, part: "下", title: "淋巴器官 (脾臟/胸腺/胸導管) (下)", file: "22. 2016DF11 02.m4a", date: "11/09 (一)", highYield: "胸導管 (乳糜池 L1-L2 ➔ 左靜脈角) vs 右淋巴導管、胸腺皮質/髓質血胸障壁" }
+          { id: 21, part: "上", title: "細胞連接型態與膜特化構造 (上)", file: "21. 2016DF11 01", duration: "01:53:40", durationSec: 6820, date: "11/07 (六)" },
+          { id: 22, part: "下", title: "淋巴器官 (脾臟/胸腺/胸導管) (下)", file: "22. 2016DF11 02", duration: "01:58:39", durationSec: 7119, date: "11/09 (一)" }
         ]
       },
       {
@@ -1275,10 +1415,12 @@
         targetWeek: "第 6 週 (11/10-11/11)",
         weekKey: "W6",
         unitTag: "Unit 9 呼吸系統 ＆ Unit 10 心臟",
+        totalDuration: "03:49:17",
+        totalSec: 13757,
         note: "趙俊彥核心：喉軟骨與喉內肌神經支配、肺葉段支氣管、心臟四腔室/瓣膜/傳導系統與冠狀循環。",
         lectures: [
-          { id: 23, part: "上", title: "呼吸系統 (喉/氣管/肺葉/胸膜) (上)", file: "23. 2016DF12 01.m4a", date: "11/10 (二)", highYield: "喉軟骨 (甲狀/環狀/會厭/杓狀)、環甲肌 (喉外神經) vs 喉返神經支配" },
-          { id: 24, part: "下", title: "心臟解剖、瓣膜與傳導系統 (下)", file: "24. 2016DF12 02.m4a", date: "11/11 (三)", highYield: "心臟傳導系統 (SA node ➔ AV node ➔ His bundle ➔ Purkinje)、冠狀動脈 (LAD, LCx, RCA)" }
+          { id: 23, part: "上", title: "呼吸系統 (喉/氣管/肺葉/胸膜) (上)", file: "23. 2016DF12 01", duration: "01:53:41", durationSec: 6821, date: "11/10 (二)" },
+          { id: 24, part: "下", title: "心臟解剖、瓣膜與傳導系統 (下)", file: "24. 2016DF12 02", duration: "01:55:36", durationSec: 6936, date: "11/11 (三)" }
         ]
       },
       {
@@ -1288,10 +1430,12 @@
         targetWeek: "第 7 週 (11/12-11/13)",
         weekKey: "W7",
         unitTag: "Unit 15 胚胎學概論",
+        totalDuration: "03:53:04",
+        totalSec: 13984,
         note: "趙俊彥核心：三胚層分化來源 (神經脊演變)、1-6 咽弓神經肌肉軟骨骨骼演變、1-4 咽囊分化 (胸腺、副甲狀腺)。",
         lectures: [
-          { id: 25, part: "上", title: "胚胎三胚層起源與神經脊分化 (上)", file: "25. 2016DF13 01.m4a", date: "11/12 (四)", highYield: "神經脊 (Neural crest) 分化器官清單、三胚層器官速記、體節 (Somite) 分化" },
-          { id: 26, part: "下", title: "咽弓、咽囊與咽溝器官發育 (下)", file: "26. 2016DF13 02.m4a", date: "11/13 (五)", highYield: "第 1 咽弓 (CN V3, 咀嚼肌, 槌骨/砧骨)、第 2 咽弓 (CN VII, 鐙骨)、第 3 咽弓 (CN IX)、第 4/6 咽弓 (CN X)" }
+          { id: 25, part: "上", title: "胚胎三胚層起源與神經脊分化 (上)", file: "25. 2016DF13 01", duration: "01:59:59", durationSec: 7199, date: "11/12 (四)" },
+          { id: 26, part: "下", title: "咽弓、咽囊與咽溝器官發育 (下)", file: "26. 2016DF13 02", duration: "01:53:05", durationSec: 6785, date: "11/13 (五)" }
         ]
       },
       {
@@ -1301,10 +1445,12 @@
         targetWeek: "第 7 週 (11/14-11/16)",
         weekKey: "W7",
         unitTag: "Unit 11 消化系統",
+        totalDuration: "05:15:44",
+        totalSec: 18944,
         note: "趙俊彥核心：腹膜後器官口訣 (SAD PUCKER)、胃床構造、十二指腸四段與 Treitz 韌帶、肝門三聯管、空腸 vs 迴腸特徵。",
         lectures: [
-          { id: 27, part: "上", title: "消化系統：腹膜腔與胃腸解剖 (上)", file: "27. 2016DF14 01.m4a", date: "11/14 (六)", highYield: "腹膜後器官口訣 (SAD PUCKER)、胃床構造、十二指腸四段與 Treitz 韌帶" },
-          { id: 28, part: "下", title: "肝膽胰、小腸大腸與組織特徵 (下)", file: "28. 2016DF14 02.m4a", date: "11/16 (一)", highYield: "空腸 vs 迴腸組織學比較 (Peyer's patch, 血管弓)、肝門三聯管 (門靜脈, 肝動脈, 總膽管)" }
+          { id: 27, part: "上", title: "消化系統：腹膜腔與胃腸解剖 (上)", file: "27. 2016DF14 01", duration: "02:21:38", durationSec: 8498, date: "11/14 (六)" },
+          { id: 28, part: "下", title: "肝膽胰、小腸大腸與組織特徵 (下)", file: "28. 2016DF14 02", duration: "02:54:06", durationSec: 10446, date: "11/16 (一)" }
         ]
       },
       {
@@ -1314,10 +1460,12 @@
         targetWeek: "第 7 週 (11/17-11/18)",
         weekKey: "W7",
         unitTag: "Unit 12 泌尿 ＆ Unit 14 生殖",
+        totalDuration: "04:48:58",
+        totalSec: 17338,
         note: "趙俊彥核心：腎臟筋膜與輸尿管生理狹窄、精索被膜層次對照腹壁各層、子宮闊韌帶/主韌帶、前列腺分區與會陰解剖。",
         lectures: [
-          { id: 29, part: "上", title: "泌尿系統 (腎臟/輸尿管/膀胱) (上)", file: "29. 2016DF15 01.m4a", date: "11/17 (二)", highYield: "腎小球足細胞裂孔膜、近曲/遠曲小管組織切片鑑別、輸尿管三個狹窄處" },
-          { id: 30, part: "下", title: "男女生殖系統與會陰解剖 (下) [完課]", file: "30. 2016DF15 02.m4a", date: "11/18 (三)", highYield: "精索層次對照腹壁、前列腺分區 (BPH vs CA)、子宮血供與輸尿管關係 (水走橋下)" }
+          { id: 29, part: "上", title: "泌尿系統 (腎臟/輸尿管/膀胱) (上)", file: "29. 2016DF15 01", duration: "02:28:56", durationSec: 8936, date: "11/17 (二)" },
+          { id: 30, part: "下", title: "男女生殖系統與會陰解剖 (下) [完課]", file: "30. 2016DF15 02", duration: "02:20:02", durationSec: 8402, date: "11/18 (三)" }
         ]
       }
     ];
@@ -1325,22 +1473,54 @@
     let currentAnatomyWeekFilter = 'ALL';
     let savedVideoState = JSON.parse(localStorage.getItem('med_exam_videos_cloud') || '{}');
 
+    function formatSecondsToHMS(totalSec) {
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function formatSecondsToChinese(totalSec) {
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      return `${h} 小時 ${m} 分鐘`;
+    }
+
     function updateVideoProgress() {
-      const checkedCount = Object.values(savedVideoState).filter(Boolean).length;
-      const percent = Math.round((checkedCount / totalVideos) * 100);
+      let checkedCount = 0;
+      let completedSeconds = 0;
+      let completedLessons = 0;
+
+      anatomyLessonsData.forEach(l => {
+        let lessonAllDone = true;
+        l.lectures.forEach(lec => {
+          if (savedVideoState[lec.id]) {
+            checkedCount++;
+            completedSeconds += lec.durationSec;
+          } else {
+            lessonAllDone = false;
+          }
+        });
+        if (lessonAllDone) completedLessons++;
+      });
+
+      const lecturePercent = Math.round((checkedCount / totalVideos) * 100);
+      const timePercent = Math.round((completedSeconds / TOTAL_ANATOMY_SECONDS) * 100);
+
       const bar = document.getElementById('video-progress-bar');
       const text = document.getElementById('video-progress-text');
-      if (bar) bar.style.width = percent + '%';
-      if (text) text.innerText = `${checkedCount}/${totalVideos} (${percent}%)`;
+      if (bar) bar.style.width = timePercent + '%';
+      if (text) text.innerText = `${checkedCount}/${totalVideos} 講 (${timePercent}%)`;
 
-      // 計算已完全完成的節課數 (共 15 節課)
-      let completedLessons = 0;
-      anatomyLessonsData.forEach(l => {
-        const allDone = l.lectures.every(lec => !!savedVideoState[lec.id]);
-        if (allDone) completedLessons++;
-      });
       const statEl = document.getElementById('anatomy-unit-stat');
-      if (statEl) statEl.innerText = `已完成 ${completedLessons} / ${anatomyLessonsData.length} 節課 (${checkedCount} / 30 講)`;
+      if (statEl) {
+        statEl.innerText = `已完成 ${completedLessons} / ${anatomyLessonsData.length} 節課 (${checkedCount} / 30 講)`;
+      }
+
+      const timeStatEl = document.getElementById('anatomy-time-stat');
+      if (timeStatEl) {
+        timeStatEl.innerText = `已研讀 ${formatSecondsToHMS(completedSeconds)} / ${TOTAL_ANATOMY_TIME_STR} (約 ${formatSecondsToChinese(completedSeconds)} · ${timePercent}%)`;
+      }
     }
 
     window.filterAnatomyWeek = function(wKey) {
@@ -1382,9 +1562,9 @@
         }
 
         // 搜尋過濾
-        let matchesLesson = `${lesson.classNum} ${lesson.title} ${lesson.unitTag} ${lesson.note} ${lesson.targetWeek}`.toLowerCase().includes(query);
+        let matchesLesson = `${lesson.classNum} ${lesson.title} ${lesson.unitTag} ${lesson.note} ${lesson.targetWeek} ${lesson.totalDuration}`.toLowerCase().includes(query);
         let matchingLectures = lesson.lectures.filter(l => 
-          matchesLesson || `${l.part} ${l.title} ${l.file} ${l.highYield} ${l.date}`.toLowerCase().includes(query)
+          matchesLesson || `${l.part} ${l.title} ${l.file} ${l.duration} ${l.date}`.toLowerCase().includes(query)
         );
 
         if (query && !matchesLesson && matchingLectures.length === 0) {
@@ -1395,43 +1575,58 @@
         const totalCount = lesson.lectures.length;
         const doneCount = lesson.lectures.filter(l => !!savedVideoState[l.id]).length;
         const isLessonDone = doneCount === totalCount;
+        const lessonDoneSec = lesson.lectures.filter(l => !!savedVideoState[l.id]).reduce((acc, cur) => acc + cur.durationSec, 0);
+        const lessonTimePercent = Math.round((lessonDoneSec / lesson.totalSec) * 100);
 
         const card = document.createElement('div');
-        card.className = `p-4 rounded-2xl border transition-all ${
+        card.className = `p-4 md:p-5 rounded-2xl border transition-all ${
           isLessonDone
             ? 'bg-slate-900/50 border-rose-500/30'
-            : 'bg-slate-800/80 border-slate-700'
+            : 'bg-slate-800/80 border-slate-700 hover:border-rose-500/30'
         }`;
 
         card.innerHTML = `
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
-            <div class="flex items-center gap-2.5">
-              <span class="px-2.5 py-0.5 rounded-lg bg-rose-500/10 text-rose-300 font-bold font-mono text-xs border border-rose-500/30">
+            <div class="flex items-start gap-2.5">
+              <span class="px-2.5 py-0.5 rounded-lg bg-rose-500/10 text-rose-300 font-bold font-mono text-xs border border-rose-500/30 shrink-0 mt-0.5">
                 ${lesson.classNum}
               </span>
               <div>
-                <h3 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="text-xs text-rose-400 font-mono font-medium">${lesson.unitTag}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-slate-900 text-sky-300 border border-slate-700">${lesson.targetWeek}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20 font-bold flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3 h-3"></i> 單元總時長: ${lesson.totalDuration}
+                  </span>
+                </div>
+                <h3 class="text-sm md:text-base font-bold text-white mt-1 flex items-center gap-2 ${isLessonDone ? 'line-through text-slate-500' : ''}">
                   ${lesson.title}
-                  <span class="text-xs text-rose-400 font-mono font-medium hidden sm:inline">｜ ${lesson.unitTag}</span>
                 </h3>
               </div>
             </div>
-            <div class="flex items-center gap-3">
-              <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-900 text-sky-300 border border-slate-700">
-                ${lesson.targetWeek}
-              </span>
-              <span class="text-xs font-mono font-bold ${isLessonDone ? 'text-rose-400' : 'text-slate-400'}">
-                ${doneCount}/${totalCount} 講
-              </span>
+            <div class="flex items-center justify-between md:justify-end gap-3 shrink-0">
+              <div class="text-right">
+                <div class="text-xs font-mono font-bold ${isLessonDone ? 'text-rose-400' : 'text-slate-300'}">
+                  ${doneCount}/${totalCount} 講 · ${lessonTimePercent}%
+                </div>
+                <div class="text-[10px] font-mono text-slate-400">
+                  ${formatSecondsToHMS(lessonDoneSec)} / ${lesson.totalDuration}
+                </div>
+              </div>
               <div class="flex items-center gap-1 text-[11px]">
-                <button onclick="toggleAnatomyLesson(${lesson.lessonId}, true)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 text-[10px] transition">全選</button>
-                <button onclick="toggleAnatomyLesson(${lesson.lessonId}, false)" class="px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 text-[10px] transition">重置</button>
+                <button onclick="toggleAnatomyLesson(${lesson.lessonId}, true)" class="px-2 py-1 rounded bg-slate-900 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 text-[10px] transition">全選</button>
+                <button onclick="toggleAnatomyLesson(${lesson.lessonId}, false)" class="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 text-[10px] transition">重置</button>
               </div>
             </div>
           </div>
 
+          <!-- 單元進度條 -->
+          <div class="w-full bg-slate-950/70 rounded-full h-1.5 overflow-hidden my-2.5 border border-slate-800">
+            <div class="bg-gradient-to-r from-rose-500 to-pink-500 h-1.5 rounded-full transition-all duration-300" style="width: ${lessonTimePercent}%"></div>
+          </div>
+
           <!-- 核心重點提示備註 -->
-          <div class="my-3 p-2.5 bg-slate-900/80 border border-rose-500/20 rounded-xl text-xs flex items-start gap-2">
+          <div class="mb-3 p-2.5 bg-slate-900/80 border border-rose-500/20 rounded-xl text-xs flex items-start gap-2">
             <i data-lucide="info" class="w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>
             <div class="text-slate-300 text-[11px] leading-relaxed">
               <span class="text-rose-300 font-semibold">趙醫師重點：</span> ${lesson.note}
@@ -1453,13 +1648,15 @@
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between gap-1">
                         <span class="text-xs font-bold text-rose-400 font-mono">第 ${String(lec.id).padStart(2, '0')} 講 (${lec.part})</span>
-                        <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-sky-400 border border-slate-700">${lec.date}</span>
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-800 text-rose-300 border border-rose-500/30 flex items-center gap-1">
+                            <i data-lucide="clock" class="w-3 h-3 text-rose-400"></i> ${lec.duration}
+                          </span>
+                          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-sky-400 border border-slate-700">${lec.date}</span>
+                        </div>
                       </div>
                       <div class="title-text text-xs font-semibold text-slate-100 mt-1 truncate ${isChecked ? 'line-through text-slate-500' : ''}">${lec.title}</div>
                       <div class="text-[10px] text-slate-500 font-mono mt-0.5 truncate">${lec.file}</div>
-                      <div class="text-[10px] text-slate-400 bg-slate-950/60 rounded px-2 py-1 mt-1.5 border border-slate-800 leading-tight">
-                        <span class="text-rose-300 font-medium">考點：</span> ${lec.highYield}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -1634,21 +1831,6 @@
               <span class="text-xs font-semibold ${isChecked ? 'text-emerald-400' : 'text-slate-400'}">
                 ${isChecked ? '✓ 已完課 & 刷題完畢' : '⏳ 待上課 / 複習'}
               </span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-xs">
-            <div class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl leading-relaxed">
-              <span class="text-amber-300 font-bold flex items-center gap-1 mb-1">
-                <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i> 本堂核心考點：
-              </span>
-              <span class="text-slate-300 text-[11px]">${item.focus}</span>
-            </div>
-            <div class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl leading-relaxed">
-              <span class="text-sky-300 font-bold flex items-center gap-1 mb-1">
-                <i data-lucide="compass" class="w-3.5 h-3.5 text-sky-400"></i> 課後複習指引：
-              </span>
-              <span class="text-slate-300 text-[11px]">${item.reviewGuide}</span>
             </div>
           </div>
         `;
@@ -1942,12 +2124,8 @@
                 </span>
               </div>
 
-              <!-- 考點與對照標籤 -->
-              <div class="space-y-1 pt-1 border-t border-slate-800/80 text-[11px]">
-                <div class="text-slate-300 flex items-start gap-1">
-                  <span class="text-amber-400 font-bold shrink-0">★ 考點:</span>
-                  <span>${sec.highYield}</span>
-                </div>
+              <!-- 對照標籤 -->
+              <div class="pt-1 border-t border-slate-800/80 text-[11px]">
                 <div class="text-sky-300 flex items-start gap-1">
                   <span class="text-sky-400 font-bold shrink-0">📖 對照:</span>
                   <span>${sec.hoHsuan}</span>
@@ -1978,7 +2156,7 @@
         physioContainer.innerHTML = `
           <div class="text-center py-12 bg-slate-800/40 border border-slate-700/60 rounded-2xl text-slate-400 text-xs">
             <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-500 mb-2"></i>
-            找不到符合「${query}」的生理學章節或考點，請更換搜尋關鍵字。
+            找不到符合「${query}」的生理學章節，請更換搜尋關鍵字。
           </div>
         `;
       }
@@ -2037,7 +2215,510 @@
     }
 
     // ==========================================
-    // 5. 備考月曆 ＆ 區間/單日臨時行程標註系統
+    // 5. 子翔藥理學（完整 19 單元 · 38 講）進度與檢核
+    // ==========================================
+    const TOTAL_PHARM_VIDEOS = 38;
+    const TOTAL_PHARM_SECONDS = 83254; // 23小時 07分鐘 34秒
+    const TOTAL_PHARM_TIME_STR = "23:07:34";
+
+    const pharmacologyData = [
+      {
+        unitId: 1,
+        classNum: "Unit 01",
+        title: "前言 (很重要別跳過)",
+        weekKey: "W8",
+        targetWeek: "第 8 週 (11/19-11/25)",
+        unitTag: "課程條款 ＆ 架構導讀",
+        totalDuration: "00:24:55",
+        totalSec: 1495,
+        lectures: [
+          { id: "pharm_1_1", part: "導讀", title: "課程條款說明", duration: "00:05:00", durationSec: 300, type: "guide" },
+          { id: "pharm_1_2", part: "導讀", title: "課程架構解說 (19m55s)", duration: "00:19:55", durationSec: 1195, type: "guide" }
+        ]
+      },
+      {
+        unitId: 2,
+        classNum: "Unit 02",
+        title: "心血管藥物",
+        weekKey: "W11",
+        targetWeek: "第 11 週 (12/10-12/16)",
+        unitTag: "循環系統 ＆ 抗高血壓/心律不整/心衰竭",
+        totalDuration: "01:55:10",
+        totalSec: 6910,
+        lectures: [
+          { id: "pharm_2_1", part: "正課", title: "心血管藥物 正課精講 (98min27sec)", duration: "01:38:27", durationSec: 5907, type: "lecture" },
+          { id: "pharm_2_2", part: "考古", title: "心血管藥物 醫師國考考古題 (16min43sec)", duration: "00:16:43", durationSec: 1003, type: "exam" }
+        ]
+      },
+      {
+        unitId: 3,
+        classNum: "Unit 03",
+        title: "利尿劑",
+        weekKey: "W11",
+        targetWeek: "第 11 週 (12/10-12/16)",
+        unitTag: "腎臟小管 ＆ 體液電解質調控",
+        totalDuration: "00:36:07",
+        totalSec: 2167,
+        lectures: [
+          { id: "pharm_3_1", part: "正課", title: "利尿劑 正課精講 (30min12sec)", duration: "00:30:12", durationSec: 1812, type: "lecture" },
+          { id: "pharm_3_2", part: "考古", title: "利尿劑 醫師國考考古題 (5min55sec)", duration: "00:05:55", durationSec: 355, type: "exam" }
+        ]
+      },
+      {
+        unitId: 4,
+        classNum: "Unit 04",
+        title: "腸胃道藥物",
+        weekKey: "W12",
+        targetWeek: "第 12 週 (12/17-12/23)",
+        unitTag: "消化系統 ＆ 制酸止吐腸道蠕動",
+        totalDuration: "01:08:24",
+        totalSec: 4104,
+        lectures: [
+          { id: "pharm_4_1", part: "正課", title: "腸胃道藥物 正課精講 (58min49sec)", duration: "00:58:49", durationSec: 3529, type: "lecture" },
+          { id: "pharm_4_2", part: "考古", title: "腸胃道藥物 醫師國考考古題 (9min35sec)", duration: "00:09:35", durationSec: 575, type: "exam" }
+        ]
+      },
+      {
+        unitId: 5,
+        classNum: "Unit 05",
+        title: "呼吸道藥物",
+        weekKey: "W12",
+        targetWeek: "第 12 週 (12/17-12/23)",
+        unitTag: "氣喘/COPD ＆ 支氣管擴張",
+        totalDuration: "00:42:46",
+        totalSec: 2566,
+        lectures: [
+          { id: "pharm_5_1", part: "正課", title: "呼吸道藥物 正課精講 (34min19sec)", duration: "00:34:19", durationSec: 2059, type: "lecture" },
+          { id: "pharm_5_2", part: "考古", title: "呼吸道藥物 醫師國考考古題 (8min27sec)", duration: "00:08:27", durationSec: 507, type: "exam" }
+        ]
+      },
+      {
+        unitId: 6,
+        classNum: "Unit 06",
+        title: "自主神經藥物",
+        weekKey: "W11",
+        targetWeek: "第 11 週 (12/10-12/16)",
+        unitTag: "交感/副交感 ＆ 膽鹼/腎上腺素受體",
+        totalDuration: "01:47:39",
+        totalSec: 6459,
+        lectures: [
+          { id: "pharm_6_1", part: "正課", title: "自主神經藥物 正課精講 (90min32sec)", duration: "01:30:32", durationSec: 5432, type: "lecture" },
+          { id: "pharm_6_2", part: "考古", title: "自主神經藥物 醫師國考考古題 (17min7sec)", duration: "00:17:07", durationSec: 1027, type: "exam" }
+        ]
+      },
+      {
+        unitId: 7,
+        classNum: "Unit 07",
+        title: "內分泌藥物",
+        weekKey: "W13",
+        targetWeek: "第 13 週 (12/24-12/30)",
+        unitTag: "甲狀腺/降血糖/皮質類固醇/性腺荷爾蒙",
+        totalDuration: "02:44:23",
+        totalSec: 9863,
+        lectures: [
+          { id: "pharm_7_1", part: "正課", title: "內分泌藥物 正課精講 (135min2sec)", duration: "02:15:02", durationSec: 8102, type: "lecture" },
+          { id: "pharm_7_2", part: "考古", title: "內分泌藥物 醫師國考考古題 (29min21sec)", duration: "00:29:21", durationSec: 1761, type: "exam" }
+        ]
+      },
+      {
+        unitId: 8,
+        classNum: "Unit 08",
+        title: "神經遞質藥物",
+        weekKey: "W12",
+        targetWeek: "第 12 週 (12/17-12/23)",
+        unitTag: "巴金森/失智症/思覺失調/抗憂鬱",
+        totalDuration: "01:13:01",
+        totalSec: 4381,
+        lectures: [
+          { id: "pharm_8_1", part: "正課", title: "神經遞質藥物 正課精講 (59min45sec)", duration: "00:59:45", durationSec: 3585, type: "lecture" },
+          { id: "pharm_8_2", part: "考古", title: "神經遞質藥物 醫師國考考古題 (13min16sec)", duration: "00:13:16", durationSec: 796, type: "exam" }
+        ]
+      },
+      {
+        unitId: 9,
+        classNum: "Unit 09",
+        title: "中樞抑制藥物",
+        weekKey: "W12",
+        targetWeek: "第 12 週 (12/17-12/23)",
+        unitTag: "鎮靜安眠 BZD/抗癲癇/全身麻醉",
+        totalDuration: "01:22:49",
+        totalSec: 4969,
+        lectures: [
+          { id: "pharm_9_1", part: "正課", title: "中樞抑制藥物 正課精講 (68min57sec)", duration: "01:08:57", durationSec: 4137, type: "lecture" },
+          { id: "pharm_9_2", part: "考古", title: "中樞抑制藥物 醫師國考考古題 (13min52sec)", duration: "00:13:52", durationSec: 832, type: "exam" }
+        ]
+      },
+      {
+        unitId: 10,
+        classNum: "Unit 10",
+        title: "血液藥物",
+        weekKey: "W11",
+        targetWeek: "第 11 週 (12/10-12/16)",
+        unitTag: "抗凝血 Warfarin/NOAC/抗血小板/溶栓劑",
+        totalDuration: "01:30:29",
+        totalSec: 5429,
+        lectures: [
+          { id: "pharm_10_1", part: "正課", title: "血液藥物 正課精講 (72min39sec)", duration: "01:12:39", durationSec: 4359, type: "lecture" },
+          { id: "pharm_10_2", part: "考古", title: "血液藥物 醫師國考考古題 (17min50sec)", duration: "00:17:50", durationSec: 1070, type: "exam" }
+        ]
+      },
+      {
+        unitId: 11,
+        classNum: "Unit 11",
+        title: "止痛藥物",
+        weekKey: "W12",
+        targetWeek: "第 12 週 (12/17-12/23)",
+        unitTag: "NSAIDs/Acetaminophen/鴉片類/偏頭痛痛風",
+        totalDuration: "01:26:51",
+        totalSec: 5211,
+        lectures: [
+          { id: "pharm_11_1", part: "正課", title: "止痛藥物 正課精講 (66min16sec)", duration: "01:06:16", durationSec: 3976, type: "lecture" },
+          { id: "pharm_11_2", part: "考古", title: "止痛藥物 醫師國考考古題 (20min35sec)", duration: "00:20:35", durationSec: 1235, type: "exam" }
+        ]
+      },
+      {
+        unitId: 12,
+        classNum: "Unit 12",
+        title: "藥動學 ＆ 藥效學",
+        weekKey: "W8",
+        targetWeek: "第 8 週 (11/19-11/25)",
+        unitTag: "ADME/生體可用率/清除率/受體動力學",
+        totalDuration: "01:05:58",
+        totalSec: 3958,
+        lectures: [
+          { id: "pharm_12_1", part: "正課", title: "藥動學&藥效學 正課精講 (51min58sec)", duration: "00:51:58", durationSec: 3118, type: "lecture" },
+          { id: "pharm_12_2", part: "考古", title: "藥動學&藥效學 醫師國考考古題 (14min0sec)", duration: "00:14:00", durationSec: 840, type: "exam" }
+        ]
+      },
+      {
+        unitId: 13,
+        classNum: "Unit 13",
+        title: "自泌素",
+        weekKey: "W13",
+        targetWeek: "第 13 週 (12/24-12/30)",
+        unitTag: "組織胺 Histamine/血清素/前列腺素",
+        totalDuration: "00:52:38",
+        totalSec: 3158,
+        lectures: [
+          { id: "pharm_13_1", part: "正課", title: "自泌素 正課精講 (44min22sec)", duration: "00:44:22", durationSec: 2662, type: "lecture" },
+          { id: "pharm_13_2", part: "考古", title: "自泌素 醫師國考考古題 (8min16sec)", duration: "00:08:16", durationSec: 496, type: "exam" }
+        ]
+      },
+      {
+        unitId: 14,
+        classNum: "Unit 14",
+        title: "解毒劑",
+        weekKey: "W10",
+        targetWeek: "第 10 週 (12/03-12/09)",
+        unitTag: "有機磷/重金屬螯合/Acetaminophen/特異性解毒",
+        totalDuration: "00:47:20",
+        totalSec: 2840,
+        lectures: [
+          { id: "pharm_14_1", part: "正課", title: "解毒劑 正課精講 (41min11sec)", duration: "00:41:11", durationSec: 2471, type: "lecture" },
+          { id: "pharm_14_2", part: "考古", title: "解毒劑 醫師國考考古題 (6min9sec)", duration: "00:06:09", durationSec: 369, type: "exam" }
+        ]
+      },
+      {
+        unitId: 15,
+        classNum: "Unit 15",
+        title: "抗生素",
+        weekKey: "W9",
+        targetWeek: "第 9 週 (11/26-12/02)",
+        unitTag: "β-lactams/巨環類/四環素/胺基糖苷/喹諾酮",
+        totalDuration: "02:08:24",
+        totalSec: 7704,
+        lectures: [
+          { id: "pharm_15_1", part: "正課", title: "抗生素 正課精講 (111min21sec)", duration: "01:51:21", durationSec: 6681, type: "lecture" },
+          { id: "pharm_15_2", part: "考古", title: "抗生素 醫師國考考古題 (17min3sec)", duration: "00:17:03", durationSec: 1023, type: "exam" }
+        ]
+      },
+      {
+        unitId: 16,
+        classNum: "Unit 16",
+        title: "抗黴菌藥物",
+        weekKey: "W9",
+        targetWeek: "第 9 週 (11/26-12/02)",
+        unitTag: "Azoles/Amphotericin B/Echinocandins/Terbinafine",
+        totalDuration: "00:26:18",
+        totalSec: 1578,
+        lectures: [
+          { id: "pharm_16_1", part: "正課", title: "抗黴菌藥物 正課精講 (18min59sec)", duration: "00:18:59", durationSec: 1139, type: "lecture" },
+          { id: "pharm_16_2", part: "考古", title: "抗黴菌藥物 醫師國考考古題 (7min19sec)", duration: "00:07:19", durationSec: 439, type: "exam" }
+        ]
+      },
+      {
+        unitId: 17,
+        classNum: "Unit 17",
+        title: "抗病毒藥物",
+        weekKey: "W10",
+        targetWeek: "第 10 週 (12/03-12/09)",
+        unitTag: "流感/HSV/VZV/B肝C肝/HIV雞尾酒療法",
+        totalDuration: "00:55:29",
+        totalSec: 3329,
+        lectures: [
+          { id: "pharm_17_1", part: "正課", title: "抗病毒藥物 正課精講 (42min13sec)", duration: "00:42:13", durationSec: 2533, type: "lecture" },
+          { id: "pharm_17_2", part: "考古", title: "抗病毒藥物 醫師國考考古題 (13min16sec)", duration: "00:13:16", durationSec: 796, type: "exam" }
+        ]
+      },
+      {
+        unitId: 18,
+        classNum: "Unit 18",
+        title: "抗癌藥物",
+        weekKey: "W10",
+        targetWeek: "第 10 週 (12/03-12/09)",
+        unitTag: "烷化劑/抗代謝/拓撲酶抑制/標靶藥物/免疫療法",
+        totalDuration: "01:17:14",
+        totalSec: 4634,
+        lectures: [
+          { id: "pharm_18_1", part: "正課", title: "抗癌藥物 正課精講 (55min4sec)", duration: "00:55:04", durationSec: 3304, type: "lecture" },
+          { id: "pharm_18_2", part: "考古", title: "抗癌藥物 考古題 (22min10sec)", duration: "00:22:10", durationSec: 1330, type: "exam" }
+        ]
+      },
+      {
+        unitId: 19,
+        classNum: "Unit 19",
+        title: "免疫相關藥物",
+        weekKey: "W8",
+        targetWeek: "第 8 週 (11/19-11/25)",
+        unitTag: "Calcineurin抑制劑/mTOR/單株抗體/生物製劑",
+        totalDuration: "00:41:39",
+        totalSec: 2499,
+        lectures: [
+          { id: "pharm_19_1", part: "正課", title: "免疫相關藥物 正課精講 (35min9sec)", duration: "00:35:09", durationSec: 2109, type: "lecture" },
+          { id: "pharm_19_2", part: "考古", title: "免疫相關藥物 醫師國考考古題 (6min30sec)", duration: "00:06:30", durationSec: 390, type: "exam" }
+        ]
+      }
+    ];
+
+    let currentPharmWeekFilter = 'ALL';
+    let currentPharmSearch = '';
+    let savedPharmState = JSON.parse(localStorage.getItem('med_exam_pharm_cloud') || '{}');
+
+    function updatePharmProgress() {
+      let checkedCount = 0;
+      let completedSeconds = 0;
+      let completedUnits = 0;
+
+      pharmacologyData.forEach(unit => {
+        let unitAllDone = true;
+        unit.lectures.forEach(lec => {
+          if (savedPharmState[lec.id]) {
+            checkedCount++;
+            completedSeconds += lec.durationSec;
+          } else {
+            unitAllDone = false;
+          }
+        });
+        if (unitAllDone) completedUnits++;
+      });
+
+      const lecturePercent = Math.round((checkedCount / TOTAL_PHARM_VIDEOS) * 100);
+      const timePercent = Math.round((completedSeconds / TOTAL_PHARM_SECONDS) * 100);
+
+      const bar = document.getElementById('pharm-progress-bar');
+      const text = document.getElementById('pharm-progress-text');
+      if (bar) bar.style.width = timePercent + '%';
+      if (text) text.innerText = `${checkedCount}/${TOTAL_PHARM_VIDEOS} 講 (${timePercent}%)`;
+
+      const statEl = document.getElementById('pharm-unit-stat');
+      if (statEl) {
+        statEl.innerText = `已完成 ${completedUnits} / ${pharmacologyData.length} 單元 (${checkedCount} / ${TOTAL_PHARM_VIDEOS} 講)`;
+      }
+
+      const timeStatEl = document.getElementById('pharm-time-stat');
+      if (timeStatEl) {
+        timeStatEl.innerText = `已研讀 ${formatSecondsToHMS(completedSeconds)} / ${TOTAL_PHARM_TIME_STR} (約 ${formatSecondsToChinese(completedSeconds)} · ${timePercent}%)`;
+      }
+    }
+
+    window.filterPharmWeek = function(wKey) {
+      currentPharmWeekFilter = wKey;
+      document.querySelectorAll('.pharm-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-week') === wKey) {
+          btn.classList.add('active', 'bg-violet-500/20', 'text-violet-300', 'border-violet-500/40');
+          btn.classList.remove('bg-slate-900', 'text-slate-400');
+        } else {
+          btn.classList.remove('active', 'bg-violet-500/20', 'text-violet-300', 'border-violet-500/40');
+          btn.classList.add('bg-slate-900', 'text-slate-400');
+        }
+      });
+      renderPharmUnits();
+    };
+
+    window.togglePharmUnit = function(unitId, selectAll) {
+      const unit = pharmacologyData.find(u => u.unitId === unitId);
+      if (!unit) return;
+      unit.lectures.forEach(lec => {
+        savedPharmState[lec.id] = selectAll;
+      });
+      localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
+      if (db) db.ref('pharmacology').set(savedPharmState);
+      renderPharmUnits();
+    };
+
+    function renderPharmUnits() {
+      const container = document.getElementById('pharm-units-container');
+      if (!container) return;
+      const query = (currentPharmSearch || '').toLowerCase().trim();
+
+      container.innerHTML = '';
+
+      const filteredUnits = pharmacologyData.filter(unit => {
+        if (currentPharmWeekFilter !== 'ALL' && unit.weekKey !== currentPharmWeekFilter) {
+          return false;
+        }
+        if (query) {
+          const matchText = `${unit.unitId} ${unit.classNum} ${unit.title} ${unit.targetWeek} ${unit.unitTag} ${unit.totalDuration} ${unit.lectures.map(l => l.title + ' ' + l.duration).join(' ')}`.toLowerCase();
+          return matchText.includes(query);
+        }
+        return true;
+      });
+
+      if (filteredUnits.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 bg-slate-800/40 border border-slate-700/60 rounded-2xl text-slate-400 text-xs">
+            <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-500 mb-2"></i>
+            找不到符合「${query}」的藥理學單元或課程，請更換搜尋關鍵字。
+          </div>
+        `;
+        lucide.createIcons();
+        updatePharmProgress();
+        return;
+      }
+
+      filteredUnits.forEach(unit => {
+        const totalCount = unit.lectures.length;
+        const doneCount = unit.lectures.filter(lec => !!savedPharmState[lec.id]).length;
+        const isUnitDone = doneCount === totalCount && totalCount > 0;
+        const unitDoneSec = unit.lectures.filter(lec => !!savedPharmState[lec.id]).reduce((acc, cur) => acc + cur.durationSec, 0);
+        const unitTimePercent = Math.round((unitDoneSec / unit.totalSec) * 100);
+
+        const card = document.createElement('div');
+        card.className = `p-4 md:p-5 rounded-2xl border transition-all ${
+          isUnitDone 
+            ? 'completed bg-slate-900/50 border-violet-500/30' 
+            : 'bg-slate-800/80 border-slate-700 hover:border-violet-500/30'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
+            <div class="flex items-start gap-2.5">
+              <span class="px-2.5 py-0.5 rounded-lg bg-violet-500/10 text-violet-300 font-bold font-mono text-xs border border-violet-500/30 shrink-0 mt-0.5">
+                ${unit.classNum}
+              </span>
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="text-xs text-violet-400 font-mono font-medium">${unit.unitTag}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-slate-900 text-sky-300 border border-slate-700">${unit.targetWeek}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-violet-500/10 text-violet-300 border border-violet-500/20 font-bold flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3 h-3"></i> 單元總時長: ${unit.totalDuration}
+                  </span>
+                </div>
+                <h3 class="text-sm md:text-base font-bold text-white mt-1 flex items-center gap-2 ${isUnitDone ? 'line-through text-slate-500' : ''}">
+                  ${unit.title}
+                </h3>
+              </div>
+            </div>
+            <div class="flex items-center justify-between md:justify-end gap-3 shrink-0">
+              <div class="text-right">
+                <div class="text-xs font-mono font-bold ${isUnitDone ? 'text-violet-400' : 'text-slate-300'}">
+                  ${doneCount}/${totalCount} 講 · ${unitTimePercent}%
+                </div>
+                <div class="text-[10px] font-mono text-slate-400">
+                  ${formatSecondsToHMS(unitDoneSec)} / ${unit.totalDuration}
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-[11px]">
+                <button onclick="togglePharmUnit(${unit.unitId}, true)" class="px-2 py-1 rounded bg-slate-900 hover:bg-violet-500/20 text-slate-300 hover:text-violet-300 border border-slate-700 text-[10px] transition">全選</button>
+                <button onclick="togglePharmUnit(${unit.unitId}, false)" class="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 text-[10px] transition">重置</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 單元進度條 -->
+          <div class="w-full bg-slate-950/70 rounded-full h-1.5 overflow-hidden my-2.5 border border-slate-800">
+            <div class="bg-gradient-to-r from-violet-500 to-indigo-500 h-1.5 rounded-full transition-all duration-300" style="width: ${unitTimePercent}%"></div>
+          </div>
+
+          <!-- 影片列表 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
+            ${unit.lectures.map(lec => {
+              const isChecked = !!savedPharmState[lec.id];
+              const isExam = lec.type === 'exam';
+              return `
+                <div class="pharm-lec-card p-3 rounded-xl border transition-all cursor-pointer ${
+                  isChecked 
+                    ? 'completed bg-slate-950/60 border-violet-500/30' 
+                    : 'bg-slate-900/90 border-slate-700/80 hover:border-violet-500/40'
+                }" data-id="${lec.id}">
+                  <div class="flex items-start gap-2.5">
+                    <input type="checkbox" class="mt-1 rounded bg-slate-800 border-slate-600 text-violet-500 focus:ring-0 cursor-pointer" data-id="${lec.id}" ${isChecked ? 'checked' : ''}>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between gap-1">
+                        <span class="text-xs font-bold text-violet-400 font-mono">
+                          ${lec.type === 'guide' ? '須知導讀' : (isExam ? '國考考古題' : '正課精講')} (${lec.part})
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-800 text-violet-300 border border-violet-500/30 flex items-center gap-1">
+                            <i data-lucide="clock" class="w-3 h-3 text-violet-400"></i> ${lec.duration}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="title-text text-xs font-semibold text-slate-100 mt-1 truncate ${isChecked ? 'line-through text-slate-500' : ''}">${lec.title}</div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+
+        // 綁定影片卡片點擊事件
+        card.querySelectorAll('.pharm-lec-card').forEach(itemEl => {
+          const lecId = itemEl.getAttribute('data-id');
+          itemEl.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT') {
+              const cb = itemEl.querySelector('input');
+              if (cb) cb.checked = !cb.checked;
+            }
+            const cb = itemEl.querySelector('input');
+            savedPharmState[lecId] = cb.checked;
+            localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
+            if (db) db.ref('pharmacology').set(savedPharmState);
+            renderPharmUnits();
+          });
+        });
+
+        container.appendChild(card);
+      });
+
+      updatePharmProgress();
+      lucide.createIcons();
+    }
+
+    const pharmSearchInput = document.getElementById('pharm-search-input');
+    if (pharmSearchInput) {
+      pharmSearchInput.addEventListener('input', (e) => {
+        currentPharmSearch = e.target.value;
+        renderPharmUnits();
+      });
+    }
+
+    renderPharmUnits();
+
+    if (db) {
+      db.ref('pharmacology').on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          savedPharmState = val;
+          localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
+          renderPharmUnits();
+        }
+      });
+    }
+
+    // ==========================================
+    // 6. 備考月曆 ＆ 區間/單日臨時行程標註系統
     // ==========================================
     const classDates = ['2026-11-06', '2026-11-13', '2026-11-18', '2026-11-27', '2026-12-04', '2026-12-11', '2026-12-23', '2026-12-28'];
     const examDatesList = ['2027-01-16', '2027-01-17', '2027-01-18'];
@@ -2224,12 +2905,12 @@
       { w: 5, start: '2026-10-29', end: '2026-11-04', date: "10/29-11/04", title: "趙俊彥 13-18：第7-9節 [間腦腦幹小腦 ➔ 脊髓傳導臂神經叢 ➔ 周邊自律視覺] ＋ 考古豹 ＋ [運動:肌力強化]" },
       { w: 6, start: '2026-11-05', end: '2026-11-11', date: "11/05-11/11", title: "趙俊彥 19-24：第10-12節 [聽平衡嗅腦垂體 ➔ 細胞連接淋巴 ➔ 呼吸脾臟心臟] ＋ 鐸鐸生化第1堂(11/06) ＋ 考古豹" },
       { w: 7, start: '2026-11-12', end: '2026-11-18', date: "11/12-11/18", title: "趙俊彥 25-30：第13-15節 [胚胎咽器發育 ➔ 消化腹膜 ➔ 泌尿生殖 解剖完課] ＋ 鐸鐸生化第2堂(11/13)＆第3堂(11/18)" },
-      { w: 8, start: '2026-11-19', end: '2026-11-25', date: "11/19-11/25", title: "小美免疫 ＋ Winner 免疫架構 ＋ 歷屆考古豹刷題 ＋ 錯題深度檢討" },
-      { w: 9, start: '2026-11-26', end: '2026-12-02', date: "11/26-12/02", title: "Winner 細菌學/真菌學 ＋ 鐸鐸生化第4堂(11/27) ＋ 考古豹 50+ 題 ＋ [運動:巔峰慢跑]" },
-      { w: 10, start: '2026-12-03', end: '2026-12-09', date: "12/03-12/09", title: "Winner 病毒/寄生蟲熟背 ＋ 鐸鐸生化第5堂(12/04) ＋ 微免圖表總整理" },
-      { w: 11, start: '2026-12-10', end: '2026-12-16', date: "12/10-12/16", title: "子翔藥理(ANS/心血管/抗生素) ＋ 鐸鐸生化第6堂(12/11) ＋ 藥理機轉考古題" },
-      { w: 12, start: '2026-12-17', end: '2026-12-23', date: "12/17-12/23", title: "子翔藥理(CNS/化療藥收尾) ＋ FC 生統 ＋ 鐸鐸生化第7堂(12/23)" },
-      { w: 13, start: '2026-12-24', end: '2026-12-30', date: "12/24-12/30", title: "FC 公衛流病法規 ＋ 歷屆常考公衛統計計算 ＋ 鐸鐸生化第8堂[生化完課](12/28)" },
+      { w: 8, start: '2026-11-19', end: '2026-11-25', date: "11/19-11/25", title: "小美免疫 ＋ Winner 免疫架構 ＋ 子翔藥理[前言/藥動藥效/免疫藥物] ＋ 歷屆考古豹刷題" },
+      { w: 9, start: '2026-11-26', end: '2026-12-02', date: "11/26-12/02", title: "Winner 細菌學/真菌學 ＋ 子翔藥理[抗生素/抗黴菌] ＋ 鐸鐸生化第4堂(11/27) ＋ 考古豹 50+ 題" },
+      { w: 10, start: '2026-12-03', end: '2026-12-09', date: "12/03-12/09", title: "Winner 病毒/寄生蟲 ＋ 子翔藥理[抗病毒/抗癌/解毒劑] ＋ 鐸鐸生化第5堂(12/04) ＋ 微免圖表整理" },
+      { w: 11, start: '2026-12-10', end: '2026-12-16', date: "12/10-12/16", title: "子翔藥理心血管自律大科[自主神經/心血管/利尿劑/血液] ＋ 鐸鐸生化第6堂(12/11) ＋ 考古題" },
+      { w: 12, start: '2026-12-17', end: '2026-12-23', date: "12/17-12/23", title: "子翔藥理中樞器官大科[神經遞質/中樞抑制/止痛/腸胃/呼吸] ＋ FC 生統 ＋ 鐸鐸生化第7堂(12/23)" },
+      { w: 13, start: '2026-12-24', end: '2026-12-30', date: "12/24-12/30", title: "子翔藥理完課[內分泌/自泌素] ＋ FC 公衛流病法規 ＋ 鐸鐸生化第8堂[生化完課](12/28)" },
       { w: 14, start: '2026-12-31', end: '2027-01-06', date: "12/31-01/06", title: "考古豹病理 8 年題庫狂刷（腫瘤/心血管/腎絲球）＋ 歷年高頻考點大彙整" },
       { w: 15, start: '2027-01-07', end: '2027-01-12', date: "01/07-01/12", title: "考前模擬總衝刺：考古豹全真模考（計時＋全檢討）＋ [運動:考前減量伸展]" },
       { w: 16, start: '2027-01-13', end: '2027-01-18', date: "01/13-01/18", title: "考前3天衝刺 (01/13-01/15 表格速記) ＋ 決戰國考 (01/16-01/18 應考，全力以赴！)" }
