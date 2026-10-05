@@ -150,8 +150,8 @@
               <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-xs font-bold border border-sky-500/30 flex items-center gap-1">
                 <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> 動能分析 ｜ Recharts
               </span>
-              <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold border border-emerald-500/30 flex items-center gap-1">
-                <i data-lucide="flame" class="w-3 h-3"></i> 推進動能：巔峰爆發中 (+24.0%)
+              <span id="trend-momentum-banner-badge" class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold border border-emerald-500/30 flex items-center gap-1">
+                <i data-lucide="flame" class="w-3 h-3"></i> 推進動能：真實進度即時聯動
               </span>
             </div>
             <h2 class="text-base md:text-lg font-bold text-white mt-1.5 flex items-center gap-2">
@@ -181,49 +181,49 @@
           <div class="bg-slate-900/70 border border-slate-700/60 rounded-xl p-3 space-y-1">
             <div class="text-[11px] font-medium text-slate-400 flex items-center justify-between">
               <span>本週衝刺完成率</span>
-              <span id="metric-week4-badge" class="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">▲ +7.5%</span>
+              <span id="metric-week4-badge" class="text-[10px] text-sky-400 font-bold bg-sky-500/10 px-1.5 py-0.2 rounded border border-sky-500/20">W1 本週</span>
             </div>
             <div class="flex items-baseline gap-1.5">
-              <span id="metric-week4-val" class="text-xl md:text-2xl font-black font-mono text-sky-400">92.4%</span>
+              <span id="metric-week4-val" class="text-xl md:text-2xl font-black font-mono text-sky-400">0.0%</span>
               <span class="text-[11px] text-slate-400">達成</span>
             </div>
-            <div class="text-[10px] text-slate-400 truncate">高於 75% 及格安全線</div>
+            <div id="metric-week4-sub" class="text-[10px] text-slate-400 truncate">依實際主科進度動態計算</div>
           </div>
 
           <div class="bg-slate-900/70 border border-slate-700/60 rounded-xl p-3 space-y-1">
             <div class="text-[11px] font-medium text-slate-400 flex items-center justify-between">
               <span>4 週平均完成率</span>
-              <span class="text-[10px] text-sky-300 font-bold bg-sky-500/10 px-1.5 py-0.2 rounded border border-sky-500/20">優於預期</span>
+              <span id="metric-avg-badge" class="text-[10px] text-sky-300 font-bold bg-sky-500/10 px-1.5 py-0.2 rounded border border-sky-500/20">4 週總合</span>
             </div>
             <div class="flex items-baseline gap-1.5">
-              <span id="metric-avg-val" class="text-xl md:text-2xl font-black font-mono text-emerald-400">85.8%</span>
+              <span id="metric-avg-val" class="text-xl md:text-2xl font-black font-mono text-emerald-400">0.0%</span>
               <span class="text-[11px] text-slate-400">平均</span>
             </div>
-            <div class="text-[10px] text-slate-400 truncate">連續 4 週穩定達標</div>
+            <div id="metric-avg-sub" class="text-[10px] text-slate-400 truncate">當前視窗 4 週平均任務達成率</div>
           </div>
 
           <div class="bg-slate-900/70 border border-slate-700/60 rounded-xl p-3 space-y-1">
             <div class="text-[11px] font-medium text-slate-400 flex items-center justify-between">
               <span>衝刺動量增長</span>
-              <span class="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">🔥 卓越</span>
+              <span id="metric-momentum-badge" class="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">動能變化</span>
             </div>
             <div class="flex items-baseline gap-1.5">
-              <span id="metric-momentum-val" class="text-xl md:text-2xl font-black font-mono text-amber-400">+24.0%</span>
+              <span id="metric-momentum-val" class="text-xl md:text-2xl font-black font-mono text-amber-400">+0.0%</span>
               <span class="text-[11px] text-slate-400">淨增長</span>
             </div>
-            <div class="text-[10px] text-slate-400 truncate">正向推進動能強勁</div>
+            <div id="metric-momentum-sub" class="text-[10px] text-slate-400 truncate">跨週推進動能變化</div>
           </div>
 
           <div class="bg-slate-900/70 border border-slate-700/60 rounded-xl p-3 space-y-1">
             <div class="text-[11px] font-medium text-slate-400 flex items-center justify-between">
               <span>每日自律執行率</span>
-              <span class="text-[10px] text-purple-300 font-bold bg-purple-500/10 px-1.5 py-0.2 rounded border border-purple-500/20">極致專注</span>
+              <span id="metric-habit-badge" class="text-[10px] text-purple-300 font-bold bg-purple-500/10 px-1.5 py-0.2 rounded border border-purple-500/20">今日打卡</span>
             </div>
             <div class="flex items-baseline gap-1.5">
-              <span id="metric-habit-val" class="text-xl md:text-2xl font-black font-mono text-purple-400">94.2%</span>
+              <span id="metric-habit-val" class="text-xl md:text-2xl font-black font-mono text-purple-400">0.0%</span>
               <span class="text-[11px] text-slate-400">打卡</span>
             </div>
-            <div class="text-[10px] text-slate-400 truncate">運動 + 考古題連貫執行</div>
+            <div id="metric-habit-sub" class="text-[10px] text-slate-400 truncate">運動 + 考古題 + 作息執行</div>
           </div>
         </div>
 
@@ -1217,6 +1217,9 @@
         localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
         if (db) db.ref(`habits/${todayStr}`).set(todayHabits);
         calculateStreak();
+        if (typeof window.updateProgressTrendChart === 'function') {
+          window.updateProgressTrendChart();
+        }
       });
     });
 
@@ -1230,6 +1233,9 @@
             document.getElementById(id).checked = !!todayHabits[id];
           });
           calculateStreak();
+          if (typeof window.updateProgressTrendChart === 'function') {
+            window.updateProgressTrendChart();
+          }
         }
       });
     }
@@ -1521,6 +1527,10 @@
       if (timeStatEl) {
         timeStatEl.innerText = `已研讀 ${formatSecondsToHMS(completedSeconds)} / ${TOTAL_ANATOMY_TIME_STR} (約 ${formatSecondsToChinese(completedSeconds)} · ${timePercent}%)`;
       }
+
+      if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateProgressTrendChart();
+      }
     }
 
     window.filterAnatomyWeek = function(wKey) {
@@ -1792,6 +1802,9 @@
       if (text) text.innerText = `${checkedCount}/${biochemData.length} (${percent}%)`;
       const timeStat = document.getElementById('biochem-time-stat');
       if (timeStat) timeStat.innerText = `已完成 ${checkedCount} / ${biochemData.length} 堂課 (${checkedCount * 4} / 32 小時)`;
+      if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateProgressTrendChart();
+      }
     }
 
     function renderBiochemUnits() {
@@ -2019,6 +2032,10 @@
       if (pBar) pBar.style.width = `${percent}%`;
       if (pText) pText.innerText = `${completedSections}/${totalSections} (${percent}%)`;
       if (pStat) pStat.innerText = `已讀 ${completedPages} / ${totalPages} 頁 · 全 7 大篇章`;
+
+      if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateProgressTrendChart();
+      }
     }
 
     // 渲染 First Choice 生理學清單
@@ -2529,6 +2546,10 @@
       if (timeStatEl) {
         timeStatEl.innerText = `已研讀 ${formatSecondsToHMS(completedSeconds)} / ${TOTAL_PHARM_TIME_STR} (約 ${formatSecondsToChinese(completedSeconds)} · ${timePercent}%)`;
       }
+
+      if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateProgressTrendChart();
+      }
     }
 
     window.filterPharmWeek = function(wKey) {
@@ -3012,147 +3033,274 @@
       window.updateProgressTrendChart();
     };
 
-    function calculateTrendData() {
-      // Read current persisted states
+    function getWeekTaskCompletion(wNum) {
       const checklistCloud = JSON.parse(localStorage.getItem('med_exam_checklist_cloud') || '{}');
+      if (checklistCloud[wNum]) return 100;
+
       const physioCloud = JSON.parse(localStorage.getItem('med_exam_physio_cloud') || '{}');
       const videosCloud = JSON.parse(localStorage.getItem('med_exam_videos_cloud') || '{}');
-      
-      // Calculate physio completion fraction for first 2 weeks
-      const physioKeys = ['fc_p_1', 'fc_p_2', 'fc_p_3', 'fc_p_4', 'fc_p_5', 'fc_p_6', 'fc_p_7'];
-      const physioCheckedCount = physioKeys.filter(k => !!physioCloud[k]).length;
-      const physioRateBonus = Math.round((physioCheckedCount / 7) * 15);
+      const pharmCloud = JSON.parse(localStorage.getItem('med_exam_pharm_cloud') || '{}');
+      const biochemCloud = JSON.parse(localStorage.getItem('med_exam_biochem_cloud') || '{}');
 
-      // Calculate anatomy completion fraction
-      const anatomyCheckedCount = Object.values(videosCloud).filter(Boolean).length;
-      const anatomyRateBonus = Math.round((anatomyCheckedCount / 30) * 12);
+      let totalTasks = 0;
+      let doneTasks = 0;
 
-      if (trendChartMode === 'sprint') {
-        const w1Checked = !!checklistCloud[1];
-        const w2Checked = !!checklistCloud[2];
-        const w3Checked = !!checklistCloud[3];
-        const w4Checked = !!checklistCloud[4];
-
-        const w1Rate = Math.min(100, Math.max(68, (w1Checked ? 98 : 72) + Math.min(10, physioRateBonus)));
-        const w2Rate = Math.min(100, Math.max(76, (w2Checked ? 100 : 80) + Math.min(12, physioRateBonus)));
-        const w3Rate = Math.min(100, Math.max(84, (w3Checked ? 98 : 88) + Math.min(8, anatomyRateBonus)));
-        const w4Rate = Math.min(100, Math.max(90, (w4Checked ? 100 : 94) + Math.min(6, anatomyRateBonus)));
-
-        return [
-          {
-            weekKey: 'W1',
-            label: '第 1 週',
-            subtitle: '10/01-10/07',
-            title: '生理學甲～丁單元奠基',
-            completion: w1Rate,
-            habit: 78,
-            target: 75,
-            note: '何宣生理精華 + 考古題奠基',
-            status: w1Checked ? '已通關 ✅' : '進行中 ⚡',
-            highlight: '細胞、神經、心血管、呼吸'
-          },
-          {
-            weekKey: 'W2',
-            label: '第 2 週',
-            subtitle: '10/08-10/14',
-            title: '生理學戊～庚 ＆ 國考報名',
-            completion: w2Rate,
-            habit: 85,
-            target: 75,
-            note: '腎臟酸鹼/腸胃/內分泌 + 10/6-15 報名',
-            status: w2Checked ? '已通關 ✅' : '進行中 ⚡',
-            highlight: '生理學大總結 + 生統計算'
-          },
-          {
-            weekKey: 'W3',
-            label: '第 3 週',
-            subtitle: '10/15-10/21',
-            title: '趙俊彥解剖學 01–06 講',
-            completion: w3Rate,
-            habit: 91,
-            target: 75,
-            note: '趙俊彥前 3 節課 + 寄生蟲速記',
-            status: w3Checked ? '已通關 ✅' : '進行中 ⚡',
-            highlight: '頭顱面部、四肢骨骼、肌群'
-          },
-          {
-            weekKey: 'W4',
-            label: '第 4 週',
-            subtitle: '10/22-10/28',
-            title: '趙俊彥解剖學 07–12 講',
-            completion: w4Rate,
-            habit: 96,
-            target: 75,
-            note: '盆底肌/全身血管/大腦皮質 + 考古豹 50+',
-            status: w4Checked ? '已通關 ✅' : '進行中 ⚡',
-            highlight: '解剖攻堅 + 考古豹突破 50+ 題'
-          }
-        ];
+      if (wNum === 1) {
+        // FC 生理(上)：甲、乙、丙、丁 (共 22 個小節)
+        const chaps = (typeof physioChaptersData !== 'undefined' ? physioChaptersData : []).filter(c => ['甲', '乙', '丙', '丁'].includes(c.chapterId));
+        chaps.forEach(c => {
+          c.sections.forEach(s => {
+            totalTasks++;
+            if (physioCloud[s.id]) doneTasks++;
+          });
+        });
+      } else if (wNum === 2) {
+        // FC 生理(下)：戊、己、庚 (共 17 個小節)
+        const chaps = (typeof physioChaptersData !== 'undefined' ? physioChaptersData : []).filter(c => ['戊', '己', '庚'].includes(c.chapterId));
+        chaps.forEach(c => {
+          c.sections.forEach(s => {
+            totalTasks++;
+            if (physioCloud[s.id]) doneTasks++;
+          });
+        });
+      } else if (wNum >= 3 && wNum <= 5) {
+        // 趙俊彥解剖學 W3 (課1-3), W4 (課4-6), W5 (課7-9) 各 6 講
+        const lessons = (typeof anatomyLessonsData !== 'undefined' ? anatomyLessonsData : []).filter(l => l.weekKey === `W${wNum}`);
+        lessons.forEach(l => {
+          l.lectures.forEach(lec => {
+            totalTasks++;
+            if (videosCloud[lec.id]) doneTasks++;
+          });
+        });
+      } else if (wNum === 6) {
+        // 解剖學 W6 (課10-12, 6講) + 生化第1堂 (bc_1)
+        const lessons = (typeof anatomyLessonsData !== 'undefined' ? anatomyLessonsData : []).filter(l => l.weekKey === 'W6');
+        lessons.forEach(l => {
+          l.lectures.forEach(lec => {
+            totalTasks++;
+            if (videosCloud[lec.id]) doneTasks++;
+          });
+        });
+        totalTasks++;
+        if (biochemCloud['bc_1']) doneTasks++;
+      } else if (wNum === 7) {
+        // 解剖學 W7 (課13-15, 6講) + 生化第2&3堂 (bc_2, bc_3)
+        const lessons = (typeof anatomyLessonsData !== 'undefined' ? anatomyLessonsData : []).filter(l => l.weekKey === 'W7');
+        lessons.forEach(l => {
+          l.lectures.forEach(lec => {
+            totalTasks++;
+            if (videosCloud[lec.id]) doneTasks++;
+          });
+        });
+        totalTasks += 2;
+        if (biochemCloud['bc_2']) doneTasks++;
+        if (biochemCloud['bc_3']) doneTasks++;
+      } else if (wNum === 8) {
+        // 子翔藥理 W8 (Unit 1, 12, 19, 共 6 講)
+        const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W8');
+        units.forEach(u => {
+          u.lectures.forEach(lec => {
+            totalTasks++;
+            if (pharmCloud[lec.id]) doneTasks++;
+          });
+        });
+      } else if (wNum === 9) {
+        // 子翔藥理 W9 (Unit 13, 14, 4講) + 生化第4堂 (bc_4)
+        const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W9');
+        units.forEach(u => {
+          u.lectures.forEach(lec => {
+            totalTasks++;
+            if (pharmCloud[lec.id]) doneTasks++;
+          });
+        });
+        totalTasks++;
+        if (biochemCloud['bc_4']) doneTasks++;
+      } else if (wNum === 10) {
+        // 子翔藥理 W10 (Unit 15, 16, 17, 6講) + 生化第5堂 (bc_5)
+        const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W10');
+        units.forEach(u => {
+          u.lectures.forEach(lec => {
+            totalTasks++;
+            if (pharmCloud[lec.id]) doneTasks++;
+          });
+        });
+        totalTasks++;
+        if (biochemCloud['bc_5']) doneTasks++;
+      } else if (wNum === 11) {
+        // 子翔藥理 W11 (Unit 2, 3, 4, 18, 8講) + 生化第6堂 (bc_6)
+        const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W11');
+        units.forEach(u => {
+          u.lectures.forEach(lec => {
+            totalTasks++;
+            if (pharmCloud[lec.id]) doneTasks++;
+          });
+        });
+        totalTasks++;
+        if (biochemCloud['bc_6']) doneTasks++;
+      } else if (wNum === 12) {
+        // 子翔藥理 W12 (Unit 5, 6, 7, 8, 9, 10講) + 生化第7堂 (bc_7)
+        const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W12');
+        units.forEach(u => {
+          u.lectures.forEach(lec => {
+            totalTasks++;
+            if (pharmCloud[lec.id]) doneTasks++;
+          });
+        });
+        totalTasks++;
+        if (biochemCloud['bc_7']) doneTasks++;
+      } else if (wNum === 13) {
+        // 子翔藥理 W13 (Unit 10, 11, 4講) + 生化第8堂 (bc_8)
+        const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W13');
+        units.forEach(u => {
+          u.lectures.forEach(lec => {
+            totalTasks++;
+            if (pharmCloud[lec.id]) doneTasks++;
+          });
+        });
+        totalTasks++;
+        if (biochemCloud['bc_8']) doneTasks++;
       } else {
-        // Rolling 4 weeks mode
-        return [
-          {
-            weekKey: 'W-3',
-            label: '4 週前 (W-3)',
-            subtitle: '準備起跑期',
-            title: '全真診斷 ＆ 暖身調整',
-            completion: 68,
-            habit: 74,
-            target: 75,
-            note: '作息調整、講義就位、摸底測驗',
-            status: '已達成 ✅',
-            highlight: '建立每日作息時間表'
-          },
-          {
-            weekKey: 'W-2',
-            label: '3 週前 (W-2)',
-            subtitle: '節奏建立期',
-            title: '晨光作息 ＆ 晨跑適應',
-            completion: 76,
-            habit: 82,
-            target: 75,
-            note: '第一階段運動啟動、心態穩定',
-            status: '已達成 ✅',
-            highlight: '慢跑 20-30 分鐘 + 核心深蹲'
-          },
-          {
-            weekKey: 'W-1',
-            label: '上週 (W-1)',
-            subtitle: '高能推進期',
-            title: '考點精準梳理 ＆ 考古題試跑',
-            completion: 86,
-            habit: 89,
-            target: 75,
-            note: '考古豹題庫熟悉、錯題收集',
-            status: '已達成 ✅',
-            highlight: '突破 75% 國考及格安全線'
-          },
-          {
-            weekKey: 'W-Now',
-            label: '本週 (Current)',
-            subtitle: '爆發突破期',
-            title: '主科衝刺全力全速推進',
-            completion: 94,
-            habit: 96,
-            target: 75,
-            note: '高頻考點記憶、各科全面提速',
-            status: '進行中 🔥',
-            highlight: '動量爆發中，穩定超越 90%'
-          }
-        ];
+        // W14, W15, W16
+        return checklistCloud[wNum] ? 100 : 0;
       }
+
+      if (totalTasks === 0) return 0;
+      return Math.min(100, Math.round((doneTasks / totalTasks) * 100));
+    }
+
+    function getWeekHabitRate(weekItem) {
+      if (!weekItem || !weekItem.start) return 0;
+      const cur = new Date(weekItem.start + 'T00:00:00');
+      const endDate = new Date(weekItem.end + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let elapsedDays = 0;
+      let habitDoneCount = 0;
+
+      while (cur <= endDate) {
+        if (cur <= today) {
+          elapsedDays++;
+          const y = cur.getFullYear();
+          const m = String(cur.getMonth() + 1).padStart(2, '0');
+          const d = String(cur.getDate()).padStart(2, '0');
+          const dayKey = `${y}-${m}-${d}`;
+          const dayHabits = JSON.parse(localStorage.getItem(`med_exam_habits_${dayKey}`) || '{}');
+          if (dayHabits['daily-sport']) habitDoneCount++;
+          if (dayHabits['daily-exam']) habitDoneCount++;
+          if (dayHabits['daily-game']) habitDoneCount++;
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      if (elapsedDays === 0) return 0;
+      return Math.round((habitDoneCount / (elapsedDays * 3)) * 100);
+    }
+
+    function calculateTrendData() {
+      const now = new Date();
+      const currentTodayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      let currentWeek = weeksData.find(w => currentTodayStr >= w.start && currentTodayStr <= w.end) || weeksData[0];
+      const currentW = currentWeek.w;
+
+      let targetWeeks = [];
+      if (trendChartMode === 'sprint') {
+        // 衝刺首 4 週 (W1-W4)
+        targetWeeks = weeksData.slice(0, 4);
+      } else {
+        // 滾動推移 (Past 4W / 動態最近 4 週視窗)
+        if (currentW <= 4) {
+          targetWeeks = weeksData.slice(0, 4);
+        } else {
+          targetWeeks = weeksData.slice(currentW - 4, currentW);
+        }
+      }
+
+      return targetWeeks.map(w => {
+        const comp = getWeekTaskCompletion(w.w);
+        const habit = getWeekHabitRate(w);
+        const isCurrent = w.w === currentW;
+
+        let shortTitle = '';
+        let note = '';
+        let highlight = '';
+
+        if (w.w === 1) {
+          shortTitle = '生理學甲～丁單元奠基';
+          note = '細胞、神經、心血管、呼吸';
+          highlight = '何宣生理精華 + 考古題奠基';
+        } else if (w.w === 2) {
+          shortTitle = '生理學戊～庚 ＆ 國考報名';
+          note = '腎臟酸鹼、腸胃、內分泌性腺';
+          highlight = '生理學總結 + 生統計算 + 10/6-15 報名';
+        } else if (w.w === 3) {
+          shortTitle = '趙俊彥解剖學 01–06 講';
+          note = '頭顱面部、四肢骨骼、頭頸背腹肌';
+          highlight = '趙俊彥前 3 節課 + 寄生蟲速記';
+        } else if (w.w === 4) {
+          shortTitle = '趙俊彥解剖學 07–12 講';
+          note = '盆底四肢肌、全身血管、大腦皮質';
+          highlight = '解剖攻堅 + 考古豹 50+ 題';
+        } else if (w.w === 5) {
+          shortTitle = '趙俊彥解剖學 13–18 講';
+          note = '間腦腦幹小腦、脊髓傳導、自律視覺';
+          highlight = '中樞周邊神經 + 考古豹刷題';
+        } else if (w.w === 6) {
+          shortTitle = '趙俊彥 19–24 講 ＆ 鐸鐸生化第1堂';
+          note = '感官細胞淋巴呼吸心臟 + 生化啟動';
+          highlight = '解剖深水區 + 鐸鐸生化核心';
+        } else if (w.w === 7) {
+          shortTitle = '趙俊彥 25–30 講 (完課) ＆ 生化 2/3 堂';
+          note = '胚胎咽器、消化腹膜、泌尿生殖';
+          highlight = '解剖學完課 + 生化代謝攻堅';
+        } else if (w.w === 8) {
+          shortTitle = '子翔藥理 ＆ 免疫學架構奠基';
+          note = '藥理前言、藥動藥效、免疫藥物';
+          highlight = '小美免疫 + Winner + 歷屆刷題';
+        } else {
+          shortTitle = w.title.split('：')[0] || `第 ${w.w} 週衝刺任務`;
+          note = w.title.slice(0, 30);
+          highlight = w.title.slice(0, 40);
+        }
+
+        let status = '';
+        if (comp === 100) {
+          status = '已通關 ✅';
+        } else if (isCurrent) {
+          status = comp > 0 ? `進行中 (${comp}%) 🔥` : '本週進行中 ⚡';
+        } else if (w.w < currentW) {
+          status = comp > 0 ? `未完全 (${comp}%) ⚠️` : '未完成 ⚠️';
+        } else {
+          status = comp > 0 ? `提前預習 (${comp}%) 🚀` : '待啟動 ⏳';
+        }
+
+        return {
+          weekNum: w.w,
+          weekKey: `W${w.w}`,
+          label: `第 ${w.w} 週${isCurrent ? ' (本週)' : ''}`,
+          subtitle: w.date,
+          title: shortTitle,
+          completion: comp,
+          habit: habit,
+          target: 75,
+          note: note,
+          status: status,
+          highlight: highlight,
+          isCurrent: isCurrent
+        };
+      });
     }
 
     function renderTrendMilestones(data) {
       const container = document.getElementById('trend-milestones-container');
       if (!container) return;
-      container.innerHTML = data.map((item, idx) => {
-        const isCurrent = idx === data.length - 1;
+      container.innerHTML = data.map((item) => {
+        const isCurrent = !!item.isCurrent;
         const diffFromTarget = (item.completion - item.target).toFixed(0);
         return `
           <div class="p-2.5 rounded-xl border transition-all ${
             isCurrent 
-              ? 'bg-sky-950/30 border-sky-500/50 shadow-md shadow-sky-500/10' 
+              ? 'bg-sky-950/30 border-sky-500/50 shadow-md shadow-sky-500/10 ring-1 ring-sky-500/30' 
               : 'bg-slate-900/60 border-slate-700/60'
           }">
             <div class="flex items-center justify-between text-[11px] mb-1">
@@ -3162,16 +3310,17 @@
               </span>
               <span class="font-mono text-[10px] text-slate-400">${item.subtitle}</span>
             </div>
-            <div class="text-[11px] font-semibold text-white truncate">${item.title}</div>
+            <div class="text-[11px] font-semibold text-white truncate" title="${item.title}">${item.title}</div>
+            <div class="text-[10px] text-slate-400 truncate mt-0.5">${item.highlight}</div>
             <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-800 text-[10px]">
-              <div class="flex items-center gap-1">
+              <div class="flex items-center gap-1.5">
                 <span class="text-slate-400">達成率:</span>
-                <span class="font-bold font-mono text-sky-400">${item.completion}%</span>
+                <span class="font-bold font-mono ${item.completion >= 75 ? 'text-emerald-400' : (item.completion > 0 ? 'text-sky-400' : 'text-slate-500')}">${item.completion}%</span>
               </div>
               <span class="px-1.5 py-0.2 rounded font-mono font-medium ${
                 Number(diffFromTarget) >= 0 
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
-                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                  : (item.completion > 0 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-500 border border-slate-700')
               }">
                 ${Number(diffFromTarget) >= 0 ? `+${diffFromTarget}%` : `${diffFromTarget}%`}
               </span>
@@ -3193,29 +3342,69 @@
       const data = calculateTrendData();
 
       // Update KPI Badges
-      const wCurrent = data[data.length - 1];
-      const wPrev = data[data.length - 2];
+      const currentItem = data.find(d => d.isCurrent) || data[0];
       const wFirst = data[0];
+      const wLast = data[data.length - 1];
       const avgRate = (data.reduce((acc, cur) => acc + cur.completion, 0) / data.length).toFixed(1);
-      const momentumDelta = (wCurrent.completion - wFirst.completion).toFixed(1);
-      const weekDelta = (wCurrent.completion - wPrev.completion).toFixed(1);
+      const momentumDelta = (wLast.completion - wFirst.completion).toFixed(1);
 
       const elWeek4Val = document.getElementById('metric-week4-val');
       const elWeek4Badge = document.getElementById('metric-week4-badge');
-      const elAvgVal = document.getElementById('metric-avg-val');
-      const elMomentumVal = document.getElementById('metric-momentum-val');
-      const elHabitVal = document.getElementById('metric-habit-val');
+      const elWeek4Sub = document.getElementById('metric-week4-sub');
 
-      if (elWeek4Val) elWeek4Val.innerText = wCurrent.completion.toFixed(1) + '%';
+      const elAvgVal = document.getElementById('metric-avg-val');
+      const elAvgBadge = document.getElementById('metric-avg-badge');
+      const elAvgSub = document.getElementById('metric-avg-sub');
+
+      const elMomentumVal = document.getElementById('metric-momentum-val');
+      const elMomentumBadge = document.getElementById('metric-momentum-badge');
+      const elMomentumSub = document.getElementById('metric-momentum-sub');
+
+      const elHabitVal = document.getElementById('metric-habit-val');
+      const elHabitBadge = document.getElementById('metric-habit-badge');
+      const elHabitSub = document.getElementById('metric-habit-sub');
+
+      const elBannerBadge = document.getElementById('trend-momentum-banner-badge');
+
+      if (elWeek4Val) elWeek4Val.innerText = currentItem.completion.toFixed(1) + '%';
       if (elWeek4Badge) {
-        elWeek4Badge.innerText = (Number(weekDelta) >= 0 ? `▲ +${weekDelta}%` : `▼ ${weekDelta}%`);
-        elWeek4Badge.className = Number(weekDelta) >= 0 
-          ? 'text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20'
-          : 'text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20';
+        elWeek4Badge.innerText = `W${currentItem.weekNum} 本週`;
       }
+      if (elWeek4Sub) {
+        if (currentItem.completion >= 75) {
+          elWeek4Sub.innerText = `超越 75% 國考及格線 🎯`;
+          elWeek4Sub.className = 'text-[10px] text-emerald-400 truncate font-semibold';
+        } else if (currentItem.completion > 0) {
+          elWeek4Sub.innerText = `穩步推進中 (${currentItem.completion}%) ⚡`;
+          elWeek4Sub.className = 'text-[10px] text-sky-400 truncate';
+        } else {
+          elWeek4Sub.innerText = `本週任務進行中，依各科勾選自動計算`;
+          elWeek4Sub.className = 'text-[10px] text-slate-400 truncate';
+        }
+      }
+
       if (elAvgVal) elAvgVal.innerText = avgRate + '%';
+      if (elAvgBadge) {
+        elAvgBadge.innerText = Number(avgRate) >= 75 ? '達標優良' : (Number(avgRate) > 0 ? '穩步推進' : '待啟動');
+        elAvgBadge.className = Number(avgRate) >= 75 
+          ? 'text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20'
+          : 'text-[10px] text-sky-300 font-bold bg-sky-500/10 px-1.5 py-0.2 rounded border border-sky-500/20';
+      }
+
       if (elMomentumVal) elMomentumVal.innerText = (Number(momentumDelta) >= 0 ? `+${momentumDelta}%` : `${momentumDelta}%`);
-      if (elHabitVal) elHabitVal.innerText = wCurrent.habit.toFixed(1) + '%';
+      if (elMomentumBadge) {
+        elMomentumBadge.innerText = Number(momentumDelta) > 0 ? '🔥 增長中' : (Number(momentumDelta) === 0 ? '穩定維持' : '蓄勢衝刺');
+      }
+
+      if (elHabitVal) elHabitVal.innerText = currentItem.habit.toFixed(1) + '%';
+      if (elHabitBadge) {
+        elHabitBadge.innerText = currentItem.habit >= 80 ? '自律巔峰' : (currentItem.habit > 0 ? '持續打卡' : '今日待打卡');
+      }
+
+      if (elBannerBadge) {
+        elBannerBadge.innerHTML = `<i data-lucide="flame" class="w-3 h-3"></i> 推進動能：${Number(momentumDelta) > 0 ? '正向突破中 (+' + momentumDelta + '%)' : (Number(avgRate) >= 75 ? '穩定達標高水準' : '真實進度即時聯動')}`;
+        lucide.createIcons();
+      }
 
       renderTrendMilestones(data);
 
@@ -3231,7 +3420,7 @@
           return h('div', { className: 'bg-slate-900/95 border border-slate-700 backdrop-blur-md rounded-xl p-3 shadow-2xl text-xs space-y-2 max-w-[280px]' },
             h('div', { className: 'flex items-center justify-between border-b border-slate-700/70 pb-1.5' },
               h('span', { className: 'font-bold text-white text-sm flex items-center gap-1.5' },
-                h('span', { className: 'w-2 h-2 rounded-full bg-sky-400' }),
+                h('span', { className: 'w-2 h-2 rounded-full ' + (item.isCurrent ? 'bg-sky-400' : 'bg-slate-400') }),
                 item.label
               ),
               h('span', { className: 'text-[10px] font-mono text-slate-400' }, item.subtitle)
@@ -3261,10 +3450,14 @@
               )
             ),
             h('div', { className: 'pt-1.5 border-t border-slate-700/70 flex items-center justify-between text-[10px]' },
-              h('span', { className: isAbove ? 'text-emerald-400 font-semibold' : 'text-amber-400' },
-                isAbove ? `🔥 勢頭強勁！超越基準 +${(item.completion - item.target).toFixed(0)}%` : '⏳ 穩定積累中'
+              h('span', { className: isAbove ? 'text-emerald-400 font-semibold' : (item.completion > 0 ? 'text-sky-300' : 'text-slate-400') },
+                item.completion === 100 
+                  ? '✅ 本週任務已全數通關！' 
+                  : (isAbove 
+                      ? `🔥 突破 75% 國考及格線 (+${(item.completion - item.target).toFixed(0)}%)` 
+                      : (item.completion > 0 ? `⚡ 任務推進中 (${item.completion}%)` : '⏳ 任務待啟動'))
               ),
-              h('span', { className: 'text-slate-400 italic' }, item.note)
+              h('span', { className: 'text-slate-400 italic' }, item.status)
             )
           );
         }
@@ -3310,7 +3503,7 @@
             tickLine: { stroke: '#475569' }
           }),
           h(Recharts.YAxis, { 
-            domain: [50, 100], 
+            domain: [0, 100], 
             stroke: '#94a3b8', 
             tick: { fill: '#94a3b8', fontSize: 11 },
             tickFormatter: v => v + '%',
