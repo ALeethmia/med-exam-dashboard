@@ -249,41 +249,189 @@
       </div>
 
       <!-- 備考月曆 ＆ 作息課表雙欄 -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- 升級版備考月曆 -->
-        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-3 border-b border-slate-700/60 pb-2">
-              <div class="flex items-center gap-1.5">
-                <h2 class="text-sm font-bold flex items-center gap-1.5 text-white">
-                  <i data-lucide="calendar-days" class="w-4 h-4 text-sky-400"></i> 備考月曆
-                </h2>
-                <span class="text-[9px] bg-slate-700/80 text-slate-300 px-1.5 py-0.2 rounded font-mono">點日期可自訂區間</span>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- 左欄 (lg:col-span-1)：精巧月曆 ＋ 國考重大期程倒數看板 (自然緊湊，告別空洞拉長) -->
+        <div class="lg:col-span-1 space-y-5">
+          <!-- 1. 精巧備考月曆卡片 (自然高度，緊湊無虛胖空白) -->
+          <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 md:p-5 shadow-lg space-y-3.5">
+            <div>
+              <div class="flex items-center justify-between mb-3 border-b border-slate-700/60 pb-2">
+                <div class="flex items-center gap-1.5">
+                  <h2 class="text-sm font-bold flex items-center gap-1.5 text-white">
+                    <i data-lucide="calendar-days" class="w-4 h-4 text-sky-400"></i> 備考月曆
+                  </h2>
+                  <span class="text-[9px] bg-slate-700/80 text-slate-300 px-1.5 py-0.2 rounded font-mono">點日期可自訂行程</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button id="prev-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+                  <span id="calendar-title" class="text-xs font-mono font-semibold px-1.5 text-slate-200">2026 / 10</span>
+                  <button id="next-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+                </div>
               </div>
-              <div class="flex items-center gap-1">
-                <button id="prev-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
-                <span id="calendar-title" class="text-xs font-mono font-semibold px-1.5 text-slate-200">2026 / 10</span>
-                <button id="next-month" class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+              <div>
+                <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-slate-400 mb-1">
+                  <span class="text-rose-400">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
               </div>
             </div>
-            <div>
-              <div class="grid grid-cols-7 text-center text-[10px] font-semibold text-slate-400 mb-1">
-                <span class="text-rose-400">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
-              </div>
-              <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+            <!-- 圖例標籤 (緊貼月曆底部，緊湊無空白) -->
+            <div class="pt-2.5 border-t border-slate-700/60 flex flex-wrap items-center justify-between text-[10px] text-slate-400 gap-1.5">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded calendar-day-today bg-slate-800"></span> 今天</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-purple-500/40 border border-purple-500"></span> 報名日 (10/6-15)</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-yellow-400/40 border border-yellow-400"></span> 鐸鐸生化</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-rose-500/40 border border-rose-500"></span> 國考 (1/16-18)</span>
+              <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 自訂標記</span>
             </div>
           </div>
-          <div class="mt-4 pt-3 border-t border-slate-700/60 flex flex-wrap items-center justify-between text-[10px] text-slate-400 gap-1.5">
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded calendar-day-today bg-slate-800"></span> 今天</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500/40 border border-purple-500"></span> 報名日 (10/6-15)</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-yellow-400/40 border border-yellow-400"></span> 鐸鐸生化</span>
-            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500/40 border border-rose-500"></span> 國考 (1/16-18)</span>
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 自訂標記</span>
+
+          <!-- 2. 國考重大期程動態倒數 ＆ 備忘看板 (填補空缺，與右側高度完美平衡) -->
+          <div class="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700 rounded-2xl p-4 md:p-5 shadow-lg space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+              <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+                <i data-lucide="compass" class="w-4 h-4 text-rose-400"></i> 國考戰役重大期程倒數
+              </h3>
+              <span class="text-[9px] px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20 font-mono">2027 決戰</span>
+            </div>
+
+            <!-- 主倒數：距離 2027 一階國考 -->
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-rose-500/30 flex items-center justify-between">
+              <div>
+                <div class="text-[11px] font-bold text-slate-200">距離 2027 一階醫師國考</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">預計 2027/01/16 - 01/18 應考</div>
+              </div>
+              <div class="text-right">
+                <span id="countdown-exam-days" class="text-2xl font-black font-mono text-rose-400">103</span>
+                <span class="text-[10px] text-slate-400 ml-0.5">天</span>
+              </div>
+            </div>
+
+            <!-- 關鍵節點列表 -->
+            <div class="space-y-2 text-xs">
+              <!-- 報名節點 -->
+              <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                  <div>
+                    <div class="text-[11px] font-bold text-slate-300">國考線上報名</div>
+                    <div class="text-[10px] text-slate-400">10/06 (二) - 10/15 (四)</div>
+                  </div>
+                </div>
+                <div id="countdown-reg-status" class="text-[11px] font-mono text-right">
+                  <span class="text-amber-400 font-bold">10/06 報名開跑</span>
+                </div>
+              </div>
+
+              <!-- 鐸鐸生化節點 -->
+              <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                  <div>
+                    <div class="text-[11px] font-bold text-slate-300">鐸鐸生化面授正課</div>
+                    <div class="text-[10px] text-slate-400">11/06 (五) 18:00 開課</div>
+                  </div>
+                </div>
+                <span id="countdown-biochem-days" class="text-[11px] font-mono text-amber-400 font-bold">倒數 32 天</span>
+              </div>
+            </div>
+
+            <!-- 激勵心法 -->
+            <div class="p-2.5 rounded-xl bg-sky-950/20 border border-sky-800/40 text-[10px] text-sky-300 flex items-center gap-2">
+              <i data-lucide="zap" class="w-3.5 h-3.5 text-sky-400 shrink-0"></i>
+              <span>保持晨光慢跑、以題帶念、每日 50+ 題，心態穩定必過！</span>
+            </div>
           </div>
         </div>
 
-        <!-- 每週作息課表 -->
-        <div class="lg:col-span-2 bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg overflow-x-auto">
+        <!-- 每週作息課表 ＆ 沉浸專注番茄鐘 -->
+        <div class="lg:col-span-2 space-y-5">
+          <!-- 🍅 國考沉浸專注番茄鐘 (Pomodoro Focus Timer) -->
+          <div class="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700/80 rounded-2xl p-4 md:p-5 shadow-xl space-y-3.5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/60 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
+                  <i data-lucide="timer" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                    國考沉浸專注番茄鐘
+                    <span id="pomo-status-badge" class="text-[10px] font-mono px-2 py-0.2 rounded-full bg-slate-700 text-slate-300">READY 準備開始</span>
+                  </h3>
+                  <p class="text-[11px] text-slate-400">配合日常作息區塊深度攻堅，打造高效專注心流</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="pomo-sound-btn" onclick="togglePomodoroSound()" class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white flex items-center gap-1">
+                  <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-400"></i> <span id="pomo-sound-text">提示音: 開</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 計時器主體與統計 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center pt-0.5">
+              <!-- 左/中：計時器與控制項 -->
+              <div class="md:col-span-2 space-y-3">
+                <!-- 預設時長切換按鈕 -->
+                <div class="flex flex-wrap gap-1.5 text-xs" id="pomo-presets-container">
+                  <button onclick="setPomodoroPreset(50, 'work', '50分 深度作戰')" data-mins="50" class="pomo-preset-btn active px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition">50m 深度作戰</button>
+                  <button onclick="setPomodoroPreset(25, 'work', '25分 刷題速戰')" data-mins="25" class="pomo-preset-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 transition">25m 刷題速戰</button>
+                  <button onclick="setPomodoroPreset(90, 'work', '90分 全真模考')" data-mins="90" class="pomo-preset-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 transition">90m 全真模考</button>
+                  <button onclick="setPomodoroPreset(10, 'break', '10分 深度休息')" data-mins="10" class="pomo-preset-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 transition">10m 休息</button>
+                  <button onclick="setPomodoroPreset(5, 'break', '5分 補水小憩')" data-mins="5" class="pomo-preset-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 transition">5m 小憩</button>
+                </div>
+
+                <!-- 數字時間顯示與進度條 -->
+                <div class="flex items-center gap-4">
+                  <div id="pomo-timer-display" class="font-mono text-4xl md:text-5xl font-black text-amber-400 tracking-wider">50:00</div>
+                  <div class="flex-1 space-y-1">
+                    <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-700/60">
+                      <div id="pomo-progress-bar" class="bg-gradient-to-r from-amber-500 to-orange-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                      <span id="pomo-mode-label">50分 深度作戰</span>
+                      <span id="pomo-percent-label">0%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 控制按鈕 -->
+                <div class="flex items-center gap-2 pt-0.5">
+                  <button id="pomo-toggle-btn" onclick="togglePomodoro()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs md:text-sm flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all cursor-pointer">
+                    <i data-lucide="play" class="w-4 h-4 fill-current"></i> <span id="pomo-toggle-text">開始專注</span>
+                  </button>
+                  <button onclick="resetPomodoro()" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold flex items-center gap-1 transition">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> <span>重設</span>
+                  </button>
+                  <button onclick="addPomodoroMinutes(5)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold flex items-center gap-1 transition">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span>+5 分鐘</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 右：今日累計戰果卡 -->
+              <div class="p-3.5 bg-slate-900/80 border border-slate-700/80 rounded-xl space-y-2 text-xs">
+                <div class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+                  <span class="text-rose-400">🍅</span> 今日專注戰績
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <div class="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60">
+                    <div class="text-[10px] text-slate-400">完成番茄數</div>
+                    <div class="text-lg font-black font-mono text-amber-400 mt-0.5"><span id="pomo-count-today">0</span> <span class="text-[10px] font-normal text-slate-400">個</span></div>
+                  </div>
+                  <div class="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60">
+                    <div class="text-[10px] text-slate-400">累計專注時長</div>
+                    <div class="text-lg font-black font-mono text-sky-400 mt-0.5"><span id="pomo-minutes-today">0</span> <span class="text-[10px] font-normal text-slate-400">分</span></div>
+                  </div>
+                </div>
+                <div class="text-[10px] text-slate-400 leading-tight border-t border-slate-800 pt-1.5">
+                  💡 <strong>國考心訣</strong>：每完成 1 個 50m 深度番茄，站起來喝水伸展 10 分鐘，維持神經傳導最佳警覺性。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 每週作息課表 -->
+          <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg overflow-x-auto">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
             <div class="flex items-center gap-2">
               <h2 class="text-sm font-bold flex items-center gap-2 text-white">
@@ -414,6 +562,7 @@
           </div>
         </div>
       </div>
+    </div>
 
       <!-- 20 週 4 階段漸進式運動菜單專區 -->
       <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
@@ -584,19 +733,24 @@
           </div>
         </div>
 
-        <!-- 搜尋與週次快速導航 -->
-        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1">
-          <div class="relative flex-1">
-            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
-            <input type="text" id="video-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition" placeholder="搜尋第幾節課、單元名稱、講次主題 (如：第 1 節課、骨骼、臂神經叢、腹膜、胚胎...)">
+        <!-- 搜尋與週次快速導航 (上下分層：搜尋全寬大器，篩選滑動流暢) -->
+        <div class="space-y-3 pt-1">
+          <!-- 第 1 層：全寬大尺寸搜尋框 -->
+          <div class="relative w-full">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
+            <input type="text" id="video-search-input" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 transition shadow-inner" placeholder="搜尋第幾節課、單元名稱、講次主題 (如：第 1 節課、骨骼、臂神經叢、腹膜、胚胎...)">
           </div>
-          <div class="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 text-xs" id="anatomy-filter-chips">
-            <button onclick="filterAnatomyWeek('ALL')" class="anatomy-filter-btn active px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[11px] font-medium whitespace-nowrap">全部 (15節課/30講)</button>
-            <button onclick="filterAnatomyWeek('W3')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W3 (第1-3課 · 10/15-10/21)</button>
-            <button onclick="filterAnatomyWeek('W4')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W4 (第4-6課 · 10/22-10/28)</button>
-            <button onclick="filterAnatomyWeek('W5')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W5 (第7-9課 · 10/29-11/04)</button>
-            <button onclick="filterAnatomyWeek('W6')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W6 (第10-12課 · 11/05-11/11)</button>
-            <button onclick="filterAnatomyWeek('W7')" class="anatomy-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W7 (第13-15課 · 11/12-11/18)</button>
+          <!-- 第 2 層：週次快速篩選標籤列 -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="anatomy-filter-chips">
+            <span class="text-[11px] text-slate-400 font-semibold shrink-0 flex items-center gap-1 pl-1 pr-0.5">
+              <i data-lucide="filter" class="w-3 h-3 text-rose-400"></i> 週次篩選:
+            </span>
+            <button onclick="filterAnatomyWeek('ALL')" class="anatomy-filter-btn active px-3 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[11px] font-medium whitespace-nowrap">全部 (15節課/30講)</button>
+            <button onclick="filterAnatomyWeek('W3')" class="anatomy-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W3 (第1-3課 · 10/15-10/21)</button>
+            <button onclick="filterAnatomyWeek('W4')" class="anatomy-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W4 (第4-6課 · 10/22-10/28)</button>
+            <button onclick="filterAnatomyWeek('W5')" class="anatomy-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W5 (第7-9課 · 10/29-11/04)</button>
+            <button onclick="filterAnatomyWeek('W6')" class="anatomy-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W6 (第10-12課 · 11/05-11/11)</button>
+            <button onclick="filterAnatomyWeek('W7')" class="anatomy-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W7 (第13-15課 · 11/12-11/18)</button>
           </div>
         </div>
       </div>
@@ -613,12 +767,15 @@
       <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[11px] font-bold border border-amber-500/30">
-                2027 寒假正課班
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[11px] font-bold border border-amber-500/30">
+                全 8 堂課 · 16 講完整課程
               </span>
-              <span class="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
+              <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
                 開課期：第 6-13 週 (11/06-12/28)
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-medium border border-emerald-500/30 flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> 整體總時長：32:00:00 (約 32.0 小時 · 每堂 4 小時)
               </span>
             </div>
             <h2 class="text-base md:text-lg font-bold flex items-center gap-2 text-white mt-1.5">
@@ -626,14 +783,15 @@
             </h2>
             <p class="text-xs text-slate-400 mt-1">配合高點面授/視訊上課日期精準鎖定，課後當晚或隔日早晨立即進行章節複習與考古豹題庫驗收。</p>
           </div>
-          <div class="flex flex-col items-end gap-1.5 min-w-[160px]">
+          <div class="flex flex-col items-end gap-1.5 min-w-[200px]">
             <div class="flex items-center gap-3 w-full justify-end">
-              <div class="w-32 bg-slate-700 rounded-full h-2.5 overflow-hidden">
-                <div id="biochem-progress-bar" class="bg-amber-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              <div class="w-36 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                <div id="biochem-progress-bar" class="bg-gradient-to-r from-amber-500 to-yellow-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
               </div>
-              <span id="biochem-progress-text" class="text-xs font-bold font-mono text-amber-400">0/8 (0%)</span>
+              <span id="biochem-progress-text" class="text-xs font-bold font-mono text-amber-400">0/8 堂 (0%)</span>
             </div>
-            <div class="text-[11px] text-slate-400 font-mono" id="biochem-time-stat">已完成 0 / 8 堂課</div>
+            <div class="text-[11px] text-slate-300 font-mono" id="biochem-time-stat">已研讀 00:00:00 / 32:00:00 (約 0 小時 0 分鐘 · 0%)</div>
+            <div class="text-[10px] text-slate-400 font-mono" id="biochem-unit-stat">已完成 0 / 8 堂課 (0 / 8 講)</div>
           </div>
         </div>
 
@@ -662,10 +820,27 @@
           </div>
         </div>
 
-        <!-- 搜尋列 -->
-        <div class="relative w-full pt-1">
-          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
-          <input type="text" id="biochem-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition" placeholder="搜尋生化課題、關鍵字 (如：酵素、醣類、分生、蛋白質、脂肪...)">
+        <!-- 搜尋與週次快速導航 (上下分層：搜尋全寬大器，篩選滑動流暢) -->
+        <div class="space-y-3 pt-1">
+          <!-- 第 1 層：全寬大尺寸搜尋框 -->
+          <div class="relative w-full">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
+            <input type="text" id="biochem-search-input" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition shadow-inner" placeholder="搜尋生化課題、關鍵字 (如：酵素、醣類、分生、蛋白質、脂肪...)">
+          </div>
+          <!-- 第 2 層：週次快速篩選標籤列 -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="biochem-filter-chips">
+            <span class="text-[11px] text-slate-400 font-semibold shrink-0 flex items-center gap-1 pl-1 pr-0.5">
+              <i data-lucide="filter" class="w-3 h-3 text-amber-400"></i> 週次篩選:
+            </span>
+            <button onclick="filterBiochemWeek('ALL')" data-week="ALL" class="biochem-filter-btn active px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-medium whitespace-nowrap">全部 (8堂)</button>
+            <button onclick="filterBiochemWeek('W6')" data-week="W6" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W6 (第1堂 · 11/06)</button>
+            <button onclick="filterBiochemWeek('W7')" data-week="W7" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W7 (第2-3堂 · 11/13, 11/18)</button>
+            <button onclick="filterBiochemWeek('W9')" data-week="W9" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W9 (第4堂 · 11/27)</button>
+            <button onclick="filterBiochemWeek('W10')" data-week="W10" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W10 (第5堂 · 12/04)</button>
+            <button onclick="filterBiochemWeek('W11')" data-week="W11" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W11 (第6堂 · 12/11)</button>
+            <button onclick="filterBiochemWeek('W12')" data-week="W12" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W12 (第7堂 · 12/23)</button>
+            <button onclick="filterBiochemWeek('W13')" data-week="W13" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W13 (第8堂 · 12/28 完課)</button>
+          </div>
         </div>
       </div>
 
@@ -681,12 +856,15 @@
       <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 text-[11px] font-bold border border-teal-500/30">
-                目錄系統化導航
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-400 text-[11px] font-bold border border-teal-500/30">
+                全 7 大篇章 · 37 個子單元
               </span>
-              <span class="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
+              <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
                 奠基期：第 1-2 週 (10/01-10/14)
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-medium border border-emerald-500/30 flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> 整體研讀量：368 頁 (約 36.8 小時 · 每頁 6 分鐘)
               </span>
             </div>
             <h2 class="text-base md:text-lg font-bold flex items-center gap-2 text-white mt-1.5">
@@ -694,14 +872,15 @@
             </h2>
             <p class="text-xs text-slate-400 mt-1">以 First Choice 生理學為骨幹系統化精讀章節 ➔ 遇到抽象機制與機轉圖表時對照何宣經典彩圖與口訣 ➔ 考古豹題庫驗收。</p>
           </div>
-          <div class="flex flex-col items-end gap-1.5 min-w-[160px]">
+          <div class="flex flex-col items-end gap-1.5 min-w-[200px]">
             <div class="flex items-center gap-3 w-full justify-end">
-              <div class="w-32 bg-slate-700 rounded-full h-2.5 overflow-hidden">
-                <div id="physio-progress-bar" class="bg-teal-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              <div class="w-36 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                <div id="physio-progress-bar" class="bg-gradient-to-r from-teal-500 to-emerald-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
               </div>
-              <span id="physio-progress-text" class="text-xs font-bold font-mono text-teal-400">0/37 (0%)</span>
+              <span id="physio-progress-text" class="text-xs font-bold font-mono text-teal-400">0/37 小節 (0%)</span>
             </div>
-            <div class="text-[11px] text-slate-400 font-mono" id="physio-page-stat">已讀 0 / 368 頁</div>
+            <div class="text-[11px] text-slate-300 font-mono" id="physio-time-stat">已研讀約 00:00:00 / 36:48:00 (約 0.0 小時 · 0%)</div>
+            <div class="text-[10px] text-slate-400 font-mono" id="physio-unit-stat">已完成 0 / 7 大篇章 (已讀 0 / 368 頁)</div>
           </div>
         </div>
 
@@ -730,21 +909,28 @@
           </div>
         </div>
 
-        <!-- 搜尋與章節快速導航 -->
-        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1">
-          <div class="relative flex-1">
-            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
-            <input type="text" id="physio-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-teal-500 transition" placeholder="搜尋章節名稱 (如：腎元、膜電位、Wiggers、甲狀腺、Diffusion...)">
+        <!-- 搜尋與章節快速導航 (上下分層：搜尋全寬大器，篩選滑動流暢) -->
+        <div class="space-y-3 pt-1">
+          <!-- 第 1 層：全寬大尺寸搜尋框 -->
+          <div class="relative w-full">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
+            <input type="text" id="physio-search-input" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-teal-500 transition shadow-inner" placeholder="搜尋章節名稱、考點關鍵字 (如：腎元、膜電位、Wiggers、甲狀腺、Diffusion...)">
           </div>
-          <div class="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 text-xs" id="physio-filter-chips">
-            <button onclick="filterPhysioChapter('ALL')" class="physio-filter-btn active px-2.5 py-1 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[11px] font-medium whitespace-nowrap">全部 (7章)</button>
-            <button onclick="filterPhysioChapter('甲')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">甲.細胞</button>
-            <button onclick="filterPhysioChapter('乙')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">乙.神經</button>
-            <button onclick="filterPhysioChapter('丙')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">丙.心血管</button>
-            <button onclick="filterPhysioChapter('丁')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">丁.呼吸</button>
-            <button onclick="filterPhysioChapter('戊')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">戊.腎臟</button>
-            <button onclick="filterPhysioChapter('己')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">己.腸胃</button>
-            <button onclick="filterPhysioChapter('庚')" class="physio-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">庚.內分泌</button>
+          <!-- 第 2 層：章節快速篩選標籤列 -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="physio-filter-chips">
+            <span class="text-[11px] text-slate-400 font-semibold shrink-0 flex items-center gap-1 pl-1 pr-0.5">
+              <i data-lucide="filter" class="w-3 h-3 text-teal-400"></i> 章節篩選:
+            </span>
+            <button onclick="filterPhysioChapter('ALL')" data-filter="ALL" class="physio-filter-btn active px-3 py-1 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[11px] font-medium whitespace-nowrap">全部 (7章/37節)</button>
+            <button onclick="filterPhysioChapter('W1')" data-filter="W1" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W1 (甲～丁單元 · 10/01-10/07)</button>
+            <button onclick="filterPhysioChapter('W2')" data-filter="W2" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W2 (戊～庚單元 · 10/08-10/14)</button>
+            <button onclick="filterPhysioChapter('甲')" data-filter="甲" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">甲.細胞 (6節)</button>
+            <button onclick="filterPhysioChapter('乙')" data-filter="乙" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">乙.神經 (4節)</button>
+            <button onclick="filterPhysioChapter('丙')" data-filter="丙" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">丙.心血管 (6節)</button>
+            <button onclick="filterPhysioChapter('丁')" data-filter="丁" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">丁.呼吸 (4節)</button>
+            <button onclick="filterPhysioChapter('戊')" data-filter="戊" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">戊.腎臟 (7節)</button>
+            <button onclick="filterPhysioChapter('己')" data-filter="己" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">己.腸胃 (4節)</button>
+            <button onclick="filterPhysioChapter('庚')" data-filter="庚" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">庚.內分泌 (6節)</button>
           </div>
         </div>
       </div>
@@ -837,20 +1023,25 @@
           </div>
         </div>
 
-        <!-- 搜尋與週次篩選按鈕列 -->
-        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1">
-          <div class="relative flex-1">
-            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400"></i>
-            <input type="text" id="pharm-search-input" class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-violet-500 transition" placeholder="搜尋藥理課程、單元名稱、主題 (如：心血管、抗生素、自主神經、抗癌、利尿劑...)">
+        <!-- 搜尋與週次快速導航 (上下分層：搜尋全寬大器，篩選滑動流暢) -->
+        <div class="space-y-3 pt-1">
+          <!-- 第 1 層：全寬大尺寸搜尋框 -->
+          <div class="relative w-full">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
+            <input type="text" id="pharm-search-input" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-violet-500 transition shadow-inner" placeholder="搜尋藥理課程、單元名稱、主題關鍵字 (如：心血管、抗生素、自主神經、抗癌、利尿劑...)">
           </div>
-          <div class="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 text-xs" id="pharm-filter-chips">
-            <button onclick="filterPharmWeek('ALL')" data-week="ALL" class="pharm-filter-btn active px-2.5 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/40 text-[11px] font-medium whitespace-nowrap">全部 (19單元/38講)</button>
-            <button onclick="filterPharmWeek('W8')" data-week="W8" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W8 (Unit 1, 12, 19 · 11/19-11/25)</button>
-            <button onclick="filterPharmWeek('W9')" data-week="W9" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W9 (Unit 15, 16 · 11/26-12/02)</button>
-            <button onclick="filterPharmWeek('W10')" data-week="W10" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W10 (Unit 14, 17, 18 · 12/03-12/09)</button>
-            <button onclick="filterPharmWeek('W11')" data-week="W11" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W11 (Unit 2, 3, 6, 10 · 12/10-12/16)</button>
-            <button onclick="filterPharmWeek('W12')" data-week="W12" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W12 (Unit 4, 5, 8, 9, 11 · 12/17-12/23)</button>
-            <button onclick="filterPharmWeek('W13')" data-week="W13" class="pharm-filter-btn px-2 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W13 (Unit 7, 13 · 12/24-12/30)</button>
+          <!-- 第 2 層：週次快速篩選標籤列 -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="pharm-filter-chips">
+            <span class="text-[11px] text-slate-400 font-semibold shrink-0 flex items-center gap-1 pl-1 pr-0.5">
+              <i data-lucide="filter" class="w-3 h-3 text-violet-400"></i> 週次篩選:
+            </span>
+            <button onclick="filterPharmWeek('ALL')" data-week="ALL" class="pharm-filter-btn active px-3 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/40 text-[11px] font-medium whitespace-nowrap">全部 (19單元/38講)</button>
+            <button onclick="filterPharmWeek('W8')" data-week="W8" class="pharm-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W8 (Unit 1, 12, 19 · 11/19-11/25)</button>
+            <button onclick="filterPharmWeek('W9')" data-week="W9" class="pharm-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W9 (Unit 15, 16 · 11/26-12/02)</button>
+            <button onclick="filterPharmWeek('W10')" data-week="W10" class="pharm-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W10 (Unit 14, 17, 18 · 12/03-12/09)</button>
+            <button onclick="filterPharmWeek('W11')" data-week="W11" class="pharm-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W11 (Unit 2, 3, 6, 10 · 12/10-12/16)</button>
+            <button onclick="filterPharmWeek('W12')" data-week="W12" class="pharm-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W12 (Unit 4, 5, 8, 9, 11 · 12/17-12/23)</button>
+            <button onclick="filterPharmWeek('W13')" data-week="W13" class="pharm-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W13 (Unit 7, 13 · 12/24-12/30)</button>
           </div>
         </div>
       </div>
@@ -1727,7 +1918,10 @@
         id: 1,
         date: "11/06 (五)",
         targetWeek: "第 6 週",
+        weekKey: "W6",
         tag: "第 1 堂 (18:00-22:00)",
+        duration: "04:00:00",
+        durationSeconds: 14400,
         title: "酵素學 ＋ 醣類代謝 (上)",
         focus: "Michaelis-Menten 方程式 (Km, Vmax)、Lineweaver-Burk 圖、競爭/非競爭抑制、糖解作用 (Glycolysis) 10 步與三大限速酵素 (Hexokinase, PFK-1, Pyruvate kinase)。",
         reviewGuide: "何宣/FC 骨幹對照：計算題必背 Km 定義、副反應 2,3-BPG 生成與紅血球氧氣解離。"
@@ -1736,7 +1930,10 @@
         id: 2,
         date: "11/13 (五)",
         targetWeek: "第 7 週",
+        weekKey: "W7",
         tag: "第 2 堂 (18:00-22:00)",
+        duration: "04:00:00",
+        durationSeconds: 14400,
         title: "醣類代謝 (下) ＋ 檸檬酸循環 (TCA)",
         focus: "Pyruvate dehydrogenase (PDH) 複合體 5 種輔酶 (Tender Loving Care For Nancy)、TCA 循環限速酵素 (Isocitrate DH)、糖質新生 (Gluconeogenesis)、肝醣合成/分解與 G6PD 缺乏症。",
         reviewGuide: "何宣/FC 骨幹對照：肝醣儲積症 (Von Gierke, Pompe, Cori, McArdle) 口訣速記。"
@@ -1745,7 +1942,10 @@
         id: 3,
         date: "11/18 (三)",
         targetWeek: "第 7 週",
+        weekKey: "W7",
         tag: "第 3 堂 (18:00-22:00)",
+        duration: "04:00:00",
+        durationSeconds: 14400,
         title: "脂肪代謝 ＋ 膜化學 ＋ 訊息傳遞",
         focus: "脂肪酸 β-氧化 (Carnitine shuttle) vs 脂肪酸合成 (Citrate shuttle, ACC 酵素)、酮體生成 (HMG-CoA synthase)、膽固醇合成 (HMG-CoA reductase)、脂蛋白 (Chylomicron, VLDL, LDL, HDL) 與 GPCR 訊息傳遞路徑。",
         reviewGuide: "何宣/FC 骨幹對照：高血脂症分類 (Fredrickson) 與 Statin 類藥理靶點。"
@@ -1754,7 +1954,10 @@
         id: 4,
         date: "11/27 (五)",
         targetWeek: "第 9 週",
+        weekKey: "W9",
         tag: "第 4 堂 (18:00-22:00)",
+        duration: "04:00:00",
+        durationSeconds: 14400,
         title: "蛋白質化學 ＋ 胺基酸代謝 ＋ 尿素循環",
         focus: "20 種胺基酸結構特徵與等電點 (pI)、生糖 vs 生酮胺基酸、尿素循環 (Urea cycle) 限速酵素 CPS-I、一碳基團轉移 (SAM, Folate, B12)、苯酮尿症 (PKU) 與楓糖尿症 (MSUD)。",
         reviewGuide: "何宣/FC 骨幹對照：高血氨症機轉、高胱胺酸尿症 (Homocystinuria) 鑑別診斷。"
@@ -1763,7 +1966,10 @@
         id: 5,
         date: "12/04 (五)",
         targetWeek: "第 10 週",
+        weekKey: "W10",
         tag: "第 5 堂 (18:00-22:00)",
+        duration: "04:00:00",
+        durationSeconds: 14400,
         title: "分子生物學 (上)：DNA 複製與修復",
         focus: "原核 vs 真核 DNA 聚合酶 (Pol I/III vs α,δ,ε)、端粒酶 (Telomerase)、DNA 修復機制 (核苷酸切除修復 NER - 著色性乾皮症, 鹼基切除修復 BER, 錯配修復 MMR - Lynch syndrome)。",
         reviewGuide: "何宣/FC 骨幹對照：DNA 拓撲異構酶 (Topoisomerase) 抑制劑與化療藥機轉。"
@@ -1772,7 +1978,10 @@
         id: 6,
         date: "12/11 (五)",
         targetWeek: "第 11 週",
+        weekKey: "W11",
         tag: "第 6 堂 (18:00-22:00)",
+        duration: "04:00:00",
+        durationSeconds: 14400,
         title: "分子生物學 (中)：RNA 轉錄與後修飾",
         focus: "原核 RNA 聚合酶 vs 真核 RNA Pol I(rRNA), II(mRNA), III(tRNA)、啟動子 (TATA box, Pribnow box)、mRNA 5' Cap, 3' Poly-A tail, Splicing (剪接體 snRNP - Lupus 抗 Sm 抗體)。",
         reviewGuide: "何宣/FC 骨幹對照：Lac operon 乳糖操縱組調控機制 (CAP-cAMP 促進 / Repressor 抑制)。"
@@ -1781,7 +1990,10 @@
         id: 7,
         date: "12/23 (三)",
         targetWeek: "第 12 週",
+        weekKey: "W12",
         tag: "第 7 堂 (18:00-22:00)",
+        duration: "04:00:00",
+        durationSeconds: 14400,
         title: "分子生物學 (下) ＋ 生物科技",
         focus: "蛋白質轉譯 (起始、延伸、終止)、密碼子與 Wobble 假說、轉譯抑制劑 (抗生素作用機轉)、PCR 原理、Southern / Northern / Western blot、CRISPR-Cas9 基因編輯技術。",
         reviewGuide: "何宣/FC 骨幹對照：抗生素抑制蛋白質合成口訣 (30S: Aminoglycosides, Tetracyclines; 50S: Chloramphenicol, Macrolides, Clindamycin)。"
@@ -1790,7 +2002,10 @@
         id: 8,
         date: "12/28 (一)",
         targetWeek: "第 13 週",
+        weekKey: "W13",
         tag: "第 8 堂 (18:00-22:00)",
+        duration: "04:00:00",
+        durationSeconds: 14400,
         title: "細胞週期 ＋ 腫瘤生物學 ＋ 冷僻題型整理 [完課]",
         focus: "Cyclin / CDK 複合體調控細胞週期檢查點 (G1/S, G2/M)、腫瘤抑制基因 (p53, Rb) 與致癌基因 (Ras, Myc, Her2)、細胞凋亡 (Apoptosis) 內/外源路徑、維生素與微量元素冷僻精華題型。",
         reviewGuide: "何宣/FC 骨幹對照：鐸鐸生化總完課！全面進入考古題衝刺與全真模擬考。"
@@ -1798,6 +2013,21 @@
     ];
 
     let savedBiochemState = JSON.parse(localStorage.getItem('med_exam_biochem_cloud') || '{}');
+    let currentBiochemFilter = 'ALL';
+
+    window.filterBiochemWeek = function(wKey) {
+      currentBiochemFilter = wKey;
+      document.querySelectorAll('.biochem-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-week') === wKey) {
+          btn.classList.add('active', 'bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+          btn.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-700');
+        } else {
+          btn.classList.remove('active', 'bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+          btn.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-700');
+        }
+      });
+      renderBiochemUnits();
+    };
 
     function updateBiochemProgress() {
       const checkedCount = Object.values(savedBiochemState).filter(Boolean).length;
@@ -1805,9 +2035,19 @@
       const bar = document.getElementById('biochem-progress-bar');
       const text = document.getElementById('biochem-progress-text');
       if (bar) bar.style.width = percent + '%';
-      if (text) text.innerText = `${checkedCount}/${biochemData.length} (${percent}%)`;
+      if (text) text.innerText = `${checkedCount}/${biochemData.length} 堂 (${percent}%)`;
+      
+      const completedSecs = checkedCount * 4 * 3600;
+      const completedHours = checkedCount * 4;
       const timeStat = document.getElementById('biochem-time-stat');
-      if (timeStat) timeStat.innerText = `已完成 ${checkedCount} / ${biochemData.length} 堂課 (${checkedCount * 4} / 32 小時)`;
+      if (timeStat) {
+        timeStat.innerText = `已研讀 ${formatSecondsToHMS(completedSecs)} / 32:00:00 (約 ${completedHours} 小時 0 分鐘 · ${percent}%)`;
+      }
+      const unitStat = document.getElementById('biochem-unit-stat');
+      if (unitStat) {
+        unitStat.innerText = `已完成 ${checkedCount} / ${biochemData.length} 堂課 (${checkedCount * 2} / 16 講)`;
+      }
+
       if (typeof window.updateProgressTrendChart === 'function') {
         window.updateProgressTrendChart();
       }
@@ -1822,11 +2062,14 @@
       container.innerHTML = '';
 
       biochemData.forEach(item => {
+        if (currentBiochemFilter !== 'ALL' && item.weekKey !== currentBiochemFilter) return;
+
         const matchText = `${item.id} ${item.date} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase();
         if (query && !matchText.includes(query)) return;
 
         const isChecked = !!savedBiochemState[item.id];
         const card = document.createElement('div');
+        card.id = `biochem-unit-card-${item.id}`;
         card.className = `p-4 rounded-2xl border transition-all cursor-pointer ${
           isChecked 
             ? 'completed bg-slate-900/50 border-amber-500/30' 
@@ -1836,20 +2079,30 @@
         card.innerHTML = `
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
             <div class="flex items-center gap-3">
-              <input type="checkbox" class="biochem-custom-checkbox rounded bg-slate-800 border-slate-600 text-amber-500 focus:ring-0 cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+              <input type="checkbox" class="biochem-custom-checkbox rounded bg-slate-800 border-slate-600 text-amber-500 focus:ring-0 cursor-pointer w-4 h-4" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
               <div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                   <span class="text-xs font-bold text-amber-400 font-mono">${item.tag}</span>
                   <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-slate-900 text-sky-400 border border-slate-700">${item.targetWeek}</span>
                   <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">${item.date}</span>
+                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3 h-3"></i> 4時00分 (240m)
+                  </span>
                 </div>
-                <h3 class="title-text text-sm md:text-base font-bold text-slate-100 mt-1 ${isChecked ? 'line-through text-slate-500' : ''}">${item.title}</h3>
+                <h3 class="title-text text-sm md:text-base font-bold text-slate-100 mt-1.5 ${isChecked ? 'line-through text-slate-500' : ''}">${item.title}</h3>
               </div>
             </div>
-            <div class="text-right">
-              <span class="text-xs font-semibold ${isChecked ? 'text-emerald-400' : 'text-slate-400'}">
+            <div class="text-right shrink-0">
+              <span class="text-xs font-semibold px-2 py-1 rounded-lg ${isChecked ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-slate-900 text-slate-400 border border-slate-700'}">
                 ${isChecked ? '✓ 已完課 & 刷題完畢' : '⏳ 待上課 / 複習'}
               </span>
+            </div>
+          </div>
+          <div class="pt-3 space-y-2 text-xs">
+            <div class="text-slate-300 leading-relaxed"><strong class="text-amber-400">核心考點：</strong>${item.focus}</div>
+            <div class="text-sky-300 bg-sky-950/20 p-2 rounded-xl border border-sky-800/40 text-[11px] flex items-start gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5"></i>
+              <span>${item.reviewGuide}</span>
             </div>
           </div>
         `;
@@ -1868,6 +2121,15 @@
 
         container.appendChild(card);
       });
+
+      if (container.children.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 bg-slate-800/40 border border-slate-700/60 rounded-2xl text-slate-400 text-xs">
+            <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-500 mb-2"></i>
+            找不到符合篩選條件的鐸鐸生化課堂，請切換週次或更換搜尋關鍵字。
+          </div>
+        `;
+      }
 
       updateBiochemProgress();
       lucide.createIcons();
@@ -2014,6 +2276,7 @@
       let completedSections = 0;
       let totalPages = 368;
       let completedPages = 0;
+      let completedChapters = 0;
 
       physioChaptersData.forEach(chap => {
         totalSections += chap.sections.length;
@@ -2024,20 +2287,29 @@
             chapCompletedSecs++;
           }
         });
+        if (chapCompletedSecs === chap.sections.length && chap.sections.length > 0) {
+          completedChapters++;
+        }
         if (chap.sections.length > 0) {
           const ratio = chapCompletedSecs / chap.sections.length;
           completedPages += Math.round(ratio * chap.totalPages);
         }
       });
 
+      completedPages = Math.min(totalPages, completedPages);
       const percent = totalSections > 0 ? Math.round((completedSections / totalSections) * 100) : 0;
       const pBar = document.getElementById('physio-progress-bar');
       const pText = document.getElementById('physio-progress-text');
-      const pStat = document.getElementById('physio-page-stat');
+      const pTimeStat = document.getElementById('physio-time-stat');
+      const pUnitStat = document.getElementById('physio-unit-stat');
 
       if (pBar) pBar.style.width = `${percent}%`;
-      if (pText) pText.innerText = `${completedSections}/${totalSections} (${percent}%)`;
-      if (pStat) pStat.innerText = `已讀 ${completedPages} / ${totalPages} 頁 · 全 7 大篇章`;
+      if (pText) pText.innerText = `${completedSections}/${totalSections} 小節 (${percent}%)`;
+
+      const estHours = (completedPages * 0.1).toFixed(1);
+      const estSeconds = Math.round(completedPages * 6 * 60);
+      if (pTimeStat) pTimeStat.innerText = `已研讀約 ${formatSecondsToHMS(estSeconds)} / 36:48:00 (約 ${estHours} 小時 · ${percent}%)`;
+      if (pUnitStat) pUnitStat.innerText = `已完成 ${completedChapters} / 7 大篇章 (已讀 ${completedPages} / ${totalPages} 頁)`;
 
       if (typeof window.updateProgressTrendChart === 'function') {
         window.updateProgressTrendChart();
@@ -2052,8 +2324,12 @@
       const query = currentPhysioSearch.trim().toLowerCase();
 
       physioChaptersData.forEach(chap => {
-        // 篩選章節 (ALL 或 特定章節)
-        if (currentPhysioFilter !== 'ALL' && chap.chapterId !== currentPhysioFilter) {
+        // 篩選章節 (ALL, W1, W2 或 特定章節)
+        if (currentPhysioFilter === 'W1') {
+          if (!['甲', '乙', '丙', '丁'].includes(chap.chapterId)) return;
+        } else if (currentPhysioFilter === 'W2') {
+          if (!['戊', '己', '庚'].includes(chap.chapterId)) return;
+        } else if (currentPhysioFilter !== 'ALL' && chap.chapterId !== currentPhysioFilter) {
           return;
         }
 
@@ -2204,7 +2480,8 @@
     window.filterPhysioChapter = function(chap) {
       currentPhysioFilter = chap;
       document.querySelectorAll('.physio-filter-btn').forEach(btn => {
-        if (btn.innerText.startsWith(chap) || (chap === 'ALL' && btn.innerText.startsWith('全部'))) {
+        const filterVal = btn.getAttribute('data-filter') || '';
+        if (filterVal === chap || (chap === 'ALL' && btn.innerText.includes('全部'))) {
           btn.classList.add('active', 'bg-teal-500/20', 'text-teal-300', 'border-teal-500/40');
           btn.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-700');
         } else {
@@ -2757,7 +3034,40 @@
     let customEvents = JSON.parse(localStorage.getItem('med_exam_custom_events') || '{}');
     let selectedModalDate = '';
 
+    function updateExamCountdownBadges() {
+      const today = new Date();
+      // Exam: 2027-01-16
+      const examDate = new Date(2027, 0, 16);
+      const regStartDate = new Date(2026, 9, 6);
+      const regEndDate = new Date(2026, 9, 15, 23, 59, 59);
+      const biochemDate = new Date(2026, 10, 6, 18, 0, 0);
+
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysToExam = Math.max(0, Math.ceil((examDate - today) / msPerDay));
+      const daysToBiochem = Math.max(0, Math.ceil((biochemDate - today) / msPerDay));
+
+      const elDaysExam = document.getElementById('countdown-exam-days');
+      if (elDaysExam) elDaysExam.innerText = daysToExam;
+
+      const elRegStatus = document.getElementById('countdown-reg-status');
+      if (elRegStatus) {
+        if (today >= regStartDate && today <= regEndDate) {
+          const daysLeft = Math.ceil((regEndDate - today) / msPerDay);
+          elRegStatus.innerHTML = `<span class="text-rose-400 font-bold animate-pulse">● 報名中 (剩 ${daysLeft} 天)</span>`;
+        } else if (today < regStartDate) {
+          const daysToReg = Math.ceil((regStartDate - today) / msPerDay);
+          elRegStatus.innerHTML = `<span class="text-amber-400 font-bold">10/06 報名 (倒數 ${daysToReg} 天)</span>`;
+        } else {
+          elRegStatus.innerHTML = `<span class="text-slate-400">報名已截止</span>`;
+        }
+      }
+
+      const elBiochemDays = document.getElementById('countdown-biochem-days');
+      if (elBiochemDays) elBiochemDays.innerText = `倒數 ${daysToBiochem} 天`;
+    }
+
     function renderCalendar() {
+      updateExamCountdownBadges();
       const year = currentCalDate.getFullYear();
       const month = currentCalDate.getMonth();
       document.getElementById('calendar-title').innerText = `${year} / ${String(month + 1).padStart(2, '0')}`;
@@ -2956,42 +3266,217 @@
       }
     }
 
+    // ==========================================
+    // 🔗 全域科目快速跳轉與焦點高亮邏輯
+    // ==========================================
+    window.jumpToSubject = function(tabId, filterVal, targetId) {
+      if (typeof switchTab === 'function') {
+        switchTab(tabId);
+      }
+      if (tabId === 'physiology' && typeof filterPhysioChapter === 'function') {
+        filterPhysioChapter(filterVal || 'ALL');
+      } else if (tabId === 'anatomy' && typeof filterAnatomyWeek === 'function') {
+        filterAnatomyWeek(filterVal || 'ALL');
+      } else if (tabId === 'biochem' && typeof filterBiochemWeek === 'function') {
+        filterBiochemWeek(filterVal || 'ALL');
+      } else if (tabId === 'pharmacology' && typeof filterPharmWeek === 'function') {
+        filterPharmWeek(filterVal || 'ALL');
+      }
+
+      setTimeout(() => {
+        const target = document.getElementById(targetId) || document.getElementById(`tab-content-${tabId}`);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          target.classList.add('ring-2', 'ring-sky-400', 'ring-offset-2', 'ring-offset-slate-900', 'transition-all');
+          setTimeout(() => {
+            target.classList.remove('ring-2', 'ring-sky-400', 'ring-offset-2', 'ring-offset-slate-900');
+          }, 1500);
+        }
+      }, 120);
+    };
+
     function renderChecklist() {
       container.innerHTML = '';
       weeksData.forEach(item => {
         const isChecked = !!savedState[item.w];
         const div = document.createElement('div');
         div.id = `week-card-${item.w}`;
-        div.className = `p-2.5 rounded-xl border transition-all flex items-start gap-2.5 cursor-pointer ${
+        div.className = `p-3 rounded-xl border transition-all flex flex-col justify-between cursor-pointer ${
           isChecked ? 'bg-slate-900/40 border-slate-700/40 text-slate-500' : 'bg-slate-900/80 border-slate-700 text-slate-200 hover:border-slate-600'
         }`;
-        div.innerHTML = `
-          <input type="checkbox" id="w-${item.w}" class="mt-0.5 rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0 cursor-pointer" ${isChecked ? 'checked' : ''}>
-          <label for="w-${item.w}" class="flex-1 cursor-pointer">
-            <div class="flex items-center justify-between text-xs font-semibold ${isChecked ? 'text-slate-500' : 'text-sky-400'}">
-              <span>第 ${item.w} 週</span>
-              <span class="font-mono text-[10px]">${item.date}</span>
+
+        let jumpButtonsHtml = '';
+        if (item.w === 1) {
+          jumpButtonsHtml = `
+            <div class="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('physiology', 'W1', 'physio-chapters-container')" class="px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/30 hover:bg-teal-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="activity" class="w-3 h-3"></i> FC 生理甲～丁 ➔
+              </button>
             </div>
-            <div class="text-[11px] mt-0.5 leading-tight ${isChecked ? 'line-through text-slate-500' : 'text-slate-300'}">${item.title}</div>
-          </label>
+          `;
+        } else if (item.w === 2) {
+          jumpButtonsHtml = `
+            <div class="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('physiology', 'W2', 'physio-chapters-container')" class="px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/30 hover:bg-teal-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="activity" class="w-3 h-3"></i> FC 生理戊～庚 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 3) {
+          jumpButtonsHtml = `
+            <div class="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('anatomy', 'W3', 'anatomy-units-container')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="book-open" class="w-3 h-3"></i> 趙俊彥 01–06 講 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 4) {
+          jumpButtonsHtml = `
+            <div class="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('anatomy', 'W4', 'anatomy-units-container')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="book-open" class="w-3 h-3"></i> 趙俊彥 07–12 講 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 5) {
+          jumpButtonsHtml = `
+            <div class="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('anatomy', 'W5', 'anatomy-units-container')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="book-open" class="w-3 h-3"></i> 趙俊彥 13–18 講 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 6) {
+          jumpButtonsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('anatomy', 'W6', 'anatomy-units-container')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="book-open" class="w-3 h-3"></i> 解剖 19–24 講 ➔
+              </button>
+              <button onclick="event.stopPropagation(); jumpToSubject('biochem', 'W6', 'biochem-units-container')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> 生化第1堂 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 7) {
+          jumpButtonsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('anatomy', 'W7', 'anatomy-units-container')" class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="book-open" class="w-3 h-3"></i> 解剖 25–30 講 (完課) ➔
+              </button>
+              <button onclick="event.stopPropagation(); jumpToSubject('biochem', 'W7', 'biochem-units-container')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> 生化第2/3堂 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 8) {
+          jumpButtonsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('pharmacology', 'W8', 'pharm-units-container')" class="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 hover:bg-violet-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="pill" class="w-3 h-3"></i> 子翔藥理 W8 ➔
+              </button>
+              <button onclick="event.stopPropagation(); jumpToSubject('biochem', 'W7', 'biochem-units-container')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> 複習生化 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 9) {
+          jumpButtonsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('pharmacology', 'W9', 'pharm-units-container')" class="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 hover:bg-violet-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="pill" class="w-3 h-3"></i> 子翔藥理 W9 (抗生素) ➔
+              </button>
+              <button onclick="event.stopPropagation(); jumpToSubject('biochem', 'W9', 'biochem-units-container')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> 生化第4堂 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 10) {
+          jumpButtonsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('pharmacology', 'W10', 'pharm-units-container')" class="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 hover:bg-violet-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="pill" class="w-3 h-3"></i> 子翔藥理 W10 ➔
+              </button>
+              <button onclick="event.stopPropagation(); jumpToSubject('biochem', 'W10', 'biochem-units-container')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> 生化第5堂 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 11) {
+          jumpButtonsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('pharmacology', 'W11', 'pharm-units-container')" class="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 hover:bg-violet-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="pill" class="w-3 h-3"></i> 子翔藥理 W11 (大科) ➔
+              </button>
+              <button onclick="event.stopPropagation(); jumpToSubject('biochem', 'W11', 'biochem-units-container')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> 生化第6堂 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 12) {
+          jumpButtonsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('pharmacology', 'W12', 'pharm-units-container')" class="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 hover:bg-violet-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="pill" class="w-3 h-3"></i> 子翔藥理 W12 (大科) ➔
+              </button>
+              <button onclick="event.stopPropagation(); jumpToSubject('biochem', 'W12', 'biochem-units-container')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> 生化第7堂 ➔
+              </button>
+            </div>
+          `;
+        } else if (item.w === 13) {
+          jumpButtonsHtml = `
+            <div class="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-slate-800/80">
+              <button onclick="event.stopPropagation(); jumpToSubject('pharmacology', 'W13', 'pharm-units-container')" class="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/30 hover:bg-violet-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="pill" class="w-3 h-3"></i> 子翔藥理 W13 (完課) ➔
+              </button>
+              <button onclick="event.stopPropagation(); jumpToSubject('biochem', 'W13', 'biochem-units-container')" class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-medium flex items-center gap-1 transition">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> 生化第8堂 (完課) ➔
+              </button>
+            </div>
+          `;
+        }
+
+        div.innerHTML = `
+          <div class="flex items-start gap-2.5">
+            <input type="checkbox" id="w-${item.w}" class="mt-0.5 rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0 cursor-pointer" ${isChecked ? 'checked' : ''}>
+            <label for="w-${item.w}" class="flex-1 cursor-pointer">
+              <div class="flex items-center justify-between text-xs font-semibold ${isChecked ? 'text-slate-500' : 'text-sky-400'}">
+                <span>第 ${item.w} 週</span>
+                <span class="font-mono text-[10px]">${item.date}</span>
+              </div>
+              <div class="text-[11px] mt-0.5 leading-tight ${isChecked ? 'line-through text-slate-500' : 'text-slate-300'}">${item.title}</div>
+            </label>
+          </div>
+          ${jumpButtonsHtml}
         `;
 
         div.addEventListener('click', (e) => {
-          if (e.target.tagName !== 'INPUT') {
+          if (e.target.tagName !== 'INPUT' && !e.target.closest('button')) {
             const checkbox = div.querySelector('input');
             checkbox.checked = !checkbox.checked;
+            savedState[item.w] = checkbox.checked;
+            localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
+            if (db) db.ref('checklist').set(savedState);
+            renderChecklist();
+            updateProgress();
           }
-          const checkbox = div.querySelector('input');
-          savedState[item.w] = checkbox.checked;
-          localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
-          if (db) db.ref('checklist').set(savedState);
-          renderChecklist();
-          updateProgress();
         });
+
+        const chk = div.querySelector('input');
+        if (chk) {
+          chk.addEventListener('change', (e) => {
+            savedState[item.w] = e.target.checked;
+            localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
+            if (db) db.ref('checklist').set(savedState);
+            renderChecklist();
+            updateProgress();
+          });
+        }
 
         container.appendChild(div);
       });
       updateProgress();
+      lucide.createIcons();
     }
     renderChecklist();
 
@@ -3333,10 +3818,26 @@
                 ${Number(diffFromTarget) >= 0 ? `+${diffFromTarget}%` : `${diffFromTarget}%`}
               </span>
             </div>
+            <button onclick="jumpToSubjectMilestone(${item.weekNum})" class="mt-2 w-full py-1 rounded bg-slate-800/90 hover:bg-sky-600 hover:text-white text-slate-300 text-[10px] font-medium transition flex items-center justify-center gap-1 border border-slate-700/60">
+              <span>直達該週進度</span> <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            </button>
           </div>
         `;
       }).join('');
+      lucide.createIcons();
     }
+
+    window.jumpToSubjectMilestone = function(wNum) {
+      if (wNum === 1) jumpToSubject('physiology', 'W1', 'physio-chapters-container');
+      else if (wNum === 2) jumpToSubject('physiology', 'W2', 'physio-chapters-container');
+      else if (wNum === 3) jumpToSubject('anatomy', 'W3', 'anatomy-units-container');
+      else if (wNum === 4) jumpToSubject('anatomy', 'W4', 'anatomy-units-container');
+      else if (wNum === 5) jumpToSubject('anatomy', 'W5', 'anatomy-units-container');
+      else if (wNum === 6) jumpToSubject('anatomy', 'W6', 'anatomy-units-container');
+      else if (wNum === 7) jumpToSubject('anatomy', 'W7', 'anatomy-units-container');
+      else if (wNum >= 8 && wNum <= 13) jumpToSubject('pharmacology', `W${wNum}`, 'pharm-units-container');
+      else jumpToSubject('plan', '', `week-card-${wNum}`);
+    };
 
     window.updateProgressTrendChart = function() {
       const mountEl = document.getElementById('recharts-progress-trend-root');
@@ -3571,6 +4072,192 @@
     } else {
       setTimeout(window.updateProgressTrendChart, 150);
     }
+
+    // ==========================================
+    // 🍅 國考沉浸專注番茄鐘 (Pomodoro Focus Timer) 完整邏輯
+    // ==========================================
+    let pomoDurationMinutes = 50;
+    let pomoRemainingSeconds = 50 * 60;
+    let pomoTimerInterval = null;
+    let pomoIsRunning = false;
+    let pomoModeType = 'work'; // 'work' | 'break'
+    let pomoModeTitle = '50分 深度作戰';
+    let pomoSoundEnabled = true;
+
+    // Load today's pomodoro count
+    const pomoTodayKey = `med_exam_pomo_${todayStr}`;
+    let pomoTodayData = JSON.parse(localStorage.getItem(pomoTodayKey) || '{"count": 0, "minutes": 0}');
+
+    function updatePomodoroStatsUI() {
+      const elCount = document.getElementById('pomo-count-today');
+      const elMins = document.getElementById('pomo-minutes-today');
+      if (elCount) elCount.innerText = pomoTodayData.count || 0;
+      if (elMins) elMins.innerText = pomoTodayData.minutes || 0;
+    }
+
+    function updatePomodoroDisplay() {
+      const elDisplay = document.getElementById('pomo-timer-display');
+      const elBar = document.getElementById('pomo-progress-bar');
+      const elPercent = document.getElementById('pomo-percent-label');
+      const elMode = document.getElementById('pomo-mode-label');
+      const elStatus = document.getElementById('pomo-status-badge');
+      const elBtnText = document.getElementById('pomo-toggle-text');
+      const elBtn = document.getElementById('pomo-toggle-btn');
+
+      const mins = Math.floor(pomoRemainingSeconds / 60);
+      const secs = pomoRemainingSeconds % 60;
+      const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      if (elDisplay) elDisplay.innerText = formatted;
+
+      const totalSecs = pomoDurationMinutes * 60;
+      const elapsed = totalSecs - pomoRemainingSeconds;
+      const percent = totalSecs > 0 ? Math.min(100, Math.round((elapsed / totalSecs) * 100)) : 0;
+
+      if (elBar) elBar.style.width = percent + '%';
+      if (elPercent) elPercent.innerText = percent + '%';
+      if (elMode) elMode.innerText = pomoModeTitle;
+
+      if (elStatus) {
+        if (pomoIsRunning) {
+          elStatus.innerText = pomoModeType === 'work' ? '🎯 專注衝刺中' : '☕ 充電休息中';
+          elStatus.className = 'text-[10px] font-mono px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse';
+        } else if (elapsed > 0 && pomoRemainingSeconds > 0) {
+          elStatus.innerText = '⏸ 暫停中';
+          elStatus.className = 'text-[10px] font-mono px-2 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        } else {
+          elStatus.innerText = 'READY 準備開始';
+          elStatus.className = 'text-[10px] font-mono px-2 py-0.2 rounded-full bg-slate-700 text-slate-300';
+        }
+      }
+
+      if (elBtnText) elBtnText.innerText = pomoIsRunning ? '暫停專注' : '開始專注';
+      if (elBtn) {
+        const icon = elBtn.querySelector('i');
+        if (icon) {
+          icon.setAttribute('data-lucide', pomoIsRunning ? 'pause' : 'play');
+          lucide.createIcons();
+        }
+      }
+    }
+
+    window.togglePomodoro = function() {
+      if (pomoIsRunning) {
+        // Pause
+        clearInterval(pomoTimerInterval);
+        pomoIsRunning = false;
+        updatePomodoroDisplay();
+      } else {
+        // Start
+        pomoIsRunning = true;
+        updatePomodoroDisplay();
+        pomoTimerInterval = setInterval(() => {
+          if (pomoRemainingSeconds > 0) {
+            pomoRemainingSeconds--;
+            updatePomodoroDisplay();
+          } else {
+            // Completed session!
+            clearInterval(pomoTimerInterval);
+            pomoIsRunning = false;
+            onPomodoroComplete();
+          }
+        }, 1000);
+      }
+    };
+
+    function onPomodoroComplete() {
+      if (pomoSoundEnabled) {
+        playPomodoroChime();
+      }
+
+      if (pomoModeType === 'work') {
+        pomoTodayData.count = (pomoTodayData.count || 0) + 1;
+        pomoTodayData.minutes = (pomoTodayData.minutes || 0) + pomoDurationMinutes;
+        localStorage.setItem(pomoTodayKey, JSON.stringify(pomoTodayData));
+        updatePomodoroStatsUI();
+
+        // Auto prompt next break
+        setPomodoroPreset(10, 'break', '10分 深度休息');
+      } else {
+        // Switch back to study
+        setPomodoroPreset(50, 'work', '50分 深度作戰');
+      }
+      updatePomodoroDisplay();
+    }
+
+    window.resetPomodoro = function() {
+      clearInterval(pomoTimerInterval);
+      pomoIsRunning = false;
+      pomoRemainingSeconds = pomoDurationMinutes * 60;
+      updatePomodoroDisplay();
+    };
+
+    window.addPomodoroMinutes = function(minsToAdd) {
+      pomoDurationMinutes += minsToAdd;
+      pomoRemainingSeconds += minsToAdd * 60;
+      updatePomodoroDisplay();
+    };
+
+    window.setPomodoroPreset = function(mins, type, title) {
+      clearInterval(pomoTimerInterval);
+      pomoIsRunning = false;
+      pomoDurationMinutes = mins;
+      pomoRemainingSeconds = mins * 60;
+      pomoModeType = type;
+      pomoModeTitle = title;
+
+      document.querySelectorAll('.pomo-preset-btn').forEach(btn => {
+        if (Number(btn.getAttribute('data-mins')) === mins && btn.innerText.includes(mins + 'm')) {
+          btn.className = 'pomo-preset-btn active px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition';
+        } else {
+          btn.className = 'pomo-preset-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 transition';
+        }
+      });
+
+      updatePomodoroDisplay();
+    };
+
+    window.togglePomodoroSound = function() {
+      pomoSoundEnabled = !pomoSoundEnabled;
+      const text = document.getElementById('pomo-sound-text');
+      if (text) text.innerText = `提示音: ${pomoSoundEnabled ? '開' : '關'}`;
+      if (pomoSoundEnabled) playPomodoroChime();
+    };
+
+    function playPomodoroChime() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, now);
+        osc1.frequency.exponentialRampToValueAtTime(440, now + 0.8);
+        gain1.gain.setValueAtTime(0.3, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.8);
+
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1320, now + 0.15);
+        osc2.frequency.exponentialRampToValueAtTime(660, now + 1.2);
+        gain2.gain.setValueAtTime(0.25, now + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.15);
+        osc2.stop(now + 1.2);
+      } catch (e) {
+        console.log('Audio chime not allowed or supported');
+      }
+    }
+
+    updatePomodoroDisplay();
+    updatePomodoroStatsUI();
 
     window.addEventListener('resize', () => {
       if (currentActiveTab === 'plan') {
