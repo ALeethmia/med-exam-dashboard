@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2027 一階醫師國考 - 16週全方位戰鬥儀表板 (10/1 啟動)</title>
+  <title>2027 一階醫師國考 - 20週全方位戰鬥儀表板</title>
+  <meta name="description" content="2027 一階醫師國考全方位戰鬥儀表板，整合備考月曆、日常作息表、First Choice 生理學 7 大篇章 (何宣對照)、趙俊彥解剖學 30 講、鐸鐸生化學 8 堂課、子翔藥理學 19 單元進度檢核與雲端即時同步。">
+  <meta property="og:title" content="2027 一階醫師國考 - 20週全方位戰鬥儀表板">
+  <meta property="og:description" content="2027 一階醫師國考全方位戰鬥儀表板，整合備考月曆、日常作息表、First Choice 生理學 7 大篇章 (何宣對照)、趙俊彥解剖學 30 講、鐸鐸生化學 8 堂課、子翔藥理學 19 單元進度檢核與雲端即時同步。">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Firebase SDK -->
@@ -3185,7 +3191,9 @@
           const m = String(cur.getMonth() + 1).padStart(2, '0');
           const d = String(cur.getDate()).padStart(2, '0');
           const dayKey = `${y}-${m}-${d}`;
-          const dayHabits = JSON.parse(localStorage.getItem(`med_exam_habits_${dayKey}`) || '{}');
+          const dayHabits = (dayKey === todayStr && typeof todayHabits !== 'undefined')
+            ? todayHabits
+            : JSON.parse(localStorage.getItem(`med_exam_habits_${dayKey}`) || '{}');
           if (dayHabits['daily-sport']) habitDoneCount++;
           if (dayHabits['daily-exam']) habitDoneCount++;
           if (dayHabits['daily-game']) habitDoneCount++;
@@ -3396,9 +3404,14 @@
         elMomentumBadge.innerText = Number(momentumDelta) > 0 ? '🔥 增長中' : (Number(momentumDelta) === 0 ? '穩定維持' : '蓄勢衝刺');
       }
 
-      if (elHabitVal) elHabitVal.innerText = currentItem.habit.toFixed(1) + '%';
+      // Calculate today's real habit percentage
+      const todayHabitsCount = habits.filter(h => typeof todayHabits !== 'undefined' && !!todayHabits[h]).length;
+      const todayHabitPercent = Math.round((todayHabitsCount / habits.length) * 100);
+      const displayHabitVal = todayHabitsCount > 0 ? todayHabitPercent : currentItem.habit;
+
+      if (elHabitVal) elHabitVal.innerText = displayHabitVal.toFixed(1) + '%';
       if (elHabitBadge) {
-        elHabitBadge.innerText = currentItem.habit >= 80 ? '自律巔峰' : (currentItem.habit > 0 ? '持續打卡' : '今日待打卡');
+        elHabitBadge.innerText = displayHabitVal >= 80 ? '自律巔峰' : (displayHabitVal > 0 ? '持續打卡' : '今日待打卡');
       }
 
       if (elBannerBadge) {
