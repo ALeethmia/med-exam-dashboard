@@ -2108,9 +2108,9 @@
       const query=currentPhysioSearch.trim().toLowerCase();
       const groups=physioChaptersData.filter(chap=>currentPhysioFilter==='ALL' ||
         (currentPhysioFilter==='W1'?['甲','乙','丙','丁'].includes(chap.chapterId):currentPhysioFilter==='W2'?['戊','己','庚'].includes(chap.chapterId):chap.chapterId===currentPhysioFilter)).map(chap=>({
-          id:chap.chapterId,title:chap.title,week:['甲','乙','丙','丁'].includes(chap.chapterId)?'W1':'W2',meta:`${chap.pages} · ${chap.targetWeek}`,note:chap.hoHsuanNote,all:chap.sections,
+          id:chap.chapterId,title:chap.title,week:['甲','乙','丙','丁'].includes(chap.chapterId)?'W1':'W2',meta:chap.pages,note:chap.hoHsuanNote,all:chap.sections,
           items:chap.sections.filter(sec=>`${sec.title} ${sec.en} ${sec.highYield} ${sec.hoHsuan} ${chap.title} ${sec.page}`.toLowerCase().includes(query)).map(sec=>({
-            id:sec.id,title:`${sec.code}. ${sec.title}`,meta:`${sec.en} · p.${sec.page}`,notes:[['核心考點',sec.highYield],['何宣對照',sec.hoHsuan]]
+            id:sec.id,title:`${sec.code}. ${sec.title}`,meta:`p.${sec.page}`,notes:[['核心考點',sec.highYield],['何宣對照',sec.hoHsuan]]
           }))
         })).filter(group=>group.items.length);
       SubjectUI.render({container:physioContainer,path:'physiology',groups,state:savedPhysioState,query,rowClass:'physio-card',onBatch:toggleAllChapter,

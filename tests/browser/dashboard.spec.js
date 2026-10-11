@@ -148,26 +148,25 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
   expect(result.writes.filter(w=>w.kind==='update').every(w=>Object.keys(w.patch).every(key=>key.includes('/')))).toBe(true);
 });
 
-test('subject groups preserve expansion, focus and learning records through rerenders',async({page})=>{
-  await page.clock.install({time:new Date('2026-10-11T04:00:00Z')});await page.goto('/');await navigate(page,'physiology');
+test('book navigation remembers selected chapters and notes without changing learning records',async({page})=>{
+  await page.goto('/');await navigate(page,'physiology');
   await expect(page.locator('#physio-chapters-container > details')).toHaveCount(7);
-  const closed=page.locator('[data-group="physiology__甲"]');
-  await closed.locator(':scope > summary').click();await expect(closed).not.toHaveAttribute('open','');
-  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('med_exam_subject_expansion_v1'))['physiology__甲'])).toBe(false);
-  const weekTwo=page.locator('[data-group="physiology__戊"]');await expect(weekTwo).toHaveAttribute('open','');
-  const checkbox=weekTwo.locator('input').first();const id=await checkbox.getAttribute('id');
+  const book=page.locator('#physio-chapters-container-index');
+  await expect(book.locator('button')).toHaveCount(7);
+  await book.locator('[data-chapter="戊"]').click();
+  const chapter=page.locator('[data-group="physiology__戊"]');
+  await expect(chapter).toBeVisible();await expect(page.locator('[data-group="physiology__甲"]')).not.toBeVisible();
+  const checkbox=chapter.locator('input').first();const id=await checkbox.getAttribute('id');
   await checkbox.check();await expect(checkbox).toBeFocused();
-  const meter=await page.locator('#physio-progress-bar').boundingBox();expect(meter.height).toBe(6);expect(meter.width).toBeGreaterThan(0);
-  await expect(closed).not.toHaveAttribute('open','');
-  const note=weekTwo.locator('.course-item-notes').first();await note.locator('summary').click();
-  await expect(note).toHaveAttribute('open','');await expect(checkbox).toBeChecked();
+  const meter=await page.locator('#physio-progress-bar').boundingBox();expect(meter.height).toBe(4);expect(meter.width).toBeGreaterThan(0);
+  const note=chapter.locator('.course-item-notes').first();await note.locator('summary').click();
   await checkbox.uncheck();await expect(note).toHaveAttribute('open','');
-  await page.reload();await expect(closed).not.toHaveAttribute('open','');await expect(note).toHaveAttribute('open','');
+  await page.reload();await expect(chapter).toBeVisible();await expect(note).toHaveAttribute('open','');
   expect(await page.evaluate(id=>window.readStudyStates().physiology[id],id)).toBe(false);
   await page.locator('#physio-search-input').fill('Nernst');
-  expect(await page.locator('#physio-chapters-container > details').count()).toBeGreaterThan(0);
-  expect(await page.locator('#physio-chapters-container > details:not([open])').count()).toBe(0);
-  await page.locator('#physio-search-input').fill('');await expect(closed).not.toHaveAttribute('open','');
+  await expect(page.locator('[data-group="physiology__甲"]')).toBeVisible();
+  await page.locator('#physio-search-input').fill('');await expect(chapter).toBeVisible();
+  await page.locator('#tab-content-physiology .course-plan-filter > summary').click();
   await page.locator('#physio-filter-chips [data-filter=W1]').click();
   await expect(page.locator('#physio-chapters-container > details')).toHaveCount(4);
 });
@@ -175,7 +174,7 @@ test('subject groups preserve expansion, focus and learning records through rere
 test('today task view clears stale filters and focuses the exact course without completing it',async({page})=>{
   await page.clock.install({time:new Date('2026-10-11T04:00:00Z')});await page.goto('/');
   const key=await page.locator('#task-list input').first().getAttribute('data-task');
-  await navigate(page,'physiology');await page.locator('#physio-filter-chips [data-filter=W1]').click();
+  await navigate(page,'physiology');await page.locator('#tab-content-physiology .course-plan-filter > summary').click();await page.locator('#physio-filter-chips [data-filter=W1]').click();
   await page.locator('#physio-search-input').fill('no-match');await navigate(page,'home');
   await page.locator('#task-list .task-open').first().click();
   const row=page.locator('[data-study-key="'+key+'"]');await expect(row).toBeVisible();
@@ -192,8 +191,40 @@ test('four subject pages share readable mobile lists in both appearances',async(
       await navigate(page,tab);const course=page.locator('#tab-content-'+tab);
       await expect(course.locator('.course-overview')).toBeVisible();
       await expect(course.locator('.course-group').first()).toBeVisible();
-      expect(await course.locator('.course-row .title-text').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(14);
+      expect(await course.locator('.course-row:visible .title-text').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(14);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     }
   }
+});
+
+test('FC table of contents follows the photographed book and separates study week controls',async({page})=>{
+  await page.goto('/');await navigate(page,'physiology');
+  const actual=await page.evaluate(()=>window.studyData.physio.map(c=>({title:c.title,sections:c.sections.map(s=>[s.code,s.title,s.page,s.id])})));
+  expect(actual.map(c=>c.title)).toEqual(['甲、細胞生理','乙、神經生理','丙、心血管生理','丁、呼吸生理','戊、腎臟生理','己、腸胃生理','庚、內分泌生理']);
+  expect(actual.map(c=>c.sections.map(s=>s[2]))).toEqual([[3,4,9,12,20,32],[41,45,67,95],[128,141,152,166,172,172],[178,193,199,208,208,210],[216,228,240,248,256],[261,267,274,292],[300,311,323,331,337,346,359,367]]);
+  expect(actual.map(c=>c.sections.map(s=>s[0]).join(''))).toEqual(['ABCDEF','ABCD','ABCDEF','ABCDEF','ABCDE','ABCD','ABCDEFGH']);
+  await expect(page.locator('#physio-filter-chips [data-filter="甲"]')).toHaveCount(0);
+  await expect(page.locator('#physio-filter-chips')).not.toBeVisible();
+  await expect(page.locator('[data-group="physiology__甲"] .course-group-heading')).not.toContainText('週');
+  const book=page.locator('#physio-chapters-container-index');
+  expect(await book.locator('button .course-index-title').allTextContents()).toEqual(actual.map(c=>c.title));
+  for(const c of actual){
+    await book.locator('[data-chapter="'+c.title[0]+'"]').click();
+    const group=page.locator('[data-group="physiology__'+c.title[0]+'"]');
+    await expect(group).toBeVisible();
+    expect(await group.locator('.title-text').allTextContents()).toEqual(c.sections.map(s=>s[0]+'. '+s[1]));
+  }
+});
+
+test('mobile chapter picker restores the book position and leaves completion records untouched',async({page})=>{
+  await page.setViewportSize({width:390,height:844});await page.goto('/');await navigate(page,'physiology');
+  const select=page.locator('#physio-chapters-container-index select');
+  await expect(select).toBeVisible();await select.selectOption('庚');
+  await expect(page.locator('[data-group="physiology__庚"]')).toBeVisible();
+  await expect(page.locator('[data-group="physiology__甲"]')).not.toBeVisible();
+  await expect(page.locator('[data-group="physiology__庚"] input')).toHaveCount(8);
+  expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({});
+  await page.reload();await expect(select).toHaveValue('庚');
+  await expect(page.locator('[data-group="physiology__庚"]')).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
