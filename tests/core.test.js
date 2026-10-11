@@ -72,3 +72,23 @@ test('local mode never queues or sends Firebase learning writes',async()=>{
   const h=syncHarness();h.window.workspaceLocalOnly=true;h.listeners['.info/connected']({val:()=>true});h.window.persistProgress('videos',{1:true},[1]);
   await new Promise(r=>setImmediate(r));assert.equal(h.writes.length,0);assert.equal(h.el.textContent,'本機模式');
 });
+
+test('time goals keep denied writes for retry and preserve awarded XP when unchecked',async()=>{
+  const {createTimeTasks}=await import('../time-tasks.js');
+  const previousWindow=globalThis.window,previousStorage=globalThis.localStorage;
+  const store=new Map();let denied=true,remote={unrelated:'keep'},writes=0;
+  globalThis.window={addEventListener(){}};
+  globalThis.localStorage={getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v)};
+  try {
+    const db={ref:()=>({on(){},transaction:async updater=>{writes++;if(denied)throw new Error('denied');remote=updater(remote);return {snapshot:{val:()=>remote}};}})};
+    const tasks=createTimeTasks({db,localOnly:false,day:'2026-10-11',onChange(){}});
+    tasks.set('morning',true);await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(tasks.failed(),true);assert.equal(Object.keys(JSON.parse(store.get('med_exam_time_tasks_v1')).pending).length,1);
+    denied=false;await tasks.retry();assert.equal(remote.unrelated,'keep');assert.equal(remote.awarded,true);
+    tasks.set('morning',false);await new Promise(resolve=>setImmediate(resolve));
+    tasks.set('morning',true);await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(Object.values(tasks.awards()).reduce((n,a)=>n+a.xp,0),20);
+    assert.equal(Object.keys(JSON.parse(store.get('med_exam_time_tasks_v1')).pending).length,0);
+    assert.ok(writes>=3);
+  } finally {globalThis.window=previousWindow;globalThis.localStorage=previousStorage;}
+});
