@@ -54,5 +54,5 @@ export function createTimeTasks({db,localOnly,day,onChange}) {
     if(event.key!==KEY||!event.newValue)return;
     try {const incoming=JSON.parse(event.newValue);saved.days={...saved.days,...incoming.days};saved.pending={...saved.pending,...incoming.pending};onChange();}catch{}
   });
-  return {set,retry,awards,tasks:()=>TIME_TASKS.map(t=>({...t,complete:!!records()[t.id]?.complete,awarded:!!records()[t.id]?.awarded})),failed:()=>failed};
+  return {set,retry,awards,history:()=>JSON.parse(JSON.stringify(saved.days)),tasks:()=>TIME_TASKS.map(t=>({...t,complete:!!records()[t.id]?.complete,awarded:!!records()[t.id]?.awarded})),failed:()=>failed};
 }

@@ -232,3 +232,87 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 .account-dialog .account-help, #auth-status, #account-status { color: var(--muted); font-size: 14px; }
 .account-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .account-button { margin-top: 8px; text-align: left; }
+
+/* Daily planning reuses the app's existing surfaces and controls. */
+.workspace-button { min-height:40px; padding:8px 16px; border:1px solid var(--line); border-radius:var(--radius-control); background:var(--surface); color:var(--ink); font-size:14px; }
+.workspace-button:hover { background:var(--subtle); }
+.workspace-button.primary { background:var(--accent); color:var(--surface); border-color:transparent; }
+.workspace-input,.workspace-dialog input:not([type=checkbox]),.workspace-dialog select { min-height:40px; width:100%; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); padding:8px 12px; }
+.workspace-dialog { width:min(680px,calc(100vw - 32px)); max-height:calc(100dvh - 48px); padding:24px; border:1px solid var(--line); border-radius:16px; background:var(--surface); color:var(--ink); overflow:auto; }
+.workspace-dialog::backdrop { background:rgb(0 0 0 / 35%); backdrop-filter:blur(4px); }
+.workspace-dialog h2 { font-size:22px; font-weight:600; margin:0; }
+.workspace-dialog label:not(.picker-row) { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:13px; color:var(--muted); }
+.dialog-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+.dialog-heading > button { min-height:40px; padding:8px; border:0; background:none; color:var(--muted); }
+.planner-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.dialog-actions { display:flex; justify-content:flex-end; margin-top:24px; }
+.picker-tools { display:flex; gap:16px; flex-wrap:wrap; }
+.picker-tools label { flex:1; min-width:140px; }
+#task-course-picker { max-height:320px; overflow:auto; border-block:1px solid var(--line); }
+.picker-group { padding:8px 0; }
+.picker-group summary { font-size:14px; font-weight:500; padding:8px; cursor:pointer; }
+.picker-row { display:flex; align-items:flex-start; gap:12px; padding:12px 8px; cursor:pointer; font-size:14px; }
+.picker-row span { flex:1; overflow-wrap:anywhere; }
+.picker-row small { color:var(--muted); white-space:nowrap; }
+.picker-all { color:var(--muted); font-size:13px; }
+#planner-error,#edit-error { color:var(--error); font-size:14px; }
+.planner-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:16px 0 8px; }
+.planner-controls .workspace-input { width:auto; min-width:0; max-width:100%; flex:1; }
+.planner-empty { padding:24px 0; text-align:center; color:var(--muted); }
+.planner-empty p { margin:0 0 16px; }
+.planner-task { align-items:flex-start; }
+.planner-task > label { min-width:0; flex:1; align-items:flex-start; }
+.task-copy { min-width:0; overflow-wrap:anywhere; }
+.task-tools { display:flex; align-items:center; flex-shrink:0; gap:4px; }
+.task-link { min-height:40px; border:0; padding:8px; background:none; color:var(--accent); font-size:12px; }
+.task-menu { position:relative; }
+.task-menu > summary { list-style:none; padding:8px; min-width:40px; min-height:40px; text-align:center; cursor:pointer; color:var(--muted); }
+.task-menu > summary::-webkit-details-marker { display:none; }
+.task-menu-actions { position:absolute; right:0; top:40px; z-index:10; width:160px; padding:8px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:0 8px 24px rgb(0 0 0 / 8%); }
+.task-menu-actions button { display:block; width:100%; text-align:left; border:0; }
+.planner-history { margin-top:16px; border-top:1px solid var(--line); padding-top:16px; }
+.planner-history summary { cursor:pointer; font-size:13px; color:var(--muted); min-height:32px; }
+.history-date { display:block; padding:8px 0; min-height:40px; color:var(--ink); background:none; border:0; }
+.planner-conflict { margin-top:16px; padding:16px; background:var(--subtle); border-radius:12px; }
+.planner-conflict p { margin:0 0 8px; font-size:14px; }
+.planner-conflict small { display:block; overflow-wrap:anywhere; margin-bottom:8px; color:var(--muted); }
+.planner-conflict button { margin:8px 8px 0 0; }
+#planner-status .workspace-link { margin-left:8px; }
+#checklist-container.week-plan-list { display:block; }
+.week-plan-item { background:var(--surface); border:1px solid var(--line); border-radius:12px; margin-bottom:8px; }
+.week-plan-heading { display:flex; justify-content:space-between; gap:16px; padding:16px; cursor:pointer; list-style:none; }
+.week-plan-heading::-webkit-details-marker { display:none; }
+.week-plan-heading strong { font-size:14px; font-weight:500; }
+.week-plan-heading small { margin-left:16px; font-size:13px; color:var(--muted); }
+.week-plan-state { color:var(--muted); font-size:13px; }
+.week-plan-item.is-current .week-plan-heading { color:var(--accent); }
+.week-plan-body { padding:0 16px 16px; }
+.week-plan-body > .workspace-button { margin-top:16px; }
+.week-plan-body label { font-size:14px; line-height:1.7; }
+.week-plan-body [class*="text-[11px]"],.week-plan-body [class*="text-[10px]"] { font-size:13px!important; }
+.week-plan-body button { min-height:40px; }
+/* The calendar modal was outside legacy-page and retained dark-only labels. */
+#event-modal [class*="text-slate-"],#event-modal [class*="text-sky-"],#event-modal .text-white { color:var(--ink)!important; }
+#event-modal [class*="bg-slate-"] { background:var(--surface)!important; }
+#event-modal [class*="border-slate-"] { border-color:var(--line)!important; }
+#event-modal :is(button,input,select) { min-height:40px; border-radius:8px; }
+#tab-content-stats [class*="bg-gradient-"] { background:var(--surface)!important; }
+@media(max-width:600px) {
+  .workspace-dialog { padding:16px; max-height:calc(100dvh - 24px); }
+  .planner-form-grid { grid-template-columns:1fr; gap:0; }
+  .picker-tools { gap:0 8px; }
+  .workspace-button { min-height:44px; }
+  .planner-controls .primary { flex-basis:100%; }
+  .week-plan-heading { gap:8px; flex-wrap:wrap; }
+  .week-plan-heading small { margin-left:8px; }
+  .task-tools { gap:0; }
+}
+#level-notice { color:var(--success); margin-left:8px; }
+#tab-content-stats .recharts-tooltip-wrapper { color:var(--ink); }
+#tab-content-stats [class*="ring-"] { --tw-ring-color:transparent; }
+.legacy-page button:not(.workspace-button):not(.history-date) { border-radius:8px; }
+@media(prefers-reduced-motion:reduce) { .workspace-meter span,.task-row { transition:none!important; } }
+.workspace-dialog [hidden] { display:none!important; }
+.week-plan-heading::before { content:'›'; color:var(--muted); font-size:18px; line-height:1.2; }
+.week-plan-item[open] > .week-plan-heading::before { transform:rotate(90deg); }
+.week-plan-heading > span:first-of-type { flex:1; }
