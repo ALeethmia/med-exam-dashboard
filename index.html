@@ -1105,6 +1105,7 @@
     </div>
   </div>
 
+  <script src="/subjects.js"></script>
   <script>
     (() => {
       const main = document.querySelector('body > .max-w-6xl');
@@ -1143,6 +1144,7 @@
         const nav=document.createElement('nav'); nav.id=id; nav.className='workspace-subnav hidden'; nav.setAttribute('aria-label',label); header.after(nav);
       }
       for(const id of ['physiology','anatomy','biochem','pharmacology','plan','calendar','schedule','exercise','focus','stats']) document.getElementById('tab-content-'+id).classList.add('legacy-page');
+      window.SubjectUI.prepare();
       const plan=document.getElementById('tab-content-plan');
       Array.from(plan.children).filter(el => !el.querySelector('#checklist-container')).forEach(el=>el.remove());
     })();
@@ -1735,143 +1737,17 @@
     };
 
     function renderAnatomyLessons() {
-      const container = document.getElementById('anatomy-units-container');
-      if (!container) return;
-      const searchInput = document.getElementById('video-search-input');
-      const query = (searchInput?.value || '').toLowerCase().trim();
-
-      container.innerHTML = '';
-
-      anatomyLessonsData.forEach(lesson => {
-        if (currentAnatomyWeekFilter !== 'ALL' && lesson.weekKey !== currentAnatomyWeekFilter) {
-          return;
-        }
-
-        // 搜尋過濾
-        let matchesLesson = `${lesson.classNum} ${lesson.title} ${lesson.unitTag} ${lesson.note} ${lesson.targetWeek} ${lesson.totalDuration}`.toLowerCase().includes(query);
-        let matchingLectures = lesson.lectures.filter(l => 
-          matchesLesson || `${l.part} ${l.title} ${l.file} ${l.duration} ${l.date}`.toLowerCase().includes(query)
-        );
-
-        if (query && !matchesLesson && matchingLectures.length === 0) {
-          return;
-        }
-
-        const lecturesToDisplay = query ? (matchesLesson ? lesson.lectures : matchingLectures) : lesson.lectures;
-        const totalCount = lesson.lectures.length;
-        const doneCount = lesson.lectures.filter(l => !!savedVideoState[l.id]).length;
-        const isLessonDone = doneCount === totalCount;
-        const lessonDoneSec = lesson.lectures.filter(l => !!savedVideoState[l.id]).reduce((acc, cur) => acc + cur.durationSec, 0);
-        const lessonTimePercent = Math.round((lessonDoneSec / lesson.totalSec) * 100);
-
-        const card = document.createElement('div');
-        card.className = `p-4 md:p-5 rounded-2xl border transition-all ${
-          isLessonDone
-            ? 'bg-slate-900/50 border-rose-500/30'
-            : 'bg-slate-800/80 border-slate-700 hover:border-rose-500/30'
-        }`;
-
-        card.innerHTML = `
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
-            <div class="flex items-start gap-2.5">
-              <span class="px-2.5 py-0.5 rounded-lg bg-rose-500/10 text-rose-300 font-bold font-mono text-xs border border-rose-500/30 shrink-0 mt-0.5">
-                ${lesson.classNum}
-              </span>
-              <div>
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="text-xs text-rose-400 font-mono font-medium">${lesson.unitTag}</span>
-                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-slate-900 text-sky-300 border border-slate-700">${lesson.targetWeek}</span>
-                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20 font-bold flex items-center gap-1">
-                    <i data-lucide="clock" class="w-3 h-3"></i> 單元總時長: ${lesson.totalDuration}
-                  </span>
-                </div>
-                <h3 class="text-sm md:text-base font-bold text-white mt-1 flex items-center gap-2 ${isLessonDone ? 'line-through text-slate-500' : ''}">
-                  ${lesson.title}
-                </h3>
-              </div>
-            </div>
-            <div class="flex items-center justify-between md:justify-end gap-3 shrink-0">
-              <div class="text-right">
-                <div class="text-xs font-mono font-bold ${isLessonDone ? 'text-rose-400' : 'text-slate-300'}">
-                  ${doneCount}/${totalCount} 講 · ${lessonTimePercent}%
-                </div>
-                <div class="text-[10px] font-mono text-slate-400">
-                  ${formatSecondsToHMS(lessonDoneSec)} / ${lesson.totalDuration}
-                </div>
-              </div>
-              <div class="flex items-center gap-1 text-[11px]">
-                <button onclick="toggleAnatomyLesson(${lesson.lessonId}, true)" class="px-2 py-1 rounded bg-slate-900 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border border-slate-700 text-[10px] transition">全選</button>
-                <button onclick="toggleAnatomyLesson(${lesson.lessonId}, false)" class="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 text-[10px] transition">重置</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 單元進度條 -->
-          <div class="w-full bg-slate-950/70 rounded-full h-1.5 overflow-hidden my-2.5 border border-slate-800">
-            <div class="bg-gradient-to-r from-rose-500 to-pink-500 h-1.5 rounded-full transition-all duration-300" style="width: ${lessonTimePercent}%"></div>
-          </div>
-
-          <!-- 核心重點提示備註 -->
-          <div class="mb-3 p-2.5 bg-slate-900/80 border border-rose-500/20 rounded-xl text-xs flex items-start gap-2">
-            <i data-lucide="info" class="w-4 h-4 text-rose-400 shrink-0 mt-0.5"></i>
-            <div class="text-slate-300 text-[11px] leading-relaxed">
-              <span class="text-rose-300 font-semibold">趙醫師重點：</span> ${lesson.note}
-            </div>
-          </div>
-
-          <!-- (上)(下) 兩講列表 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
-            ${lecturesToDisplay.map(lec => {
-              const isChecked = !!savedVideoState[lec.id];
-              return `
-                <div class="anatomy-lec-card p-3 rounded-xl border transition-all cursor-pointer ${
-                  isChecked 
-                    ? 'completed bg-slate-950/60 border-rose-500/30' 
-                    : 'bg-slate-900/90 border-slate-700/80 hover:border-rose-500/40'
-                }" data-id="${lec.id}">
-                  <div class="flex items-start gap-2.5">
-                    <input type="checkbox" class="mt-1 rounded bg-slate-800 border-slate-600 text-rose-500 focus:ring-0 cursor-pointer" data-id="${lec.id}" ${isChecked ? 'checked' : ''}>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center justify-between gap-1">
-                        <span class="text-xs font-bold text-rose-400 font-mono">第 ${String(lec.id).padStart(2, '0')} 講 (${lec.part})</span>
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-800 text-rose-300 border border-rose-500/30 flex items-center gap-1">
-                            <i data-lucide="clock" class="w-3 h-3 text-rose-400"></i> ${lec.duration}
-                          </span>
-                          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-sky-400 border border-slate-700">${lec.date}</span>
-                        </div>
-                      </div>
-                      <div class="title-text text-xs font-semibold text-slate-100 mt-1 truncate ${isChecked ? 'line-through text-slate-500' : ''}">${lec.title}</div>
-                      <div class="text-[10px] text-slate-500 font-mono mt-0.5 truncate">${lec.file}</div>
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `;
-
-        // 綁定打勾事件
-        card.querySelectorAll('.anatomy-lec-card').forEach(itemEl => {
-          const lecId = Number(itemEl.getAttribute('data-id'));
-          itemEl.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT') {
-              const cb = itemEl.querySelector('input');
-              if (cb) cb.checked = !cb.checked;
-            }
-            const cb = itemEl.querySelector('input');
-            savedVideoState[lecId] = cb.checked;
-            localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
-            persistProgress('videos', savedVideoState, [lecId]);
-            renderAnatomyLessons();
-          });
-        });
-
-        container.appendChild(card);
-      });
-
+      const container=document.getElementById('anatomy-units-container');
+      const query=(document.getElementById('video-search-input')?.value || '').trim().toLowerCase();
+      const groups=anatomyLessonsData.filter(lesson=>currentAnatomyWeekFilter==='ALL' || lesson.weekKey===currentAnatomyWeekFilter).map(lesson=>{
+        const match=`${lesson.classNum} ${lesson.title} ${lesson.unitTag} ${lesson.note} ${lesson.targetWeek} ${lesson.totalDuration}`.toLowerCase().includes(query);
+        const lectures=lesson.lectures.filter(l=>match || `${l.part} ${l.title} ${l.file} ${l.duration} ${l.date}`.toLowerCase().includes(query));
+        return {id:lesson.lessonId,title:`${lesson.classNum} · ${lesson.title}`,week:lesson.weekKey,meta:`${lesson.unitTag} · ${lesson.targetWeek} · ${lesson.totalDuration}`,note:lesson.note,
+          all:lesson.lectures,items:lectures.map(l=>({id:l.id,title:l.title,meta:`第 ${l.id} 講（${l.part}） · ${l.duration} · ${l.date}`,notes:[['檔名',l.file]]}))};
+      }).filter(group=>group.items.length);
+      SubjectUI.render({container,path:'videos',groups,state:savedVideoState,query,rowClass:'anatomy-lec-card',onBatch:toggleAnatomyLesson,
+        onChange:(id,complete)=>window.setStudyCompletion('videos',id,complete)});
       updateVideoProgress();
-      window.lucide?.createIcons();
     }
 
     const searchInput = document.getElementById('video-search-input');
@@ -2034,85 +1910,15 @@
     }
 
     function renderBiochemUnits() {
-      const container = document.getElementById('biochem-units-container');
-      if (!container) return;
-      const searchInput = document.getElementById('biochem-search-input');
-      const query = (searchInput?.value || '').toLowerCase().trim();
-
-      container.innerHTML = '';
-
-      biochemData.forEach(item => {
-        if (currentBiochemFilter !== 'ALL' && item.weekKey !== currentBiochemFilter) return;
-
-        const matchText = `${item.id} ${item.date} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase();
-        if (query && !matchText.includes(query)) return;
-
-        const isChecked = !!savedBiochemState[item.id];
-        const card = document.createElement('div');
-        card.id = `biochem-unit-card-${item.id}`;
-        card.className = `p-4 rounded-2xl border transition-all cursor-pointer ${
-          isChecked 
-            ? 'completed bg-slate-900/50 border-amber-500/30' 
-            : 'bg-slate-800/80 border-slate-700 hover:border-amber-500/50'
-        }`;
-
-        card.innerHTML = `
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
-            <div class="flex items-center gap-3">
-              <input type="checkbox" class="biochem-custom-checkbox rounded bg-slate-800 border-slate-600 text-amber-500 focus:ring-0 cursor-pointer w-4 h-4" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
-              <div>
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="text-xs font-bold text-amber-400 font-mono">${item.tag}</span>
-                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-slate-900 text-sky-400 border border-slate-700">${item.targetWeek}</span>
-                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">${item.date}</span>
-                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                    <i data-lucide="clock" class="w-3 h-3"></i> 4時00分 (240m)
-                  </span>
-                </div>
-                <h3 class="title-text text-sm md:text-base font-bold text-slate-100 mt-1.5 ${isChecked ? 'line-through text-slate-500' : ''}">${item.title}</h3>
-              </div>
-            </div>
-            <div class="text-right shrink-0">
-              <span class="text-xs font-semibold px-2 py-1 rounded-lg ${isChecked ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-slate-900 text-slate-400 border border-slate-700'}">
-                ${isChecked ? '✓ 已完課 & 刷題完畢' : '⏳ 待上課 / 複習'}
-              </span>
-            </div>
-          </div>
-          <div class="pt-3 space-y-2 text-xs">
-            <div class="text-slate-300 leading-relaxed"><strong class="text-amber-400">核心考點：</strong>${item.focus}</div>
-            <div class="text-sky-300 bg-sky-950/20 p-2 rounded-xl border border-sky-800/40 text-[11px] flex items-start gap-1.5">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5"></i>
-              <span>${item.reviewGuide}</span>
-            </div>
-          </div>
-        `;
-
-        card.addEventListener('click', (e) => {
-          if (e.target.tagName !== 'INPUT') {
-            const checkbox = card.querySelector('input');
-            checkbox.checked = !checkbox.checked;
-          }
-          const checkbox = card.querySelector('input');
-          savedBiochemState[item.id] = checkbox.checked;
-          localStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
-          persistProgress('biochem', savedBiochemState, [item.id]);
-          renderBiochemUnits();
-        });
-
-        container.appendChild(card);
-      });
-
-      if (container.children.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-10 bg-slate-800/40 border border-slate-700/60 rounded-2xl text-slate-400 text-xs">
-            <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-500 mb-2"></i>
-            找不到符合篩選條件的鐸鐸生化課堂，請切換週次或更換搜尋關鍵字。
-          </div>
-        `;
-      }
-
+      const container=document.getElementById('biochem-units-container');
+      const query=(document.getElementById('biochem-search-input')?.value || '').trim().toLowerCase();
+      const groups=biochemData.filter(item=>(currentBiochemFilter==='ALL' || item.weekKey===currentBiochemFilter) &&
+        `${item.id} ${item.date} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase().includes(query)).map(item=>({
+          id:item.id,title:item.title,week:item.weekKey,meta:`${item.tag} · ${item.targetWeek} · ${item.date}`,all:[item],
+          items:[{id:item.id,title:'完成課程與複習',meta:item.duration,notes:[['核心考點',item.focus],['複習建議',item.reviewGuide]]}]
+        }));
+      SubjectUI.render({container,path:'biochem',groups,state:savedBiochemState,query,rowClass:'biochem-course-row',onChange:(id,complete)=>window.setStudyCompletion('biochem',id,complete)});
       updateBiochemProgress();
-      window.lucide?.createIcons();
     }
 
     const biochemSearchInput = document.getElementById('biochem-search-input');
@@ -2299,153 +2105,19 @@
 
     // 渲染 First Choice 生理學清單
     function renderPhysioChecklist() {
-      if (!physioContainer) return;
-      physioContainer.innerHTML = '';
-
-      const query = currentPhysioSearch.trim().toLowerCase();
-
-      physioChaptersData.forEach(chap => {
-        // 篩選章節 (ALL, W1, W2 或 特定章節)
-        if (currentPhysioFilter === 'W1') {
-          if (!['甲', '乙', '丙', '丁'].includes(chap.chapterId)) return;
-        } else if (currentPhysioFilter === 'W2') {
-          if (!['戊', '己', '庚'].includes(chap.chapterId)) return;
-        } else if (currentPhysioFilter !== 'ALL' && chap.chapterId !== currentPhysioFilter) {
-          return;
-        }
-
-        // 搜尋過濾子單元
-        const filteredSections = chap.sections.filter(sec => {
-          if (!query) return true;
-          return (
-            sec.title.toLowerCase().includes(query) ||
-            sec.en.toLowerCase().includes(query) ||
-            sec.highYield.toLowerCase().includes(query) ||
-            sec.hoHsuan.toLowerCase().includes(query) ||
-            chap.title.toLowerCase().includes(query) ||
-            String(sec.page).includes(query)
-          );
-        });
-
-        if (query && filteredSections.length === 0) {
-          return;
-        }
-
-        // 計算該章完成數
-        const chapCompletedCount = chap.sections.filter(s => savedPhysioState[s.id]).length;
-        const chapTotal = chap.sections.length;
-        const isChapAllCompleted = chapCompletedCount === chapTotal;
-        const chapPercent = Math.round((chapCompletedCount / chapTotal) * 100);
-
-        const chapCard = document.createElement('div');
-        chapCard.className = `bg-slate-800/80 border ${isChapAllCompleted ? 'border-teal-500/40 bg-teal-950/10' : 'border-slate-700'} rounded-2xl p-5 shadow-lg space-y-4 transition-all duration-200`;
-
-        chapCard.innerHTML = `
-          <!-- 章節頂部 Header -->
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-700/60 pb-3">
-            <div class="space-y-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-300 text-xs font-bold border border-teal-500/30">
-                  ${chap.pages}
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300 text-xs font-medium">
-                  ${chap.targetWeek}
-                </span>
-                <span class="text-xs font-bold font-mono ${isChapAllCompleted ? 'text-teal-400' : 'text-slate-400'}">
-                  進度: ${chapCompletedCount}/${chapTotal} (${chapPercent}%)
-                </span>
-              </div>
-              <h3 class="text-base font-bold text-white flex items-center gap-2 mt-1">
-                <i data-lucide="folder-check" class="w-4 h-4 text-teal-400"></i> ${chap.title}
-              </h3>
-            </div>
-
-            <!-- 操作按鈕 -->
-            <div class="flex items-center gap-2">
-              <button onclick="toggleAllChapter('${chap.chapterId}', ${!isChapAllCompleted})" class="px-2.5 py-1 rounded-lg text-xs font-medium ${isChapAllCompleted ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30 border border-teal-500/40'} transition flex items-center gap-1">
-                <i data-lucide="${isChapAllCompleted ? 'rotate-ccw' : 'check-circle-2'}" class="w-3.5 h-3.5"></i> ${isChapAllCompleted ? '取消全選' : '一鍵全選本章'}
-              </button>
-            </div>
-          </div>
-
-          <!-- 💡 何宣對照提示卡 -->
-          <div class="p-3 bg-sky-950/20 border border-sky-500/20 rounded-xl flex items-start gap-2.5 text-xs text-sky-200">
-            <i data-lucide="info" class="w-4 h-4 text-sky-400 shrink-0 mt-0.5"></i>
-            <div>
-              <span class="font-bold text-sky-300">何宣重點速記翻閱：</span>
-              <span class="text-slate-300">${chap.hoHsuanNote}</span>
-            </div>
-          </div>
-
-          <!-- 子單元卡片網格 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="sections-container-${chap.chapterId}"></div>
-        `;
-
-        const secContainer = chapCard.querySelector(`#sections-container-${chap.chapterId}`);
-
-        filteredSections.forEach(sec => {
-          const isDone = !!savedPhysioState[sec.id];
-          const secCard = document.createElement('div');
-          secCard.className = `physio-card p-3 rounded-xl border ${isDone ? 'completed border-teal-500/40 bg-teal-950/10' : 'border-slate-700/80 bg-slate-900/60 hover:border-slate-600'} flex flex-col justify-between gap-2.5 cursor-pointer transition-all duration-150`;
-
-          secCard.innerHTML = `
-            <div class="space-y-1.5">
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-start gap-2.5">
-                  <input type="checkbox" id="${sec.id}" ${isDone ? 'checked' : ''} class="mt-0.5 rounded bg-slate-800 border-slate-600 text-teal-500 focus:ring-0 focus:ring-offset-0 cursor-pointer">
-                  <div>
-                    <span class="text-xs font-bold text-teal-400 font-mono mr-1">${sec.code}.</span>
-                    <span class="title-text text-sm font-semibold ${isDone ? 'text-slate-400 line-through' : 'text-slate-100'}">${sec.title}</span>
-                    <div class="text-[11px] text-slate-400 font-mono tracking-tight">${sec.en}</div>
-                  </div>
-                </div>
-                <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-teal-300 border border-slate-700 shrink-0">
-                  p.${sec.page}
-                </span>
-              </div>
-
-              <!-- 對照標籤 -->
-              <div class="pt-1 border-t border-slate-800/80 text-[11px]">
-                <div class="text-sky-300 flex items-start gap-1">
-                  <span class="text-sky-400 font-bold shrink-0">📖 對照:</span>
-                  <span>${sec.hoHsuan}</span>
-                </div>
-              </div>
-            </div>
-          `;
-
-          secCard.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT') {
-              const checkbox = secCard.querySelector('input');
-              checkbox.checked = !checkbox.checked;
-            }
-            const checkbox = secCard.querySelector('input');
-            savedPhysioState[sec.id] = checkbox.checked;
-            localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
-            persistProgress('physiology', savedPhysioState, [sec.id]);
-            renderPhysioChecklist();
-          });
-
-          secContainer.appendChild(secCard);
-        });
-
-        physioContainer.appendChild(chapCard);
-      });
-
-      if (physioContainer.children.length === 0) {
-        physioContainer.innerHTML = `
-          <div class="text-center py-12 bg-slate-800/40 border border-slate-700/60 rounded-2xl text-slate-400 text-xs">
-            <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-500 mb-2"></i>
-            找不到符合「${query}」的生理學章節，請更換搜尋關鍵字。
-          </div>
-        `;
-      }
-
+      const query=currentPhysioSearch.trim().toLowerCase();
+      const groups=physioChaptersData.filter(chap=>currentPhysioFilter==='ALL' ||
+        (currentPhysioFilter==='W1'?['甲','乙','丙','丁'].includes(chap.chapterId):currentPhysioFilter==='W2'?['戊','己','庚'].includes(chap.chapterId):chap.chapterId===currentPhysioFilter)).map(chap=>({
+          id:chap.chapterId,title:chap.title,week:['甲','乙','丙','丁'].includes(chap.chapterId)?'W1':'W2',meta:`${chap.pages} · ${chap.targetWeek}`,note:chap.hoHsuanNote,all:chap.sections,
+          items:chap.sections.filter(sec=>`${sec.title} ${sec.en} ${sec.highYield} ${sec.hoHsuan} ${chap.title} ${sec.page}`.toLowerCase().includes(query)).map(sec=>({
+            id:sec.id,title:`${sec.code}. ${sec.title}`,meta:`${sec.en} · p.${sec.page}`,notes:[['核心考點',sec.highYield],['何宣對照',sec.hoHsuan]]
+          }))
+        })).filter(group=>group.items.length);
+      SubjectUI.render({container:physioContainer,path:'physiology',groups,state:savedPhysioState,query,rowClass:'physio-card',onBatch:toggleAllChapter,
+        onChange:(id,complete)=>window.setStudyCompletion('physiology',id,complete)});
       updatePhysioProgress();
-      window.lucide?.createIcons();
     }
 
-    // 章節一鍵全選 / 取消全選
     window.toggleAllChapter = function(chapterId, forceState) {
       const chap = physioChaptersData.find(c => c.chapterId === chapterId);
       if (!chap) return;
@@ -2843,143 +2515,15 @@
     };
 
     function renderPharmUnits() {
-      const container = document.getElementById('pharm-units-container');
-      if (!container) return;
-      const query = (currentPharmSearch || '').toLowerCase().trim();
-
-      container.innerHTML = '';
-
-      const filteredUnits = pharmacologyData.filter(unit => {
-        if (currentPharmWeekFilter !== 'ALL' && unit.weekKey !== currentPharmWeekFilter) {
-          return false;
-        }
-        if (query) {
-          const matchText = `${unit.unitId} ${unit.classNum} ${unit.title} ${unit.targetWeek} ${unit.unitTag} ${unit.totalDuration} ${unit.lectures.map(l => l.title + ' ' + l.duration).join(' ')}`.toLowerCase();
-          return matchText.includes(query);
-        }
-        return true;
-      });
-
-      if (filteredUnits.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-12 bg-slate-800/40 border border-slate-700/60 rounded-2xl text-slate-400 text-xs">
-            <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-500 mb-2"></i>
-            找不到符合「${query}」的藥理學單元或課程，請更換搜尋關鍵字。
-          </div>
-        `;
-        window.lucide?.createIcons();
-        updatePharmProgress();
-        return;
-      }
-
-      filteredUnits.forEach(unit => {
-        const totalCount = unit.lectures.length;
-        const doneCount = unit.lectures.filter(lec => !!savedPharmState[lec.id]).length;
-        const isUnitDone = doneCount === totalCount && totalCount > 0;
-        const unitDoneSec = unit.lectures.filter(lec => !!savedPharmState[lec.id]).reduce((acc, cur) => acc + cur.durationSec, 0);
-        const unitTimePercent = Math.round((unitDoneSec / unit.totalSec) * 100);
-
-        const card = document.createElement('div');
-        card.className = `p-4 md:p-5 rounded-2xl border transition-all ${
-          isUnitDone 
-            ? 'completed bg-slate-900/50 border-violet-500/30' 
-            : 'bg-slate-800/80 border-slate-700 hover:border-violet-500/30'
-        }`;
-
-        card.innerHTML = `
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
-            <div class="flex items-start gap-2.5">
-              <span class="px-2.5 py-0.5 rounded-lg bg-violet-500/10 text-violet-300 font-bold font-mono text-xs border border-violet-500/30 shrink-0 mt-0.5">
-                ${unit.classNum}
-              </span>
-              <div>
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="text-xs text-violet-400 font-mono font-medium">${unit.unitTag}</span>
-                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-slate-900 text-sky-300 border border-slate-700">${unit.targetWeek}</span>
-                  <span class="text-[11px] font-mono px-2 py-0.2 rounded bg-violet-500/10 text-violet-300 border border-violet-500/20 font-bold flex items-center gap-1">
-                    <i data-lucide="clock" class="w-3 h-3"></i> 單元總時長: ${unit.totalDuration}
-                  </span>
-                </div>
-                <h3 class="text-sm md:text-base font-bold text-white mt-1 flex items-center gap-2 ${isUnitDone ? 'line-through text-slate-500' : ''}">
-                  ${unit.title}
-                </h3>
-              </div>
-            </div>
-            <div class="flex items-center justify-between md:justify-end gap-3 shrink-0">
-              <div class="text-right">
-                <div class="text-xs font-mono font-bold ${isUnitDone ? 'text-violet-400' : 'text-slate-300'}">
-                  ${doneCount}/${totalCount} 講 · ${unitTimePercent}%
-                </div>
-                <div class="text-[10px] font-mono text-slate-400">
-                  ${formatSecondsToHMS(unitDoneSec)} / ${unit.totalDuration}
-                </div>
-              </div>
-              <div class="flex items-center gap-1 text-[11px]">
-                <button onclick="togglePharmUnit(${unit.unitId}, true)" class="px-2 py-1 rounded bg-slate-900 hover:bg-violet-500/20 text-slate-300 hover:text-violet-300 border border-slate-700 text-[10px] transition">全選</button>
-                <button onclick="togglePharmUnit(${unit.unitId}, false)" class="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-700 text-[10px] transition">重置</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 單元進度條 -->
-          <div class="w-full bg-slate-950/70 rounded-full h-1.5 overflow-hidden my-2.5 border border-slate-800">
-            <div class="bg-gradient-to-r from-violet-500 to-indigo-500 h-1.5 rounded-full transition-all duration-300" style="width: ${unitTimePercent}%"></div>
-          </div>
-
-          <!-- 影片列表 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
-            ${unit.lectures.map(lec => {
-              const isChecked = !!savedPharmState[lec.id];
-              const isExam = lec.type === 'exam';
-              return `
-                <div class="pharm-lec-card p-3 rounded-xl border transition-all cursor-pointer ${
-                  isChecked 
-                    ? 'completed bg-slate-950/60 border-violet-500/30' 
-                    : 'bg-slate-900/90 border-slate-700/80 hover:border-violet-500/40'
-                }" data-id="${lec.id}">
-                  <div class="flex items-start gap-2.5">
-                    <input type="checkbox" class="mt-1 rounded bg-slate-800 border-slate-600 text-violet-500 focus:ring-0 cursor-pointer" data-id="${lec.id}" ${isChecked ? 'checked' : ''}>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center justify-between gap-1">
-                        <span class="text-xs font-bold text-violet-400 font-mono">
-                          ${lec.type === 'guide' ? '須知導讀' : (isExam ? '國考考古題' : '正課精講')} (${lec.part})
-                        </span>
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-800 text-violet-300 border border-violet-500/30 flex items-center gap-1">
-                            <i data-lucide="clock" class="w-3 h-3 text-violet-400"></i> ${lec.duration}
-                          </span>
-                        </div>
-                      </div>
-                      <div class="title-text text-xs font-semibold text-slate-100 mt-1 truncate ${isChecked ? 'line-through text-slate-500' : ''}">${lec.title}</div>
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `;
-
-        // 綁定影片卡片點擊事件
-        card.querySelectorAll('.pharm-lec-card').forEach(itemEl => {
-          const lecId = itemEl.getAttribute('data-id');
-          itemEl.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT') {
-              const cb = itemEl.querySelector('input');
-              if (cb) cb.checked = !cb.checked;
-            }
-            const cb = itemEl.querySelector('input');
-            savedPharmState[lecId] = cb.checked;
-            localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
-            persistProgress('pharmacology', savedPharmState, [lecId]);
-            renderPharmUnits();
-          });
-        });
-
-        container.appendChild(card);
-      });
-
+      const query=(currentPharmSearch || '').trim().toLowerCase();
+      const groups=pharmacologyData.filter(unit=>(currentPharmWeekFilter==='ALL' || unit.weekKey===currentPharmWeekFilter) &&
+        `${unit.unitId} ${unit.classNum} ${unit.title} ${unit.targetWeek} ${unit.unitTag} ${unit.totalDuration} ${unit.lectures.map(l=>l.title+' '+l.duration).join(' ')}`.toLowerCase().includes(query)).map(unit=>({
+          id:unit.unitId,title:`${unit.classNum} · ${unit.title}`,week:unit.weekKey,meta:`${unit.unitTag} · ${unit.targetWeek} · ${unit.totalDuration}`,all:unit.lectures,
+          items:unit.lectures.map(l=>({id:l.id,title:l.title,meta:`${l.part} · ${l.duration}`}))
+        }));
+      SubjectUI.render({container:document.getElementById('pharm-units-container'),path:'pharmacology',groups,state:savedPharmState,query,rowClass:'pharm-lec-card',onBatch:togglePharmUnit,
+        onChange:(id,complete)=>window.setStudyCompletion('pharmacology',id,complete)});
       updatePharmProgress();
-      window.lucide?.createIcons();
     }
 
     const pharmSearchInput = document.getElementById('pharm-search-input');
@@ -4290,6 +3834,7 @@
       if(path==='physiology') filterPhysioChapter('ALL');
       if(path==='pharmacology') filterPharmWeek('ALL');
       switchTab(tab);
+      window.SubjectUI.locate(path,id);
     };
     window.studyData = { physio: physioChaptersData, anatomy: anatomyLessonsData, biochem: biochemData, pharm: pharmacologyData, weeks: weeksData };
   </script>

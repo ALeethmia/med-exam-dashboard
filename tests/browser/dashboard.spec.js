@@ -60,8 +60,8 @@ test('all subjects keep search, filters, item checks and batch operations',async
   await page.locator('#video-search-input').fill('no-match-123');await expect(page.locator('.anatomy-lec-card')).toHaveCount(0);
   await page.locator('#video-search-input').fill('');await page.locator('.anatomy-lec-card input').first().check();
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('med_exam_videos_cloud'))['1'])).toBe(true);
-  await page.getByRole('button',{name:'全選',exact:true}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().videos).filter(Boolean).length)).toBe(2);
-  await navigate(page,'biochem');await expect(page.locator('#biochem-units-container > div')).toHaveCount(8);
+  await page.locator('.course-batch button:visible').filter({hasText:/^全選$/}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().videos).filter(Boolean).length)).toBe(2);
+  await navigate(page,'biochem');await expect(page.locator('#biochem-units-container > details')).toHaveCount(8);
   await page.locator('#biochem-search-input').fill('no-match-123');await expect(page.locator('#biochem-units-container input')).toHaveCount(0);
   await page.locator('#biochem-search-input').fill('');await page.locator('#biochem-units-container input').first().check();
   expect(await page.evaluate(()=>window.readStudyStates().biochem['1'])).toBe(true);
@@ -71,7 +71,7 @@ test('all subjects keep search, filters, item checks and batch operations',async
   await navigate(page,'pharmacology');await expect(page.locator('.pharm-lec-card')).toHaveCount(38);
   await page.locator('#pharm-search-input').fill('no-match-123');await expect(page.locator('.pharm-lec-card')).toHaveCount(0);
   await page.locator('#pharm-search-input').fill('');await page.locator('.pharm-lec-card input').first().check();
-  await page.getByRole('button',{name:'全選',exact:true}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().pharmacology).filter(Boolean).length)).toBe(2);
+  await page.locator('.course-batch button:visible').filter({hasText:/^全選$/}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().pharmacology).filter(Boolean).length)).toBe(2);
 });
 test('appearance remembers preference and follows system changes',async({page})=>{
   await page.emulateMedia({colorScheme:'dark'});await page.goto('/');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
@@ -146,4 +146,54 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
   expect(Object.keys(result.records.gamification.v1.awards)).toHaveLength(1);
   expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/'))).toBe(true);
   expect(result.writes.filter(w=>w.kind==='update').every(w=>Object.keys(w.patch).every(key=>key.includes('/')))).toBe(true);
+});
+
+test('subject groups preserve expansion, focus and learning records through rerenders',async({page})=>{
+  await page.clock.install({time:new Date('2026-10-11T04:00:00Z')});await page.goto('/');await navigate(page,'physiology');
+  await expect(page.locator('#physio-chapters-container > details')).toHaveCount(7);
+  const closed=page.locator('[data-group="physiology__甲"]');
+  await closed.locator(':scope > summary').click();await expect(closed).not.toHaveAttribute('open','');
+  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('med_exam_subject_expansion_v1'))['physiology__甲'])).toBe(false);
+  const weekTwo=page.locator('[data-group="physiology__戊"]');await expect(weekTwo).toHaveAttribute('open','');
+  const checkbox=weekTwo.locator('input').first();const id=await checkbox.getAttribute('id');
+  await checkbox.check();await expect(checkbox).toBeFocused();
+  const meter=await page.locator('#physio-progress-bar').boundingBox();expect(meter.height).toBe(6);expect(meter.width).toBeGreaterThan(0);
+  await expect(closed).not.toHaveAttribute('open','');
+  const note=weekTwo.locator('.course-item-notes').first();await note.locator('summary').click();
+  await expect(note).toHaveAttribute('open','');await expect(checkbox).toBeChecked();
+  await checkbox.uncheck();await expect(note).toHaveAttribute('open','');
+  await page.reload();await expect(closed).not.toHaveAttribute('open','');await expect(note).toHaveAttribute('open','');
+  expect(await page.evaluate(id=>window.readStudyStates().physiology[id],id)).toBe(false);
+  await page.locator('#physio-search-input').fill('Nernst');
+  expect(await page.locator('#physio-chapters-container > details').count()).toBeGreaterThan(0);
+  expect(await page.locator('#physio-chapters-container > details:not([open])').count()).toBe(0);
+  await page.locator('#physio-search-input').fill('');await expect(closed).not.toHaveAttribute('open','');
+  await page.locator('#physio-filter-chips [data-filter=W1]').click();
+  await expect(page.locator('#physio-chapters-container > details')).toHaveCount(4);
+});
+
+test('today task view clears stale filters and focuses the exact course without completing it',async({page})=>{
+  await page.clock.install({time:new Date('2026-10-11T04:00:00Z')});await page.goto('/');
+  const key=await page.locator('#task-list input').first().getAttribute('data-task');
+  await navigate(page,'physiology');await page.locator('#physio-filter-chips [data-filter=W1]').click();
+  await page.locator('#physio-search-input').fill('no-match');await navigate(page,'home');
+  await page.locator('#task-list .task-open').first().click();
+  const row=page.locator('[data-study-key="'+key+'"]');await expect(row).toBeVisible();
+  await expect(row.locator('input')).toBeFocused();await expect(row.locator('input')).not.toBeChecked();
+  await expect(page.locator('#physio-search-input')).toHaveValue('');
+  await expect(page.locator('#xp-detail')).toContainText('0 XP');
+});
+
+test('four subject pages share readable mobile lists in both appearances',async({page})=>{
+  await page.setViewportSize({width:390,height:844});await page.goto('/');
+  for(const theme of ['light','dark']) {
+    await page.locator('[data-appearance='+theme+']').click();
+    for(const tab of ['physiology','anatomy','biochem','pharmacology']) {
+      await navigate(page,tab);const course=page.locator('#tab-content-'+tab);
+      await expect(course.locator('.course-overview')).toBeVisible();
+      await expect(course.locator('.course-group').first()).toBeVisible();
+      expect(await course.locator('.course-row .title-text').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(14);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    }
+  }
 });

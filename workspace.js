@@ -83,11 +83,8 @@ function tasksForToday() {
     .map(t => ({...validItems.get(awardKey(t)), xp:20}));
 }
 function openSubject(task) {
-  const tab = ({videos:'anatomy',physiology:'physiology',biochem:'biochem',pharmacology:'pharmacology'})[task.path];
-  // Clear stale search/filter state so the selected task can always be found.
+  // Clears stale filters, expands the owning unit and focuses the exact course.
   window.showStudyItem(task.path, task.id);
-  window.switchTab(tab);
-  document.getElementById('tab-content-'+tab).scrollIntoView({block:'start', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 }
 function setMeter(id, percent) {
   const meter = document.getElementById(id);
