@@ -2977,18 +2977,6 @@
           ${jumpButtonsHtml}
         `;
 
-        div.addEventListener('click', (e) => {
-          if (e.target.tagName !== 'INPUT' && !e.target.closest('button')) {
-            const checkbox = div.querySelector('input');
-            checkbox.checked = !checkbox.checked;
-            savedState[item.w] = checkbox.checked;
-            localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
-            persistProgress('checklist', savedState, [item.w]);
-            renderChecklist();
-            updateProgress();
-          }
-        });
-
         const chk = div.querySelector('input');
         if (chk) {
           chk.addEventListener('change', (e) => {
@@ -3004,6 +2992,7 @@
       });
       updateProgress();
       window.lucide?.createIcons();
+      window.decorateWeekPlan?.();
     }
     renderChecklist();
 
@@ -3529,55 +3518,55 @@
         h(Recharts.AreaChart, { data: data, margin: { top: 15, right: 25, left: -10, bottom: 5 } },
           h('defs', null,
             h('linearGradient', { id: 'cyanTrendGrad', x1: '0', y1: '0', x2: '0', y2: '1' },
-              h('stop', { offset: '5%', stopColor: '#38bdf8', stopOpacity: 0.35 }),
-              h('stop', { offset: '95%', stopColor: '#38bdf8', stopOpacity: 0.0 })
+              h('stop', { offset: '5%', stopColor: 'var(--accent)', stopOpacity: 0.12 }),
+              h('stop', { offset: '95%', stopColor: 'var(--accent)', stopOpacity: 0.0 })
             ),
             h('linearGradient', { id: 'emeraldTrendGrad', x1: '0', y1: '0', x2: '0', y2: '1' },
-              h('stop', { offset: '5%', stopColor: '#10b981', stopOpacity: 0.2 }),
-              h('stop', { offset: '95%', stopColor: '#10b981', stopOpacity: 0.0 })
+              h('stop', { offset: '5%', stopColor: 'var(--success)', stopOpacity: 0.2 }),
+              h('stop', { offset: '95%', stopColor: 'var(--success)', stopOpacity: 0.0 })
             )
           ),
-          h(Recharts.CartesianGrid, { strokeDasharray: '3 3', stroke: '#334155', opacity: 0.5 }),
+          h(Recharts.CartesianGrid, { strokeDasharray: '3 3', stroke: 'var(--line)', opacity: 0.5 }),
           h(Recharts.XAxis, { 
             dataKey: 'label', 
-            stroke: '#94a3b8', 
-            tick: { fill: '#94a3b8', fontSize: 12 },
-            axisLine: { stroke: '#475569' },
-            tickLine: { stroke: '#475569' }
+            stroke: 'var(--muted)',
+            tick: { fill: 'var(--muted)', fontSize: 12 },
+            axisLine: { stroke: 'var(--line)' },
+            tickLine: { stroke: 'var(--line)' }
           }),
           h(Recharts.YAxis, { 
             domain: [0, 100], 
-            stroke: '#94a3b8', 
-            tick: { fill: '#94a3b8', fontSize: 11 },
+            stroke: 'var(--muted)',
+            tick: { fill: 'var(--muted)', fontSize: 12 },
             tickFormatter: v => v + '%',
-            axisLine: { stroke: '#475569' },
-            tickLine: { stroke: '#475569' }
+            axisLine: { stroke: 'var(--line)' },
+            tickLine: { stroke: 'var(--line)' }
           }),
           h(Recharts.Tooltip, { content: CustomTooltip }),
           h(Recharts.ReferenceLine, { 
             y: 75, 
-            stroke: '#f59e0b', 
+            stroke: 'var(--warning)',
             strokeDasharray: '4 4',
-            label: { value: '75% 進度參考', fill: '#fbbf24', fontSize: 10, position: 'insideTopRight' }
+            label: { value: '75% 進度參考', fill: 'var(--warning)', fontSize: 12, position: 'insideTopRight' }
           }),
           h(Recharts.Area, { 
             type: 'monotone', 
             name: '主科任務達成率', 
             dataKey: 'completion', 
-            stroke: '#38bdf8', 
+            stroke: 'var(--accent)',
             strokeWidth: 3, 
             fill: 'url(#cyanTrendGrad)', 
-            dot: { r: 4, fill: '#38bdf8', stroke: '#0f172a', strokeWidth: 2 },
-            activeDot: { r: 6, fill: '#38bdf8', stroke: '#ffffff', strokeWidth: 2 } 
+            dot: { r: 4, fill: 'var(--accent)', stroke: 'var(--surface)', strokeWidth: 2 },
+            activeDot: { r: 6, fill: 'var(--accent)', stroke: 'var(--surface)', strokeWidth: 2 }
           }),
           h(Recharts.Line, { 
             type: 'monotone', 
             name: '自律打卡執行率', 
             dataKey: 'habit', 
-            stroke: '#10b981', 
+            stroke: 'var(--success)',
             strokeWidth: 2, 
             strokeDasharray: '4 4',
-            dot: { r: 3, fill: '#10b981' } 
+            dot: { r: 3, fill: 'var(--success)' }
           }),
           h(Recharts.Legend, { content: renderCustomLegend })
         )

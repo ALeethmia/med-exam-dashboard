@@ -9,13 +9,22 @@ async function navigate(page,tab) {
 }
 
 
+async function addCustom(page,title='考古題 50 題',minutes) {
+  await page.getByRole('button',{name:'規劃今日任務',exact:true}).click();
+  await page.locator('#task-custom').fill(title);
+  if(minutes)await page.locator('#task-minutes').fill(String(minutes));
+  await page.locator('#planner-form').getByRole('button',{name:'加入任務'}).click();
+  await expect(page.locator('#task-list')).toContainText(title);
+}
+
 test.beforeEach(async({page})=>{
   // No external scripts or production database requests are permitted in this suite.
   await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1' ? route.continue() : route.abort());
 });
-test('time goals award XP once per day and never change course completion',async({page})=>{
+test('planned tasks award XP once and never change course completion',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/');await expect(page.locator('#task-list input')).toHaveCount(3);
+  await page.goto('/');await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
+  await addCustom(page,'生理閱讀',120);
   const id=await page.locator('#task-list input').first().getAttribute('data-task');
   await page.locator('#task-list input').first().check();await expect(page.locator('#xp-detail')).toContainText('20 XP');
   expect(await page.evaluate(()=>document.activeElement?.dataset.task)).toBe(id);
@@ -23,7 +32,7 @@ test('time goals award XP once per day and never change course completion',async
   await expect(page.locator('#xp-detail')).toContainText('20 XP');
   await page.reload();await expect(page.locator('#xp-detail')).toContainText('20 XP');
   expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({});
-  await expect(page.locator('#task-count')).toHaveText('2 / 5 小時');
+  await expect(page.locator('#task-count')).toHaveText('1 / 1 任務');
   expect(errors).toEqual([]);expect(await page.evaluate(()=>window.learningDB)).toBe(null);
 });
 
@@ -47,6 +56,7 @@ test('homepage week progress and calendar summary read existing learning records
   await page.clock.install({time:new Date('2026-10-11T04:00:00Z')});
   await page.goto('/');await expect(page.locator('#current-week')).toHaveText('第 2 週');
   await expect(page.locator('#current-week-percent')).toHaveText('0%');
+  await addCustom(page);
   await page.locator('#task-list input').first().check();
   await expect(page.locator('#current-week-percent')).toHaveText('0%');
   await page.evaluate(()=>window.setStudyCompletion('physiology','fc_p_5_a',true));
@@ -58,7 +68,7 @@ test('homepage week progress and calendar summary read existing learning records
   await expect(page.locator('#upcoming-list .upcoming-row').first()).toContainText('10/12');
 });
 test('all subjects keep search, filters, item checks and batch operations',async({page})=>{
-  await page.goto('/');await expect(page.locator('#task-list input')).toHaveCount(3);
+  await page.goto('/');await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
   await navigate(page,'anatomy');await expect(page.locator('.anatomy-lec-card')).toHaveCount(30);
   await page.locator('#video-search-input').fill('頭顱');expect(await page.locator('.anatomy-lec-card').count()).toBeGreaterThan(0);
   await page.locator('#video-search-input').fill('no-match-123');await expect(page.locator('.anatomy-lec-card')).toHaveCount(0);
@@ -84,7 +94,7 @@ test('appearance remembers preference and follows system changes',async({page})=
   await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme','light');
 });
 test('separate pages retain calendar, routines, exercise and focus timer',async({page})=>{
-  await page.goto('/');await expect(page.locator('#task-list input')).toHaveCount(3);
+  await page.goto('/');await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
   await expect(page.locator('#calendar-grid')).not.toBeVisible();
   await navigate(page,'calendar');await expect(page.locator('#calendar-grid')).toBeVisible();
   await page.evaluate(()=>openEventModal('2026-10-11'));
@@ -93,13 +103,13 @@ test('separate pages retain calendar, routines, exercise and focus timer',async(
   expect(await page.evaluate(()=>window.injected)).toBeUndefined();await page.evaluate(()=>closeEventModal());
   await navigate(page,'schedule');await expect(page.locator('#daily-sport')).toBeVisible();await page.locator('#daily-sport').check();
   await navigate(page,'exercise');await expect(page.locator('#sport-phase-1')).toBeVisible();
-  await navigate(page,'plan');await expect(page.locator('#checklist-container input')).toHaveCount(16);await page.locator('#w-1').check();
+  await navigate(page,'plan');await expect(page.locator('#checklist-container input')).toHaveCount(16);await page.locator('[data-week="1"] > summary').click();await page.locator('#w-1').check();
   await navigate(page,'stats');await expect(page.locator('#progress-trend-card')).toBeVisible();
   await expect(page.locator('.recharts-wrapper')).toBeVisible();
   await navigate(page,'focus');await page.locator('#pomo-toggle-btn').click();await expect(page.locator('#pomo-toggle-text')).toContainText('暫停');
 });
 test('mobile navigation has no document overflow in either appearance',async({page})=>{
-  await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.locator('#task-list input')).toHaveCount(3);
+  await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
   for(const theme of ['light','dark']) {
     await page.locator('[data-appearance='+theme+']').click();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -112,6 +122,7 @@ test('mobile navigation has no document overflow in either appearance',async({pa
 test('midnight in Taipei refreshes daily tasks and habit date bindings',async({page})=>{
   await page.clock.install({time:new Date('2026-10-11T15:59:50Z')});
   await page.goto('/');await expect(page.locator('#today-label')).toContainText('2026年10月11日');
+  await addCustom(page);
   await page.locator('#task-list input').first().check();
   await page.clock.fastForward(31000);
   await expect(page.locator('#today-label')).toContainText('2026年10月12日');
@@ -139,17 +150,18 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
     window.firebase={apps:[],initializeApp(){this.apps.push({});},auth:()=>({onAuthStateChanged:callback=>setTimeout(()=>callback({uid:'test-owner',email:'owner@example.test'}),0)}),database:()=>db};
     window.mockDatabase={records,writes};
   });
-  await page.goto('/');await expect(page.locator('#task-list input')).toHaveCount(3);
+  await page.goto('/');await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
+  await addCustom(page);
   await page.locator('#task-list input').first().check();await expect(page.locator('#xp-detail')).toContainText('20 XP');
-  await expect.poll(()=>page.evaluate(()=>Object.values(window.mockDatabase.records.gamification?.v2?.timeTasks || {}).flatMap(day=>Object.values(day)).filter(t=>t.awarded).length)).toBe(1);
+  await expect.poll(()=>page.evaluate(()=>Object.values(window.mockDatabase.records.gamification?.v3?.planner?.tasks || {}).filter(t=>t.award?.xp===20).length)).toBe(1);
   await page.locator('#task-list input').first().uncheck();await page.locator('#task-list input').first().check();
   await navigate(page,'anatomy');await page.locator('.anatomy-lec-card input').nth(1).check();
   await expect.poll(()=>page.evaluate(()=>window.mockDatabase.records.videos['2'])).toBe(true);
   const result=await page.evaluate(()=>window.mockDatabase);
   expect(result.records.videos['1']).toBe(true);expect(result.records.videos.unrelated).toBe(true);expect(result.records.biochem['8']).toBe(true);
   expect(result.records.legacy).toEqual({keep:'unchanged'});
-  expect(Object.values(result.records.gamification.v2.timeTasks).flatMap(day=>Object.values(day)).filter(t=>t.awarded)).toHaveLength(1);
-  expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/')||w.path.startsWith('gamification/v2/timeTasks/'))).toBe(true);
+  expect(Object.values(result.records.gamification.v3.planner.tasks).filter(t=>t.award?.xp===20)).toHaveLength(1);
+  expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/')||w.path.startsWith('gamification/v2/timeTasks/')||w.path.startsWith('gamification/v3/planner/tasks/'))).toBe(true);
   expect(result.writes.filter(w=>w.kind==='update').every(w=>Object.keys(w.patch).every(key=>key.includes('/')))).toBe(true);
 });
 
@@ -269,7 +281,7 @@ test('Google login gates database access and exposes UID without clearing progre
   await expect(page.locator('#auth-status')).toContainText('此網址尚未授權');
   expect(await page.evaluate(() => window.authTest.reads)).toBe(0);
   await page.locator('#google-sign-in').click();
-  await expect(page.locator('#task-list input')).toHaveCount(3);
+  await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
   expect(await page.evaluate(() => window.authTest.reads)).toBe(1);
   await page.locator('#account-button').click();
   await expect(page.locator('#account-uid')).toHaveValue(OWNER_UID);
@@ -355,4 +367,113 @@ test('JavaScript login failures identify the browser error and failed stage', as
   await expect(page.locator('#auth-status')).toContainText('建立登入提供者');
   await expect(page.locator('#google-sign-in')).toBeEnabled();
   expect(await page.evaluate(()=>window.studyData)).toBeUndefined();
+});
+
+test('planner selects across subjects, keeps task and course completion separate, and locates the course',async({page})=>{
+  await page.goto('/');await expect(page.locator('#planner-date')).toBeVisible();
+  await expect(page.locator('#task-list input')).toHaveCount(0);
+  await page.getByRole('button',{name:'規劃今日任務',exact:true}).click();
+  await page.locator('#task-course-picker summary').filter({hasText:'丙、心血管生理'}).click();
+  await page.locator('[data-course="physiology__fc_p_3_a"]').check();
+  await page.locator('#task-subject').selectOption('pharmacology');
+  await page.locator('[data-course="pharmacology__pharm_1_1"]').check();
+  await expect(page.locator('#task-selection')).toContainText('已選 2 個課程');
+  await page.locator('#planner-form').getByRole('button',{name:'加入任務'}).click();
+  await expect(page.locator('#task-list input')).toHaveCount(2);
+  const states=await page.evaluate(()=>window.readStudyStates());
+  await page.locator('#task-list input').first().check();
+  expect(await page.evaluate(()=>window.readStudyStates())).toEqual(states);
+  await expect(page.locator('#task-count')).toHaveText('1 / 2 任務');
+  await page.reload();await expect(page.locator('#task-list input').first()).toBeChecked();
+  await page.locator('#task-list .task-link').first().click();
+  await expect(page.locator('#page-title')).toHaveText('First Choice 生理學');
+  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"]')).toBeVisible();
+  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input')).toBeFocused();
+  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input')).not.toBeChecked();
+});
+
+test('free tasks retain ID through edits, ordering, postponement and deletion; copying starts a new activity',async({page})=>{
+  await page.clock.install({time:new Date('2026-10-12T04:00:00Z')});await page.goto('/');
+  await addCustom(page,'考古題 50 題');await addCustom(page,'閱讀',60);
+  const original=await page.locator('.planner-task').first().getAttribute('data-task-id');
+  await page.locator('.planner-task').nth(1).locator('summary').click();await page.locator('.planner-task').nth(1).getByRole('button',{name:'上移',exact:true}).click();
+  await expect(page.locator('.planner-task').first()).toContainText('閱讀');
+  const task=page.locator(`[data-task-id="${original}"]`);
+  await task.locator('input').check();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await task.locator('summary').click();await task.getByRole('button',{name:'編輯',exact:true}).click();
+  await page.locator('#edit-title').fill('考古题 60 題');await page.locator('#edit-minutes').fill('45');
+  await page.getByRole('button',{name:'儲存任務'}).click();await expect(task).toContainText('預計 45 分鐘');
+  await task.locator('summary').click();await task.getByRole('button',{name:'延後',exact:true}).click();await page.locator('#edit-date').fill('2026-10-13');await page.getByRole('button',{name:'儲存任務'}).click();
+  await expect(task).toHaveCount(0);await page.locator('#planner-date').fill('2026-10-13');await expect(task).toBeVisible();
+  await task.locator('input').uncheck();await task.locator('input').check();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await task.locator('summary').click();await task.getByRole('button',{name:'刪除',exact:true}).click();await expect(task).toHaveCount(0);await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await page.getByRole('button',{name:'復原刪除'}).click();await expect(task).toBeVisible();
+  await task.locator('summary').click();await task.getByRole('button',{name:'複製至今天',exact:true}).click();
+  await expect(page.locator('#planner-date')).toHaveValue('2026-10-12');
+  const copied=page.locator('.planner-task').filter({hasText:'考古题 60 題'});await expect(copied.locator('input')).not.toBeChecked();expect(await copied.getAttribute('data-task-id')).not.toBe(original);
+  await page.reload();await expect(copied).toBeVisible();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+});
+
+test('week plan opens only current week and offers optional course selection without creating tasks',async({page})=>{
+  await page.clock.install({time:new Date('2026-10-12T04:00:00Z')});await page.goto('/');await navigate(page,'plan');
+  await expect(page.locator('.week-plan-item')).toHaveCount(16);await expect(page.locator('.week-plan-item[open]')).toHaveCount(1);
+  await expect(page.locator('.week-plan-item[open]')).toHaveAttribute('data-week','2');
+  await page.locator('.week-plan-item[open]').getByRole('button',{name:'選取內容加入今日任務'}).click();
+  await expect(page.locator('#task-source')).toHaveValue('week');await expect(page.locator('#task-week')).toHaveValue('W2');
+  await expect(page.locator('#task-course-picker input:checked')).toHaveCount(0);
+  await page.locator('#task-subject').selectOption('pharmacology');await page.locator('#task-source').selectOption('all');
+  await page.locator('[data-course="pharmacology__pharm_1_1"]').check();await page.locator('#planner-form').getByRole('button',{name:'加入任務'}).click();
+  await navigate(page,'home');await expect(page.locator('#task-list input')).toHaveCount(1);
+  await expect(page.locator('#current-week-percent')).toHaveText('0%');
+});
+
+test('legacy time goals and course awards retain XP and readable history',async({page})=>{
+  await page.addInitScript(()=>{
+    localStorage.setItem('med_exam_time_tasks_v1',JSON.stringify({days:{'2026-10-10':{morning:{complete:true,awarded:true,hours:2}}},pending:{}}));
+    localStorage.setItem('med_exam_gamification_v1',JSON.stringify({days:{},awards:{physiology__fc_p_1_a:{xp:20,day:'2026-10-09'}}}));
+    localStorage.setItem('med_exam_physio_cloud','{"fc_p_1_a":true}');
+  });
+  await page.goto('/');await expect(page.locator('#growth-xp')).toHaveText('40 XP');await expect(page.locator('#task-list input')).toHaveCount(0);
+  await addCustom(page);await page.locator('#task-list input').check();await expect(page.locator('#growth-xp')).toHaveText('60 XP');
+  await navigate(page,'progression');await page.getByText('舊時間目標紀錄',{exact:true}).click();await expect(page.locator('#legacy-time-history')).toContainText('2026-10-10');await expect(page.locator('#legacy-time-history')).toContainText('上午: 完成');
+  expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({fc_p_1_a:true});
+});
+
+for(const theme of ['light','dark','system'])test(`mobile planning and editing remain usable in ${theme} appearance`,async({page})=>{
+  await page.setViewportSize({width:390,height:844});await page.goto('/');await page.locator('[data-appearance='+theme+']').click();
+  await page.getByRole('button',{name:'規劃今日任務',exact:true}).click();
+  await page.locator('[data-course="physiology__fc_p_1_a"]').check();
+  await page.locator('#task-custom').fill('考古題 50 題');
+  expect(await page.locator('dialog[open]').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+  await page.locator('#planner-form').getByRole('button',{name:'加入任務'}).click();
+  await expect(page.locator('#task-list input')).toHaveCount(2);
+  await page.locator('.planner-task').first().locator('summary').click();await page.locator('.planner-task').first().getByRole('button',{name:'編輯',exact:true}).click();
+  await page.locator('#edit-minutes').fill('30');await page.getByRole('button',{name:'儲存任務'}).click();
+  await page.locator('#task-list input').first().check();await page.reload();await expect(page.locator('#task-list input').first()).toBeChecked();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('same-field conflicts display both versions and resolve only after a user chooses',async({page})=>{
+  await page.clock.install({time:new Date('2026-10-12T04:00:00Z')});
+  await page.addInitScript(ownerUid=>{
+    Object.defineProperty(window,'workspaceLocalOnly',{get:()=>false,set(){}});
+    const remoteTask={title:'雲端的考古題任務',date:'2026-10-12',minutes:null,links:[],complete:false,deleted:false,order:1,createdAt:1,_versions:{title:'cloud-new'}};
+    localStorage.setItem('med_exam_daily_planner_v3',JSON.stringify({tasks:{conflict:{...remoteTask,title:'本機的考古題任務',_versions:{title:'cloud-old'}}},pending:{conflict:{patch:{title:'本機的考古題任務'},bases:{title:'cloud-old'},tokens:{title:'offline-edit'}}}}));
+    const records={gamification:{v3:{planner:{tasks:{conflict:remoteTask}}}}},callbacks=[];
+    const get=path=>path.split('/').reduce((value,key)=>value?.[key],records)??null;
+    const db={ref:path=>({
+      on(event,callback){callbacks.push([path,callback]);setTimeout(()=>callback({val:()=>path==='.info/connected'?true:structuredClone(get(path))}),0);},
+      async once(){return {val:()=>structuredClone(get(path))};},
+      async transaction(updater){const value=updater(structuredClone(get(path)));if(value!==undefined){records.gamification.v3.planner.tasks.conflict=value;for(const [p,cb] of callbacks)if(p!=='.info/connected')setTimeout(()=>cb({val:()=>structuredClone(get(p))}),0);}return {committed:value!==undefined,snapshot:{val:()=>structuredClone(get(path))}};}
+    })};
+    window.firebase={apps:[],initializeApp(){this.apps.push({});},auth:()=>({onAuthStateChanged:callback=>setTimeout(()=>callback({uid:ownerUid}),0)}),database:()=>db};
+    window.conflictRecords=records;
+  },OWNER_UID);
+  await page.goto('/');
+  await expect(page.locator('#planner-conflicts')).toContainText('本機的考古題任務');
+  await expect(page.locator('#planner-conflicts')).toContainText('雲端的考古題任務');
+  expect(await page.evaluate(()=>window.conflictRecords.gamification.v3.planner.tasks.conflict.title)).toBe('雲端的考古題任務');
+  await page.getByRole('button',{name:'採用雲端修改',exact:true}).click();
+  await expect(page.locator('#planner-conflicts')).toBeEmpty();await expect(page.locator('#task-list')).toContainText('雲端的考古題任務');
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('med_exam_daily_planner_v3')).pending)).toEqual({});
 });
