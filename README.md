@@ -58,9 +58,9 @@ Vercel 正式部署設定未修改；此分支需先經 PR 審查再合併。靜
 
 ## Google 登入與私人同步
 
-正式網站必須先完成 Google 登入，才會建立 Realtime Database 連線、載入學習介面及重送待同步紀錄。本機及 `?mode=local` 仍完全隔離正式資料庫。登出會斷開資料庫並重新載入登入畫面，不清除 localStorage 或既有紀錄。
+正式網站必須先完成 Google 登入，且 UID 符合 `owner-config.js` 的 `OWNER_UID`，才會建立 Realtime Database 連線、載入學習介面及重送待同步紀錄。未授權帳號會登出並顯示拒絕訊息；允許的 UID 未設定時，所有帳號均無法開啟學習介面或啟動同步，不會自動將首次登入者指定為擁有者。本機及 `?mode=local` 仍完全隔離正式資料庫。登出會斷開資料庫並重新載入登入畫面，不清除 localStorage 或既有紀錄。
 
-Firebase Console 需啟用 Authentication → Google，並在授權網域加入正式網站網域；若測試 Vercel Preview 登入，該預覽網域也須加入。已登入後，側欄「帳號與同步」可查看與複製 Firebase UID。登入不會自動變更 Security Rules：目前到期的規則仍須由專案擁有者更新。
+Firebase Console 需啟用 Authentication → Google，並在授權網域加入正式網站網域；若測試 Vercel Preview 登入，該預覽網域也須加入。尚未有 Firebase 使用者時，可先在已授權的預覽網域以本人 Google 帳號登入；`OWNER_UID` 留空時，登入畫面只顯示該次登入的 UID，隨即登出，不啟動學習介面或資料庫。將本人 UID 填入 `owner-config.js` 並使用相同 UID 設定 Database Rules 後，再部署正式站。已授權登入後，側欄「帳號與同步」可查看與複製 Firebase UID。登入不會自動變更 Security Rules：目前到期的規則仍須由專案擁有者更新。
 
 單人使用且不變更原有資料路徑時，可將 Realtime Database 根層存取限定為本人 UID（將下列佔位文字換成網站顯示的 UID，檢查既有子路徑是否還有其他授權規則）：
 
@@ -74,3 +74,5 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 ```
 
 此規則由使用者在 Firebase Console 審查並發布，本專案不會部署規則或操作正式資料庫測試。這是單人存取限制，沒有新增多人帳號隔離或資料驗證模型。原公開 Web 設定移至 `firebase-config.js`，內容未變；它不是服務帳戶私鑰，也不取代 Security Rules。真實 Google 登入仍須在已授權的部署網域上驗證。
+
+網站端 UID 檢查只限制正常介面流程，不能取代 Database Rules，也不能阻止其他人完成 Google 身分驗證或出現在 Authentication 使用者清單。資料庫必須獨立限制同一個擁有者 UID。`?mode=local` 保留無雲端連線的本機預覽能力。

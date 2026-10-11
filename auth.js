@@ -1,3 +1,5 @@
+import {OWNER_UID} from './owner-config.js';
+
 // Keep the existing classic-script globals intact; start learning only after authentication.
 let started = false;
 async function startLearning() {
@@ -47,7 +49,7 @@ function addAccount(auth, user) {
 if (window.workspaceLocalOnly) {
   await startLearning();
 } else {
-  const login = dialog('<h2>登入國考準備</h2><p>使用 Google 帳號，安全同步你的學習進度。</p><button type="button" id="google-sign-in" disabled>使用 Google 登入</button><p id="auth-status" role="status">正在連線至登入服務…</p>');
+  const login = dialog('<h2>登入國考準備</h2><p>使用 Google 帳號，安全同步你的學習進度。</p><button type="button" id="google-sign-in" disabled>使用 Google 登入</button><p id="auth-status" role="status">正在連線至登入服務…</p><div id="owner-setup" hidden><label for="setup-uid">你的 Firebase UID</label><input id="setup-uid" readonly><p>請將此 UID 提供給網站維護者，完成個人帳號限制設定。</p></div>');
   login.addEventListener('cancel', event => event.preventDefault());
   login.showModal();
   const status = login.querySelector('#auth-status');
@@ -56,18 +58,37 @@ if (window.workspaceLocalOnly) {
     if (!window.firebase?.auth) throw new Error('Auth SDK unavailable');
     if (!firebase.apps.length) firebase.initializeApp(window.examFirebaseConfig);
     const auth = firebase.auth();
+    let accessMessage = '';
     button.onclick = async () => {
+      accessMessage = '';
+      login.querySelector('#owner-setup').hidden = true;
       button.disabled = true;
       status.textContent = '請在登入視窗選擇你的 Google 帳號。';
-      try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters?.({prompt: 'select_account'});
+        await auth.signInWithPopup(provider);
+      }
       catch (error) { status.textContent = authMessage(error); }
       finally { button.disabled = false; }
     };
     auth.onAuthStateChanged(async user => {
       if (!user) {
         if (started) { window.learningDB?.goOffline?.(); location.reload(); return; }
-        status.textContent = '登入後即可使用；既有紀錄會保留。';
+        status.textContent = accessMessage || '此工作台僅供擁有者使用，請登入你的 Google 帳號。';
         button.disabled = false;
+        return;
+      }
+      if (!OWNER_UID || user.uid !== OWNER_UID) {
+        accessMessage = OWNER_UID ? '此帳號沒有使用權限，請改用擁有者的 Google 帳號。' : '尚未設定擁有者 UID，學習介面與雲端同步均未啟動。';
+        status.textContent = accessMessage;
+        if (!OWNER_UID) {
+          login.querySelector('#owner-setup').hidden = false;
+          login.querySelector('#setup-uid').value = user.uid;
+        }
+        button.disabled = true;
+        try { await auth.signOut(); button.disabled = false; }
+        catch { status.textContent = accessMessage + ' 無法登出，請重新整理後重試。'; }
         return;
       }
       window.authenticatedUser = user;

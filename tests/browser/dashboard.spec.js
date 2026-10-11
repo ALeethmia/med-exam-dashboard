@@ -118,6 +118,7 @@ test('midnight in Taipei refreshes daily tasks and habit date bindings',async({p
 });
 
 test('mock Firebase keeps unrelated records and confines XP to its namespace',async({page})=>{
+  await page.route('**/owner-config.js', route => route.fulfill({contentType:'application/javascript',body:"export const OWNER_UID = 'test-owner';"}));
   await page.addInitScript(()=>{
     Object.defineProperty(window,'workspaceLocalOnly',{get:()=>false,set:()=>{}});
     const records={videos:{1:true,unrelated:true}, biochem:{8:true}, '.info':{connected:true}, legacy:{keep:'unchanged'}};
@@ -234,6 +235,7 @@ test('calendar stays compact and routines read like a timetable on desktop and m
 });
 
 test('Google login gates database access and exposes UID without clearing progress', async ({page}) => {
+  await page.route('**/owner-config.js', route => route.fulfill({contentType:'application/javascript',body:"export const OWNER_UID = 'owner-uid';"}));
   await page.addInitScript(() => {
     Object.defineProperty(window, 'workspaceLocalOnly', {get: () => false, set() {}});
     if (!sessionStorage.getItem('auth-test-seeded')) {
@@ -289,3 +291,30 @@ test('missing authentication SDK blocks cloud database initialization', async ({
   await expect(page.locator('#google-sign-in')).toBeDisabled();
   expect(await page.evaluate(() => window.studyData)).toBeUndefined();
 });
+
+for (const owner of ['', 'different-owner']) {
+  test(`cloud access rejects an account when owner UID is ${owner ? 'different' : 'unset'}`, async ({page}) => {
+    await page.route('**/owner-config.js', route => route.fulfill({contentType:'application/javascript', body:`export const OWNER_UID = '${owner}';`}));
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'workspaceLocalOnly', {get:()=>false, set(){}});
+      window.ownerTest = {databaseCalls:0, signOuts:0};
+      localStorage.setItem('med_exam_physio_cloud', '{"1":true}');
+      let callback;
+      const auth = {
+        onAuthStateChanged(notify) {callback=notify; setTimeout(()=>notify({uid:'unapproved-user'}),0);},
+        async signOut() {window.ownerTest.signOuts++; callback(null);}
+      };
+      window.firebase = {apps:[], initializeApp(){this.apps.push({});}, auth:()=>auth,
+        database(){window.ownerTest.databaseCalls++; throw new Error('Unauthorized database access');}
+      };
+    });
+    await page.goto('/');
+    await expect(page.locator('#auth-status')).toContainText(owner ? '此帳號沒有使用權限' : '尚未設定擁有者 UID');
+    await expect(page.locator('#google-sign-in')).toBeEnabled();
+    expect(await page.evaluate(()=>window.ownerTest)).toEqual({databaseCalls:0,signOuts:1});
+    expect(await page.evaluate(()=>window.studyData)).toBeUndefined();
+    expect(await page.evaluate(()=>window.authenticatedUser)).toBeUndefined();
+    expect(await page.evaluate(()=>localStorage.getItem('med_exam_physio_cloud'))).toBe('{"1":true}');
+    if (!owner) await expect(page.locator('#setup-uid')).toHaveValue('unapproved-user');
+  });
+}
