@@ -1,6 +1,6 @@
 // Existing public Firebase web configuration; no server credentials.
 window.examFirebaseConfig = {
-      apiKey: "AIzaSyDTdvMQQegAy69B5yooc0vTvdpodQwoCIE",
+      apiKey: "AIzaSyDTDvMQQegAy69B5yooc0vTvdpodQwoCIE",
       authDomain: "my-exam-1aab9.firebaseapp.com",
       databaseURL: "https://my-exam-1aab9-default-rtdb.firebaseio.com",
       projectId: "my-exam-1aab9",

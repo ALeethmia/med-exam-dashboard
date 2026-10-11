@@ -40,7 +40,7 @@ Tailwind CSS、Lucide、React / Recharts 趨勢圖從鎖定的 npm 套件產生�
 
 正式環境的 Firebase Security Rules 不在此 Repository 中，也未修改或部署；需要允許新命名空間的讀取與 transaction 才能雲端同步成就。XP 是個人學習提示，不是可信任的競賽計分。正式 Firebase 同步未在本次改版中測試。
 
-既有公開 Firebase 前端設定維持原樣，沒有新增憑證。`.env.example` 的 `FIREBASE_API_KEY` 並不會被程式讀取。不要提交 `.env`、服務帳戶檔或其他秘密。
+沿用既有公開 Firebase 前端設定，並依擁有者核對結果修正 API 金鑰第 9 個字元的大小寫，沒有新增私密憑證。`.env.example` 的 `FIREBASE_API_KEY` 並不會被程式讀取。不要提交 `.env`、服務帳戶檔或其他秘密。
 
 ## 驗證
 
@@ -73,6 +73,6 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 }
 ```
 
-此規則由使用者在 Firebase Console 審查並發布，本專案不會部署規則或操作正式資料庫測試。這是單人存取限制，沒有新增多人帳號隔離或資料驗證模型。原公開 Web 設定移至 `firebase-config.js`，內容未變；它不是服務帳戶私鑰，也不取代 Security Rules。真實 Google 登入仍須在已授權的部署網域上驗證。
+此規則由使用者在 Firebase Console 審查並發布，本專案不會部署規則或操作正式資料庫測試。這是單人存取限制，沒有新增多人帳號隔離或資料驗證模型。原公開 Web 設定移至 `firebase-config.js`，API 金鑰第 9 個字元依擁有者核對結果修正為大寫，其餘設定未變；它不是服務帳戶私鑰，也不取代 Security Rules。真實 Google 登入仍須在已授權的部署網域上驗證。
 
 網站端 UID 檢查只限制正常介面流程，不能取代 Database Rules，也不能阻止其他人完成 Google 身分驗證或出現在 Authentication 使用者清單。資料庫必須獨立限制同一個擁有者 UID。`?mode=local` 保留無雲端連線的本機預覽能力。
