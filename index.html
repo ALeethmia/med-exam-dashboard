@@ -3504,7 +3504,7 @@
                 item.completion === 100 
                   ? '✅ 本週任務已全數通關！' 
                   : (isAbove 
-                      ? `達到每週進度參考 (+${(item.completion - item.target).toFixed(0)}%)` 
+                      ? `達到每週進度參考 (+${(item.completion - item.target).toFixed(0)}%)`
                       : (item.completion > 0 ? `⚡ 任務推進中 (${item.completion}%)` : '⏳ 任務待啟動'))
               ),
               h('span', { className: 'text-slate-400 italic' }, item.status)
