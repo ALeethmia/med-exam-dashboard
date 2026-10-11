@@ -20,6 +20,13 @@
       const stats=node('details','course-stat-details');stats.append(node('summary','','查看時數與單元統計'));
       for(const suffix of ['time-stat','unit-stat']) {const stat=document.getElementById(statPrefix+'-'+suffix);stat.className='workspace-note';stats.append(stat);}
       summary.append(stats);
+      if(tab==='pharmacology') {
+        const courseLink=node('a','course-resource-link','開啟子翔藥理課程 ↗');
+        courseLink.href='https://med-learning-story.com/zihsiang-pharmacology/course/';
+        courseLink.target='_blank';courseLink.rel='noopener noreferrer';
+        courseLink.setAttribute('aria-label','開啟子翔藥理課程（另開分頁）');
+        summary.append(courseLink);
+      }
       const tools=node('section','course-tools');
       const input=document.getElementById(prefix+'-search-input');input.className='course-search';input.placeholder='搜尋課程、章節或考點';input.setAttribute('aria-label','搜尋'+({anatomy:'解剖學',biochem:'生化學',physiology:'生理學',pharmacology:'藥理學'}[tab]));tools.append(input);
       const chips=document.getElementById((tab==='anatomy'?'anatomy':prefix)+'-filter-chips');

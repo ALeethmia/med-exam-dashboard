@@ -135,6 +135,8 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 .course-overview .panel-heading h2 { font-size:13px; color:var(--muted); font-weight:500; }
 .course-count { font-size:13px; font-variant-numeric:tabular-nums; color:var(--ink); }
 .course-overview .workspace-meter { height:4px; }
+.course-resource-link { display:inline-flex; align-items:center; min-height:40px; margin-top:8px; color:var(--accent); font-size:14px; text-decoration:none; }
+.course-resource-link:hover { text-decoration:underline; }
 .course-stat-details { font-size:12px; color:var(--muted); margin-top:8px; }
 .course-stat-details summary { cursor:pointer; }
 .course-tools { display:flex; align-items:flex-start; gap:16px; }
