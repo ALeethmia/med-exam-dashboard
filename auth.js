@@ -19,7 +19,9 @@ function dialog(markup) {
 }
 function authMessage(error) {
   // Show only the bounded Firebase code, never raw errors, tokens or account details.
-  const code = typeof error?.code === 'string' && /^auth\/[a-z-]{1,64}$/.test(error.code) ? error.code : '';
+  const candidate = typeof error?.code === 'string' ? error.code : '';
+  const code = /^auth\/[a-z0-9._-]{1,120}$/.test(candidate) ? candidate : '';
+  const browserCode = ({TypeError:'client/type-error', SecurityError:'client/security-error', NotAllowedError:'client/not-allowed', AbortError:'client/aborted'})[error?.name] || 'client/unknown-error';
   const message = ({
     'auth/unauthorized-domain': '此網址尚未授權。請在 Firebase Authentication 的授權網域加入目前的網站網域。',
     'auth/popup-blocked': '瀏覽器阻擋了登入視窗，請允許此網站開啟彈出式視窗後重試。',
@@ -29,6 +31,7 @@ function authMessage(error) {
     'auth/operation-not-allowed': '請先在 Firebase Authentication 啟用 Google 登入。',
     'auth/configuration-not-found': '找不到 Firebase 登入設定，請確認已在網站對應的 Firebase 專案啟用 Authentication。',
     'auth/invalid-api-key': 'Firebase 網站設定的 API 金鑰無效，請檢查網站設定。',
+    'auth/api-key-not-valid.-please-pass-a-valid-api-key.': 'Firebase 網站設定的 API 金鑰無效，請至 Firebase 專案設定核對 Web App 設定。',
     'auth/app-not-authorized': '此網站未獲得 Firebase API 金鑰授權，請檢查金鑰的網站限制。',
     'auth/web-storage-unsupported': '瀏覽器無法儲存登入狀態，請改用一般瀏覽模式並允許網站儲存資料。',
     'auth/operation-not-supported-in-this-environment': '此瀏覽環境不支援登入，請在 Safari 或 Chrome 直接開啟預覽網址。',
@@ -37,7 +40,7 @@ function authMessage(error) {
     'auth/too-many-requests': '登入嘗試過於頻繁，請稍後再試。',
     'auth/internal-error': '登入服務發生內部錯誤，需要根據錯誤代碼進一步檢查。'
   })[code] || '無法完成登入，請提供下方錯誤代碼以便檢查。';
-  return `${message}（${code || 'client/unknown-error'}）`;
+  return `${message}（${code || browserCode}）`;
 }
 function addAccount(auth, user) {
   const button = document.createElement('button');
@@ -73,16 +76,19 @@ if (window.workspaceLocalOnly) {
     const auth = firebase.auth();
     let accessMessage = '';
     button.onclick = async () => {
+      let stage = '建立登入提供者';
       accessMessage = '';
       login.querySelector('#owner-setup').hidden = true;
       button.disabled = true;
       status.textContent = '請在登入視窗選擇你的 Google 帳號。';
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
+        stage = '設定 Google 帳號選擇';
         provider.setCustomParameters?.({prompt: 'select_account'});
+        stage = 'Google 登入驗證';
         await auth.signInWithPopup(provider);
       }
-      catch (error) { status.textContent = authMessage(error); }
+      catch (error) { status.textContent = `${authMessage(error)} · ${stage}`; }
       finally { button.disabled = false; }
     };
     auth.onAuthStateChanged(async user => {

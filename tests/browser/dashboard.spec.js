@@ -319,7 +319,7 @@ for (const owner of ['', 'different-owner']) {
   });
 }
 
-for (const code of ['auth/configuration-not-found', 'auth/unrecognized-error']) {
+for (const code of ['auth/configuration-not-found', 'auth/unrecognized-error', 'auth/api-key-not-valid.-please-pass-a-valid-api-key.']) {
   test(`login shows actionable diagnostic code ${code} without exposing raw error details`, async ({page}) => {
     await page.addInitScript(code => {
       Object.defineProperty(window, 'workspaceLocalOnly', {get:()=>false,set(){}});
@@ -341,3 +341,18 @@ for (const code of ['auth/configuration-not-found', 'auth/unrecognized-error']) 
     expect(await page.evaluate(()=>window.studyData)).toBeUndefined();
   });
 }
+
+test('JavaScript login failures identify the browser error and failed stage', async ({page}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'workspaceLocalOnly', {get:()=>false,set(){}});
+    const factory = ()=>({onAuthStateChanged(callback){setTimeout(()=>callback(null),0);}});
+    // SDK namespace exists but its provider constructor is unavailable.
+    window.firebase = {apps:[], initializeApp(){this.apps.push({});},auth:factory};
+  });
+  await page.goto('/');
+  await page.locator('#google-sign-in').click();
+  await expect(page.locator('#auth-status')).toContainText('client/type-error');
+  await expect(page.locator('#auth-status')).toContainText('建立登入提供者');
+  await expect(page.locator('#google-sign-in')).toBeEnabled();
+  expect(await page.evaluate(()=>window.studyData)).toBeUndefined();
+});
