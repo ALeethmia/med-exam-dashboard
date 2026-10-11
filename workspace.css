@@ -187,3 +187,26 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
   .course-filters { left:0; right:auto; top:40px; } .course-filters button,.course-batch button { min-height:44px; }
   .course-group-heading { padding:24px 16px 16px; gap:8px; } .course-group-body { padding:0 16px 8px; }
 }
+/* Calendar and timetable retain their controls without stretching the month grid. */
+#tab-content-calendar { max-width:800px; margin-inline:auto; }
+#tab-content-calendar .calendar-card { width:100%; }
+#calendar-grid > div { min-height:48px; }
+#tab-content-schedule { max-width:800px; margin-inline:auto; }
+#tab-content-schedule table { min-width:0; width:100%; font-size:14px; }
+#tab-content-schedule td { padding:16px 8px; }
+#tab-content-schedule td:first-child { width:152px; font-size:12px; white-space:nowrap; }
+#tab-content-schedule .schedule-activity { color:var(--ink); font-weight:500; }
+#tab-content-schedule .schedule-row { background:transparent!important; }
+#tab-content-schedule .current-schedule-row { background:var(--tint)!important; box-shadow:none; border-left:0; }
+#tab-content-schedule .schedule-subtab.active { background:var(--subtle)!important; color:var(--ink)!important; }
+@media(max-width:640px) { #calendar-grid > div { min-height:40px; } #tab-content-schedule td { padding:16px 4px; } #tab-content-schedule td:first-child { width:132px; } }
+#tab-content-calendar { max-width:640px; }
+#calendar-grid > div { border:1px solid transparent; background:transparent!important; color:var(--ink)!important; box-shadow:none!important; font-size:13px; }
+#calendar-grid > div:hover { background:var(--subtle)!important; }
+#calendar-grid .calendar-day-reg,#calendar-grid .calendar-day-class { background:var(--subtle)!important; }
+#calendar-grid .calendar-day-exam { color:var(--warning)!important; border-color:var(--warning); }
+#calendar-grid .calendar-day-today { background:var(--tint)!important; color:var(--accent)!important; border-color:var(--accent); }
+#tab-content-schedule .current-schedule-row { border-left:0!important; }
+#tab-content-schedule .current-pointer-arrow { animation:none; color:var(--accent); }
+#tab-content-schedule tbody { border-color:var(--line); }
+#tab-content-schedule tr { border-color:var(--line); }

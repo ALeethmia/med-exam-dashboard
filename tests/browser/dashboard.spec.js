@@ -12,7 +12,7 @@ test.beforeEach(async({page})=>{
   // No external scripts or production database requests are permitted in this suite.
   await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1' ? route.continue() : route.abort());
 });
-test('homepage tasks award XP once and retain original learning IDs on reload',async({page})=>{
+test('time goals award XP once per day and never change course completion',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');await expect(page.locator('#task-list input')).toHaveCount(3);
   const id=await page.locator('#task-list input').first().getAttribute('data-task');
@@ -21,7 +21,8 @@ test('homepage tasks award XP once and retain original learning IDs on reload',a
   await page.locator('#task-list input').first().uncheck();await page.locator('#task-list input').first().check();
   await expect(page.locator('#xp-detail')).toContainText('20 XP');
   await page.reload();await expect(page.locator('#xp-detail')).toContainText('20 XP');
-  expect(await page.evaluate(id=>{const [path,key]=id.split('__');return window.readStudyStates()[path][key];},id)).toBe(true);
+  expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({});
+  await expect(page.locator('#task-count')).toHaveText('2 / 5 小時');
   expect(errors).toEqual([]);expect(await page.evaluate(()=>window.learningDB)).toBe(null);
 });
 
@@ -46,6 +47,8 @@ test('homepage week progress and calendar summary read existing learning records
   await page.goto('/');await expect(page.locator('#current-week')).toHaveText('第 2 週');
   await expect(page.locator('#current-week-percent')).toHaveText('0%');
   await page.locator('#task-list input').first().check();
+  await expect(page.locator('#current-week-percent')).toHaveText('0%');
+  await page.evaluate(()=>window.setStudyCompletion('physiology','fc_p_5_a',true));
   await expect(page.locator('#current-week-percent')).toHaveText('6%');
   await navigate(page,'calendar');await page.evaluate(()=>openEventModal('2026-10-12'));
   await page.locator('#modal-event-input').fill('複習腎臟生理');await page.getByRole('button',{name:'新增標註'}).click();
@@ -136,15 +139,15 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
   });
   await page.goto('/');await expect(page.locator('#task-list input')).toHaveCount(3);
   await page.locator('#task-list input').first().check();await expect(page.locator('#xp-detail')).toContainText('20 XP');
-  await expect.poll(()=>page.evaluate(()=>Object.keys(window.mockDatabase.records.gamification?.v1?.awards || {}).length)).toBe(1);
+  await expect.poll(()=>page.evaluate(()=>Object.values(window.mockDatabase.records.gamification?.v2?.timeTasks || {}).flatMap(day=>Object.values(day)).filter(t=>t.awarded).length)).toBe(1);
   await page.locator('#task-list input').first().uncheck();await page.locator('#task-list input').first().check();
   await navigate(page,'anatomy');await page.locator('.anatomy-lec-card input').nth(1).check();
   await expect.poll(()=>page.evaluate(()=>window.mockDatabase.records.videos['2'])).toBe(true);
   const result=await page.evaluate(()=>window.mockDatabase);
   expect(result.records.videos['1']).toBe(true);expect(result.records.videos.unrelated).toBe(true);expect(result.records.biochem['8']).toBe(true);
   expect(result.records.legacy).toEqual({keep:'unchanged'});
-  expect(Object.keys(result.records.gamification.v1.awards)).toHaveLength(1);
-  expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/'))).toBe(true);
+  expect(Object.values(result.records.gamification.v2.timeTasks).flatMap(day=>Object.values(day)).filter(t=>t.awarded)).toHaveLength(1);
+  expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/')||w.path.startsWith('gamification/v2/timeTasks/'))).toBe(true);
   expect(result.writes.filter(w=>w.kind==='update').every(w=>Object.keys(w.patch).every(key=>key.includes('/')))).toBe(true);
 });
 
@@ -168,18 +171,6 @@ test('book navigation remembers selected chapters without changing learning reco
   await page.locator('#tab-content-physiology .course-plan-filter > summary').click();
   await page.locator('#physio-filter-chips [data-filter=W1]').click();
   await expect(page.locator('#physio-chapters-container > details')).toHaveCount(4);
-});
-
-test('today task view clears stale filters and focuses the exact course without completing it',async({page})=>{
-  await page.clock.install({time:new Date('2026-10-11T04:00:00Z')});await page.goto('/');
-  const key=await page.locator('#task-list input').first().getAttribute('data-task');
-  await navigate(page,'physiology');await page.locator('#tab-content-physiology .course-plan-filter > summary').click();await page.locator('#physio-filter-chips [data-filter=W1]').click();
-  await page.locator('#physio-search-input').fill('no-match');await navigate(page,'home');
-  await page.locator('#task-list .task-open').first().click();
-  const row=page.locator('[data-study-key="'+key+'"]');await expect(row).toBeVisible();
-  await expect(row.locator('input')).toBeFocused();await expect(row.locator('input')).not.toBeChecked();
-  await expect(page.locator('#physio-search-input')).toHaveValue('');
-  await expect(page.locator('#xp-detail')).toContainText('0 XP');
 });
 
 test('four subject pages share readable mobile lists in both appearances',async({page})=>{
@@ -226,4 +217,14 @@ test('mobile chapter picker restores the book position and leaves completion rec
   await page.reload();await expect(select).toHaveValue('庚');
   await expect(page.locator('[data-group="physiology__庚"]')).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('calendar stays compact and routines read like a timetable on desktop and mobile',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});await page.goto('/');await navigate(page,'calendar');
+  expect((await page.locator('#tab-content-calendar').boundingBox()).width).toBeLessThanOrEqual(640);
+  await navigate(page,'schedule');await page.locator('#sched-btn-weekday').click();
+  expect(await page.locator('#sched-content-weekday .schedule-activity').allTextContents()).toEqual(['運動','早餐・淋浴','主科讀書','午餐・午休','題目練習','錯題訂正','晚餐・休息','副科讀書','自由時間']);
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await navigate(page,'calendar');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

@@ -1,4 +1,5 @@
-import {GAME_KEY, GAME_PATH, dateKey, awardKey, flattenSubjects, selectTasks, subjectStats, gameStats} from './study-core.js';
+import {createTimeTasks} from './time-tasks.js';
+import {GAME_KEY, GAME_PATH, dateKey, awardKey, flattenSubjects, subjectStats, gameStats} from './study-core.js';
 
 const data = window.studyData;
 if (!data) throw new Error('課程資料未能載入');
@@ -16,6 +17,7 @@ let gameFailed = false;
 const save = () => localStorage.setItem(GAME_KEY, JSON.stringify(game));
 const db = window.learningDB;
 const states = () => window.readStudyStates();
+const timeTasks=createTimeTasks({db,localOnly:window.workspaceLocalOnly,day,onChange:()=>render()});
 const home = document.getElementById('tab-content-home');
 const content = document.createElement('div');
 content.innerHTML = `
@@ -26,7 +28,7 @@ content.innerHTML = `
         <div class="panel-heading"><h2 id="tasks-title">今日任務</h2><span id="task-count"></span></div>
         <div class="workspace-meter" role="progressbar" aria-label="今日任務完成率" aria-valuemin="0" aria-valuemax="100" id="daily-meter"><span></span></div>
         <div id="task-list"></div>
-        <p class="workspace-note">依讀書計畫推薦。完成任務即更新科目進度。</p>
+        <p class="workspace-note">讀書後勾選時間目標。課程完成請在科目頁記錄。</p>
       </section>
       <section class="workspace-panel" aria-labelledby="week-title">
         <div class="panel-heading"><h2 id="week-title">本週計畫</h2><button class="workspace-link" data-go="plan">全部週次 →</button></div>
@@ -70,22 +72,9 @@ document.getElementById('mobile-menu').addEventListener('click',()=>{
   const open=document.getElementById('workspace-nav').classList.toggle('mobile-open');
   document.getElementById('mobile-menu').setAttribute('aria-expanded',String(open));
 });
-document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void syncGame();});
+document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void syncGame();void timeTasks.retry();});
 
-function tasksForToday() {
-  if (!game.days[day]) {
-    game.days[day] = {tasks: selectTasks(allItems, states(), data.weeks, day)};
-    save();
-  }
-  const list = game.days[day].tasks;
-  return (Array.isArray(list) ? list : Object.values(list || {}))
-    .filter(t => t && validItems.has(awardKey(t))).slice(0,3)
-    .map(t => ({...validItems.get(awardKey(t)), xp:20}));
-}
-function openSubject(task) {
-  // Clears stale filters, expands the owning unit and focuses the exact course.
-  window.showStudyItem(task.path, task.id);
-}
+function tasksForToday() { return timeTasks.tasks(); }
 function setMeter(id, percent) {
   const meter = document.getElementById(id);
   meter.querySelector('span').style.width = percent+'%';
@@ -121,24 +110,24 @@ function render() {
   const focusedTask=document.activeElement?.dataset.task;
   const current = states();
   const tasks = tasksForToday();
-  const count = tasks.filter(t => current[t.path]?.[t.id]).length;
-  document.getElementById('task-count').textContent = `${count} / ${tasks.length} 完成`;
+  const hours=tasks.filter(t=>t.complete).reduce((sum,t)=>sum+t.hours,0);
+  const totalHours=tasks.reduce((sum,t)=>sum+t.hours,0);
+  document.getElementById('task-count').textContent = `${hours} / ${totalHours} 小時`;
   document.getElementById('today-label').textContent = new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
-  setMeter('daily-meter', tasks.length ? Math.round(count/tasks.length*100) : 0);
+  setMeter('daily-meter', totalHours ? Math.round(hours/totalHours*100) : 0);
   const list = document.getElementById('task-list'); list.replaceChildren();
   if (!tasks.length) { const p=document.createElement('p'); p.className='workspace-note'; p.textContent='所有學習項目都已完成。今天留給複習與休息。'; list.append(p); }
   for (const task of tasks) {
-    const complete = !!current[task.path]?.[task.id];
+    const complete = task.complete;
     const row=document.createElement('div'); row.className='task-row'+(complete?' is-complete':'');
     const label=document.createElement('label');
-    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=complete; cb.dataset.task=awardKey(task);
-    cb.addEventListener('change', () => window.setStudyCompletion(task.path, task.id, cb.checked));
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=complete; cb.dataset.task=task.id;
+    cb.addEventListener('change', () => timeTasks.set(task.id, cb.checked));
     const text=document.createElement('span'); const title=document.createElement('strong'); title.textContent=task.title;
-    const meta=document.createElement('small'); meta.textContent=task.subject;
+    const meta=document.createElement('small'); meta.textContent=complete?'已完成時間目標':'完成後勾選';
     text.append(title,meta); label.append(cb,text);
-    const open=document.createElement('button'); open.className='task-open'; open.type='button'; open.textContent='查看'; open.setAttribute('aria-label','查看'+task.title); open.addEventListener('click',()=>openSubject(task));
-    const xp=document.createElement('span');xp.className='task-xp';xp.textContent=game.awards[awardKey(task)]?'✓ 已獲得':'+20 XP';
-    row.append(label,xp,open); list.append(row);
+    const xp=document.createElement('span');xp.className='task-xp';xp.textContent=task.awarded?'✓ 已獲得':'+20 XP';
+    row.append(label,xp); list.append(row);
   }
   if(focusedTask) [...list.querySelectorAll('input')].find(input=>input.dataset.task===focusedTask)?.focus({preventScroll:true});
   const subjects=subjectStats(data,current);
@@ -157,7 +146,7 @@ function render() {
     summary.append(button);
   }
   renderPlanningSummary();
-  const stats=gameStats(game.awards,day);
+  const stats=gameStats({...game.awards,...timeTasks.awards()},day);
   document.getElementById('growth-level').textContent=`Lv. ${stats.level} · 學習者`;
   document.getElementById('growth-xp').textContent=`${stats.xp} XP`;
   document.getElementById('sidebar-level').textContent=`學習者 · Lv. ${stats.level}`;
@@ -166,7 +155,7 @@ function render() {
   document.getElementById('xp-meter').style.width=stats.xp%100+'%';
   document.getElementById('weekly-detail').textContent=`本週完成 ${stats.weekly} / 10 個任務 · 週一重新計算`;
   document.getElementById('weekly-meter').style.width=Math.min(100,stats.weekly/10*100)+'%';
-  document.getElementById('game-sync-status').textContent=gameFailed?'成就雲端同步失敗，本機紀錄已保留；可使用重試同步。':db?'成就獨立同步，不影響原有學習紀錄。':'XP 與成就保存在此瀏覽器。';
+  document.getElementById('game-sync-status').textContent=(gameFailed||timeTasks.failed())?'成就雲端同步失敗，本機紀錄已保留；可使用重試同步。':db?'成就獨立同步，不影響原有學習紀錄。':'XP 與成就保存在此瀏覽器。';
   const achievements=document.getElementById('achievements'); achievements.replaceChildren();
   for(const a of stats.achievements) {
     const el=document.createElement('div'); el.className='achievement'+(a.unlocked?' unlocked':''); el.textContent=(a.unlocked?'✓ ':'○ ')+a.title;
@@ -181,10 +170,6 @@ async function syncGame() {
   gameDirty=false;
   gameSyncing=true;
   try {
-    const tasks=tasksForToday();
-    const result=await db.ref(`${GAME_PATH}/days/${day}`).transaction(existing=>existing || {tasks});
-    const saved=result.snapshot.val();
-    if (saved) game.days[day]=saved;
     // Each subject ID can award XP once, including across devices and retries.
     for(const [key, award] of Object.entries(game.awards)) {
       if (!validItems.has(key) || award.xp !== 20 || !/^\d{4}-\d{2}-\d{2}$/.test(award.day || '')) continue;
@@ -194,16 +179,8 @@ async function syncGame() {
     gameFailed=false;
     save();
   } catch { gameFailed=true; }
-  finally { gameSyncing=false; render(); if(gameDirty && !gameFailed) void syncGame(); }
+  finally { gameSyncing=false; render(); if(gameDirty && !gameFailed) void syncGame();void timeTasks.retry(); }
 }
-window.addEventListener('study-completed', event => {
-  const task=tasksForToday().find(t=>t.path===event.detail.path && t.id===event.detail.id);
-  if (task && event.detail.complete && !game.awards[awardKey(task)]) {
-    game.awards[awardKey(task)]={xp:20, day};
-    save();
-    void syncGame();
-  }
-});
 window.addEventListener('learning-change', render);
 window.addEventListener('storage', event => {
   if (event.key===GAME_KEY) {
@@ -215,14 +192,13 @@ if (db && !window.workspaceLocalOnly) {
   db.ref(`${GAME_PATH}/awards`).on('value', snap => {
     game.awards={...game.awards,...(snap.val() || {})}; save(); render();
   },()=>{gameFailed=true; render();});
-  db.ref(`${GAME_PATH}/days/${day}`).on('value', snap=>{
-    if(snap.val()) { game.days[day]=snap.val(); save(); render(); }
-  },()=>{gameFailed=true; render();});
+
 }
 // Refresh across midnight so legacy habits and the focus timer bind to the new date.
 function checkDay() { if(dateKey()!==day) location.reload(); }
 setInterval(checkDay,30000);
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) { checkDay(); void syncGame(); } });
-window.addEventListener('online',()=>{window.retryLearningSync(); void syncGame();});
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) { checkDay(); void syncGame();void timeTasks.retry(); } });
+window.addEventListener('online',()=>{window.retryLearningSync(); void syncGame();void timeTasks.retry();});
 render();
 void syncGame();
+void timeTasks.retry();
