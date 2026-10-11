@@ -3,23 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2027 一階醫師國考 - 20週全方位戰鬥儀表板</title>
+  <title>2027 一階醫師國考 - 學習工作台</title>
   <meta name="description" content="2027 一階醫師國考全方位戰鬥儀表板，整合備考月曆、日常作息表、First Choice 生理學 7 大篇章 (何宣對照)、趙俊彥解剖學 30 講、鐸鐸生化學 8 堂課、子翔藥理學 19 單元進度檢核與雲端即時同步。">
-  <meta property="og:title" content="2027 一階醫師國考 - 20週全方位戰鬥儀表板">
+  <meta property="og:title" content="2027 一階醫師國考 - 學習工作台">
   <meta property="og:description" content="2027 一階醫師國考全方位戰鬥儀表板，整合備考月曆、日常作息表、First Choice 生理學 7 大篇章 (何宣對照)、趙俊彥解剖學 30 講、鐸鐸生化學 8 堂課、子翔藥理學 19 單元進度檢核與雲端即時同步。">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/theme.js"></script>
+  <script src="/sync.js"></script>
+  <link rel="stylesheet" href="/public/tailwind.css">
+  <script src="/public/lucide.min.js"></script>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <!-- React & Recharts for Progress Trend Visualization -->
-  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prop-types@15/prop-types.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="/public/react.min.js"></script>
+  <script src="/public/react-dom.min.js"></script>
+  <script src="/public/prop-types.min.js"></script>
+  <script src="/public/recharts.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0f172a; color: #f8fafc; }
     .calendar-day-exam { background-color: rgba(244, 63, 94, 0.25); color: #fb7185; font-weight: bold; border: 1px solid rgba(244, 63, 94, 0.5); }
@@ -66,6 +68,7 @@
       box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
     }
   </style>
+  <link rel="stylesheet" href="/workspace.css">
 </head>
 <body class="p-4 md:p-6">
   <div class="max-w-6xl mx-auto space-y-6">
@@ -564,11 +567,11 @@
       </div>
     </div>
 
-      <!-- 20 週 4 階段漸進式運動菜單專區 -->
+      <!-- 16 週 4 階段漸進式運動菜單專區 -->
       <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-bold flex items-center gap-2 text-white">
-            <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> 20 週 4 階段漸進式運動菜單（晨光陽光 ＋ Apple Fitness+）
+            <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> 16 週 4 階段漸進式運動菜單（晨光陽光 ＋ Apple Fitness+）
           </h2>
           <span class="text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">每日 07:15 - 08:00</span>
         </div>
@@ -921,7 +924,7 @@
             <span class="text-[11px] text-slate-400 font-semibold shrink-0 flex items-center gap-1 pl-1 pr-0.5">
               <i data-lucide="filter" class="w-3 h-3 text-teal-400"></i> 章節篩選:
             </span>
-            <button onclick="filterPhysioChapter('ALL')" data-filter="ALL" class="physio-filter-btn active px-3 py-1 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[11px] font-medium whitespace-nowrap">全部 (7章/37節)</button>
+            <button onclick="filterPhysioChapter('ALL')" data-filter="ALL" class="physio-filter-btn active px-3 py-1 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/40 text-[11px] font-medium whitespace-nowrap">全部 (7章/39節)</button>
             <button onclick="filterPhysioChapter('W1')" data-filter="W1" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W1 (甲～丁單元 · 10/01-10/07)</button>
             <button onclick="filterPhysioChapter('W2')" data-filter="W2" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W2 (戊～庚單元 · 10/08-10/14)</button>
             <button onclick="filterPhysioChapter('甲')" data-filter="甲" class="physio-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">甲.細胞 (6節)</button>
@@ -1103,20 +1106,63 @@
   </div>
 
   <script>
-    lucide.createIcons();
+    (() => {
+      const main = document.querySelector('body > .max-w-6xl');
+      main.className = 'workspace-main';
+      const shell = document.createElement('div'); shell.className = 'workspace-shell';
+      const sidebar = document.createElement('aside'); sidebar.className = 'workspace-sidebar';
+      sidebar.innerHTML = '<div class="workspace-brand">學習工作台<small>2027 第一階醫師國考</small></div><nav aria-label="主要導覽" id="workspace-nav"></nav>';
+      main.before(shell); shell.append(sidebar, main);
+      sidebar.querySelector('nav').append(document.getElementById('main-tabs-header-container'));
+      const oldNav = main.querySelector('.overflow-x-auto.pb-1'); if (oldNav) oldNav.remove();
+      for (const id of ['home','stats','calendar','schedule','exercise']) {
+        const page = document.createElement('section'); page.id = 'tab-content-' + id; page.className = 'page-stack hidden'; main.append(page);
+      }
+      const moveCard = (id, page, hops = 0) => {
+        let el = document.getElementById(id);
+        for(let i=0;i<hops;i++) el = el.parentElement;
+        document.getElementById('tab-content-' + page).append(el);
+      };
+      moveCard('progress-trend-card','stats');
+      moveCard('calendar-grid','calendar',4);
+      moveCard('sched-content-weekday','schedule',1);
+      moveCard('sport-phase-1','exercise',2);
+      const pomo = document.getElementById('pomo-toggle-btn');
+      const focus = pomo.closest('.rounded-2xl');
+      const details = document.createElement('details'); details.className='focus-tool'; details.innerHTML='<summary>專注計時器</summary>'; details.append(focus); document.getElementById('tab-content-home').append(details);
+      const header = main.querySelector('header');
+      const habits = document.getElementById('daily-sport').closest('.flex.flex-wrap.items-center.gap-3');
+      const habitPanel = document.createElement('div'); habitPanel.className='workspace-panel'; habitPanel.innerHTML='<h2>每日習慣</h2>'; habitPanel.append(habits); document.getElementById('tab-content-schedule').append(habitPanel);
+      const links = header.querySelector('a').parentElement; document.getElementById('tab-content-schedule').append(links);
+      const sync = document.getElementById('sync-status');
+      header.className='workspace-topbar';
+      header.replaceChildren();
+      header.innerHTML='<div><h1>一步一步，準備好自己。</h1><p>2027 年 1 月 16 日 · 距離考試 <span id="countdown-days">—</span> 天 <span id="current-clock" class="hidden"></span></p></div><div class="workspace-controls"><label for="appearance">外觀</label><select id="appearance"><option value="system">跟隨系統</option><option value="light">淺色</option><option value="dark">深色</option></select><button id="retry-sync" type="button">重試同步</button></div>';
+      header.querySelector('.workspace-controls').prepend(sync);
+      const plan=document.getElementById('tab-content-plan');
+      Array.from(plan.children).filter(el => !el.querySelector('#checklist-container')).forEach(el=>el.remove());
+    })();
+  </script>
+  <script>
+    window.lucide?.createIcons();
 
     // ==========================================
     // 🔀 分頁切換與拖曳排序邏輯 (主導覽 Tab Draggable)
     // ==========================================
     const defaultTabs = [
-      { id: 'plan', title: '作戰總覽 ＆ 20 週衝刺', icon: 'compass', color: 'text-sky-400' },
-      { id: 'physiology', title: 'First Choice 生理學', icon: 'activity', color: 'text-teal-400' },
-      { id: 'anatomy', title: '趙俊彥解剖學', icon: 'book-open', color: 'text-rose-400' },
-      { id: 'biochem', title: '鐸鐸生化學', icon: 'sparkles', color: 'text-amber-400' },
-      { id: 'pharmacology', title: '子翔藥理學', icon: 'pill', color: 'text-violet-400' }
+      { id: 'home', title: '今日', icon: 'house' },
+      { id: 'stats', title: '統計', icon: 'chart-no-axes-combined' },
+      { id: 'calendar', title: '行事曆', icon: 'calendar-days' },
+      { id: 'schedule', title: '作息', icon: 'clock' },
+      { id: 'exercise', title: '運動', icon: 'activity' },
+      { id: 'plan', title: '讀書計畫', icon: 'compass', color: 'text-sky-400' },
+      { id: 'physiology', title: '生理學', icon: 'activity', color: 'text-teal-400' },
+      { id: 'anatomy', title: '解剖學', icon: 'book-open', color: 'text-rose-400' },
+      { id: 'biochem', title: '生化學', icon: 'sparkles', color: 'text-amber-400' },
+      { id: 'pharmacology', title: '藥理學', icon: 'pill', color: 'text-violet-400' }
     ];
 
-    let currentActiveTab = localStorage.getItem('med_exam_active_tab') || 'plan';
+    let currentActiveTab = localStorage.getItem('med_exam_active_tab') || 'home';
     let savedTabOrder = JSON.parse(localStorage.getItem('med_exam_tab_order') || 'null');
     
     // 確保 savedTabOrder 完整包含所有分頁
@@ -1124,6 +1170,7 @@
       savedTabOrder = defaultTabs.map(t => t.id);
     }
 
+    if (!defaultTabs.some(t => t.id === currentActiveTab)) currentActiveTab = 'home';
     let draggedTabId = null;
 
     function renderMainTabsNav() {
@@ -1137,7 +1184,7 @@
 
         const btn = document.createElement('button');
         btn.id = `tab-btn-${meta.id}`;
-        btn.draggable = true;
+        btn.draggable = false;
         const isActive = meta.id === currentActiveTab;
         btn.className = `tab-btn px-4 py-2.5 rounded-t-xl text-xs md:text-sm font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-grab active:cursor-grabbing ${
           isActive ? 'active text-slate-200' : 'text-slate-400 hover:text-slate-200'
@@ -1145,7 +1192,7 @@
         btn.innerHTML = `
           <i data-lucide="${meta.icon}" class="w-4 h-4 ${meta.color}"></i>
           <span>${meta.title}</span>
-          <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-600 opacity-40 hover:opacity-100 shrink-0 ml-0.5"></i>
+
         `;
 
         btn.addEventListener('click', () => {
@@ -1195,11 +1242,13 @@
         container.appendChild(btn);
       });
 
-      lucide.createIcons();
+      window.lucide?.createIcons();
     }
 
     window.switchTab = function(tabName) {
+      if (!defaultTabs.some(t => t.id === tabName)) tabName = 'home';
       currentActiveTab = tabName;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.setAttribute('aria-current', btn.id === `tab-btn-${tabName}` ? 'page' : 'false'));
       localStorage.setItem('med_exam_active_tab', tabName);
       const allTabIds = defaultTabs.map(t => t.id);
       allTabIds.forEach(t => {
@@ -1222,11 +1271,12 @@
           }
         }
       });
-      lucide.createIcons();
-      if (tabName === 'plan' && typeof window.updateProgressTrendChart === 'function') {
+      window.lucide?.createIcons();
+      if (tabName === 'stats' && typeof window.updateProgressTrendChart === 'function') {
         setTimeout(() => {
           window.dispatchEvent(new Event('resize'));
-          window.updateProgressTrendChart();
+          window.updateWorkspace?.();
+        window.updateProgressTrendChart();
         }, 50);
       }
     };
@@ -1305,7 +1355,7 @@
     // ==========================================
     function updateCurrentSportPhase() {
       const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
       
       const cards = document.querySelectorAll('.sport-phase-card');
       let matched = false;
@@ -1356,17 +1406,16 @@
 
     let db = null;
     try {
+      if (window.workspaceLocalOnly || typeof firebase === 'undefined') throw new Error('Local mode');
       firebase.initializeApp(firebaseConfig);
       db = firebase.database();
-      document.getElementById('sync-status').innerText = '雲端即時同步 🟢';
-      document.getElementById('sync-status').className = 'text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono';
-    } catch (e) {
-      console.warn('Firebase 連線未啟用', e);
-      document.getElementById('sync-status').innerText = '本地儲存 🟡';
+    } catch {
+      db = null;
     }
+    window.attachLearningDB(db);
 
     // 1. 即時時鐘與考試倒數
-    const examDate = new Date('2027-01-16T08:30:00');
+    const examDate = new Date('2027-01-16T08:30:00+08:00');
     function updateClock() {
       const now = new Date();
       document.getElementById('current-clock').innerText = now.toTimeString().split(' ')[0];
@@ -1381,7 +1430,7 @@
 
     // 2. 每日三大自律習慣
     const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
     const habits = ['daily-sport', 'daily-exam', 'daily-game'];
     const habitStorageKey = `med_exam_habits_${todayStr}`;
     let todayHabits = JSON.parse(localStorage.getItem(habitStorageKey) || '{}');
@@ -1412,10 +1461,11 @@
       el.addEventListener('change', () => {
         todayHabits[id] = el.checked;
         localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
-        if (db) db.ref(`habits/${todayStr}`).set(todayHabits);
+        persistProgress(`habits/${todayStr}`, todayHabits, [id]);
         calculateStreak();
         if (typeof window.updateProgressTrendChart === 'function') {
-          window.updateProgressTrendChart();
+          window.updateWorkspace?.();
+        window.updateProgressTrendChart();
         }
       });
     });
@@ -1423,15 +1473,16 @@
     if (db) {
       db.ref(`habits/${todayStr}`).on('value', snap => {
         const val = snap.val();
-        if (val) {
-          todayHabits = val;
+        {
+          todayHabits = mergeLearningSnapshot(`habits/${todayStr}`, val);
           localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
           habits.forEach(id => {
             document.getElementById(id).checked = !!todayHabits[id];
-          });
+          }, window.reportSyncError);
           calculateStreak();
           if (typeof window.updateProgressTrendChart === 'function') {
-            window.updateProgressTrendChart();
+            window.updateWorkspace?.();
+        window.updateProgressTrendChart();
           }
         }
       });
@@ -1726,6 +1777,7 @@
       }
 
       if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateWorkspace?.();
         window.updateProgressTrendChart();
       }
     }
@@ -1751,7 +1803,7 @@
         savedVideoState[lec.id] = selectAll;
       });
       localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
-      if (db) db.ref('videos').set(savedVideoState);
+      persistProgress('videos', savedVideoState, lesson.lectures.map(lec => lec.id));
       renderAnatomyLessons();
     };
 
@@ -1883,7 +1935,7 @@
             const cb = itemEl.querySelector('input');
             savedVideoState[lecId] = cb.checked;
             localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
-            if (db) db.ref('videos').set(savedVideoState);
+            persistProgress('videos', savedVideoState, [lecId]);
             renderAnatomyLessons();
           });
         });
@@ -1892,7 +1944,7 @@
       });
 
       updateVideoProgress();
-      lucide.createIcons();
+      window.lucide?.createIcons();
     }
 
     const searchInput = document.getElementById('video-search-input');
@@ -1902,12 +1954,12 @@
     if (db) {
       db.ref('videos').on('value', snap => {
         const val = snap.val();
-        if (val) {
-          savedVideoState = val;
+        {
+          savedVideoState = mergeLearningSnapshot('videos', val);
           localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
           renderAnatomyLessons();
         }
-      });
+      }, window.reportSyncError);
     }
 
     // ==========================================
@@ -2049,6 +2101,7 @@
       }
 
       if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateWorkspace?.();
         window.updateProgressTrendChart();
       }
     }
@@ -2115,7 +2168,7 @@
           const checkbox = card.querySelector('input');
           savedBiochemState[item.id] = checkbox.checked;
           localStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
-          if (db) db.ref('biochem').set(savedBiochemState);
+          persistProgress('biochem', savedBiochemState, [item.id]);
           renderBiochemUnits();
         });
 
@@ -2132,7 +2185,7 @@
       }
 
       updateBiochemProgress();
-      lucide.createIcons();
+      window.lucide?.createIcons();
     }
 
     const biochemSearchInput = document.getElementById('biochem-search-input');
@@ -2142,12 +2195,12 @@
     if (db) {
       db.ref('biochem').on('value', snap => {
         const val = snap.val();
-        if (val) {
-          savedBiochemState = val;
+        {
+          savedBiochemState = mergeLearningSnapshot('biochem', val);
           localStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
           renderBiochemUnits();
         }
-      });
+      }, window.reportSyncError);
     }
 
     // ==========================================
@@ -2312,6 +2365,7 @@
       if (pUnitStat) pUnitStat.innerText = `已完成 ${completedChapters} / 7 大篇章 (已讀 ${completedPages} / ${totalPages} 頁)`;
 
       if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateWorkspace?.();
         window.updateProgressTrendChart();
       }
     }
@@ -2441,7 +2495,7 @@
             const checkbox = secCard.querySelector('input');
             savedPhysioState[sec.id] = checkbox.checked;
             localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
-            if (db) db.ref('physiology').set(savedPhysioState);
+            persistProgress('physiology', savedPhysioState, [sec.id]);
             renderPhysioChecklist();
           });
 
@@ -2461,7 +2515,7 @@
       }
 
       updatePhysioProgress();
-      lucide.createIcons();
+      window.lucide?.createIcons();
     }
 
     // 章節一鍵全選 / 取消全選
@@ -2472,7 +2526,7 @@
         savedPhysioState[sec.id] = forceState;
       });
       localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
-      if (db) db.ref('physiology').set(savedPhysioState);
+      persistProgress('physiology', savedPhysioState, chap.sections.map(sec => sec.id));
       renderPhysioChecklist();
     };
 
@@ -2506,12 +2560,12 @@
     if (db) {
       db.ref('physiology').on('value', snap => {
         const val = snap.val();
-        if (val) {
-          savedPhysioState = val;
+        {
+          savedPhysioState = mergeLearningSnapshot('physiology', val);
           localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
           renderPhysioChecklist();
         }
-      });
+      }, window.reportSyncError);
     }
 
     // ==========================================
@@ -2831,6 +2885,7 @@
       }
 
       if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateWorkspace?.();
         window.updateProgressTrendChart();
       }
     }
@@ -2856,7 +2911,7 @@
         savedPharmState[lec.id] = selectAll;
       });
       localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
-      if (db) db.ref('pharmacology').set(savedPharmState);
+      persistProgress('pharmacology', savedPharmState, unit.lectures.map(lec => lec.id));
       renderPharmUnits();
     };
 
@@ -2885,7 +2940,7 @@
             找不到符合「${query}」的藥理學單元或課程，請更換搜尋關鍵字。
           </div>
         `;
-        lucide.createIcons();
+        window.lucide?.createIcons();
         updatePharmProgress();
         return;
       }
@@ -2988,7 +3043,7 @@
             const cb = itemEl.querySelector('input');
             savedPharmState[lecId] = cb.checked;
             localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
-            if (db) db.ref('pharmacology').set(savedPharmState);
+            persistProgress('pharmacology', savedPharmState, [lecId]);
             renderPharmUnits();
           });
         });
@@ -2997,7 +3052,7 @@
       });
 
       updatePharmProgress();
-      lucide.createIcons();
+      window.lucide?.createIcons();
     }
 
     const pharmSearchInput = document.getElementById('pharm-search-input');
@@ -3013,12 +3068,12 @@
     if (db) {
       db.ref('pharmacology').on('value', snap => {
         const val = snap.val();
-        if (val) {
-          savedPharmState = val;
+        {
+          savedPharmState = mergeLearningSnapshot('pharmacology', val);
           localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
           renderPharmUnits();
         }
-      });
+      }, window.reportSyncError);
     }
 
     // ==========================================
@@ -3123,13 +3178,14 @@
       document.getElementById('modal-end-date').value = dateStr;
       renderModalEventsList();
       document.getElementById('event-modal').classList.remove('hidden');
-      lucide.createIcons();
+      window.lucide?.createIcons();
     };
 
     window.closeEventModal = function() {
       document.getElementById('event-modal').classList.add('hidden');
     };
 
+    const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
     function renderModalEventsList() {
       const container = document.getElementById('modal-events-list');
       const events = customEvents[selectedModalDate] || [];
@@ -3150,12 +3206,15 @@
 
         return `
           <div class="flex items-center justify-between p-2 rounded-lg border ${colorMap[ev.color] || colorMap.emerald} text-xs">
-            <span class="truncate">${ev.text} ${rangeText}</span>
-            <button onclick="deleteCustomEvent('${ev.id || ''}', ${idx})" class="text-slate-400 hover:text-rose-400 p-0.5 ml-2"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            <span class="truncate">${escapeHTML(ev.text)} ${rangeText}</span>
+            <button data-event-id="${escapeHTML(ev.id || '')}" data-event-index="${idx}" class="text-slate-400 hover:text-rose-400 p-0.5 ml-2"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
           </div>
         `;
       }).join('');
-      lucide.createIcons();
+      container.querySelectorAll('[data-event-index]').forEach(button => {
+        button.addEventListener('click', () => deleteCustomEvent(button.dataset.eventId, Number(button.dataset.eventIndex)));
+      });
+      window.lucide?.createIcons();
     }
 
     // 儲存行程（支援單日及跨日連續區間）
@@ -3178,9 +3237,11 @@
 
       const eventId = 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
       let cur = new Date(start);
+      const affectedDates = [];
 
       while (cur <= end) {
         const curDateStr = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+        affectedDates.push(curDateStr);
         if (!customEvents[curDateStr]) customEvents[curDateStr] = [];
         customEvents[curDateStr].push({
           id: eventId,
@@ -3193,7 +3254,7 @@
       }
 
       localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
-      if (db) db.ref('custom_events').set(customEvents);
+      persistProgress('custom_events', customEvents, affectedDates);
 
       input.value = '';
       renderModalEventsList();
@@ -3202,6 +3263,7 @@
 
     // 刪除行程（若是區間建立的則一併刪除全部天數標記）
     window.deleteCustomEvent = function(eventId, index) {
+      const affectedDates = eventId ? Object.keys(customEvents).filter(date => customEvents[date].some(ev => ev.id === eventId)) : [selectedModalDate];
       if (eventId) {
         Object.keys(customEvents).forEach(dateKey => {
           customEvents[dateKey] = customEvents[dateKey].filter(ev => ev.id !== eventId);
@@ -3215,7 +3277,7 @@
       }
 
       localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
-      if (db) db.ref('custom_events').set(customEvents);
+      persistProgress('custom_events', customEvents, affectedDates);
       renderModalEventsList();
       renderCalendar();
     };
@@ -3223,12 +3285,12 @@
     if (db) {
       db.ref('custom_events').on('value', snap => {
         const val = snap.val();
-        if (val) {
-          customEvents = val;
+        {
+          customEvents = mergeLearningSnapshot('custom_events', val);
           localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
           renderCalendar();
         }
-      });
+      }, window.reportSyncError);
     }
 
     // ==========================================
@@ -3262,6 +3324,7 @@
       document.getElementById('progress-bar').style.width = percent + '%';
       document.getElementById('progress-text').innerText = percent + '%';
       if (typeof window.updateProgressTrendChart === 'function') {
+        window.updateWorkspace?.();
         window.updateProgressTrendChart();
       }
     }
@@ -3456,7 +3519,7 @@
             checkbox.checked = !checkbox.checked;
             savedState[item.w] = checkbox.checked;
             localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
-            if (db) db.ref('checklist').set(savedState);
+            persistProgress('checklist', savedState, [item.w]);
             renderChecklist();
             updateProgress();
           }
@@ -3467,7 +3530,7 @@
           chk.addEventListener('change', (e) => {
             savedState[item.w] = e.target.checked;
             localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
-            if (db) db.ref('checklist').set(savedState);
+            persistProgress('checklist', savedState, [item.w]);
             renderChecklist();
             updateProgress();
           });
@@ -3476,19 +3539,19 @@
         container.appendChild(div);
       });
       updateProgress();
-      lucide.createIcons();
+      window.lucide?.createIcons();
     }
     renderChecklist();
 
     if (db) {
       db.ref('checklist').on('value', snap => {
         const val = snap.val();
-        if (val) {
-          savedState = val;
+        {
+          savedState = mergeLearningSnapshot('checklist', val);
           localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
           renderChecklist();
         }
-      });
+      }, window.reportSyncError);
     }
 
     // 7. 定位當週速跳功能
@@ -3573,7 +3636,7 @@
           });
         });
         totalTasks++;
-        if (biochemCloud['bc_1']) doneTasks++;
+        if (biochemCloud['1']) doneTasks++;
       } else if (wNum === 7) {
         // 解剖學 W7 (課13-15, 6講) + 生化第2&3堂 (bc_2, bc_3)
         const lessons = (typeof anatomyLessonsData !== 'undefined' ? anatomyLessonsData : []).filter(l => l.weekKey === 'W7');
@@ -3584,8 +3647,8 @@
           });
         });
         totalTasks += 2;
-        if (biochemCloud['bc_2']) doneTasks++;
-        if (biochemCloud['bc_3']) doneTasks++;
+        if (biochemCloud['2']) doneTasks++;
+        if (biochemCloud['3']) doneTasks++;
       } else if (wNum === 8) {
         // 子翔藥理 W8 (Unit 1, 12, 19, 共 6 講)
         const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W8');
@@ -3605,7 +3668,7 @@
           });
         });
         totalTasks++;
-        if (biochemCloud['bc_4']) doneTasks++;
+        if (biochemCloud['4']) doneTasks++;
       } else if (wNum === 10) {
         // 子翔藥理 W10 (Unit 15, 16, 17, 6講) + 生化第5堂 (bc_5)
         const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W10');
@@ -3616,7 +3679,7 @@
           });
         });
         totalTasks++;
-        if (biochemCloud['bc_5']) doneTasks++;
+        if (biochemCloud['5']) doneTasks++;
       } else if (wNum === 11) {
         // 子翔藥理 W11 (Unit 2, 3, 4, 18, 8講) + 生化第6堂 (bc_6)
         const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W11');
@@ -3627,7 +3690,7 @@
           });
         });
         totalTasks++;
-        if (biochemCloud['bc_6']) doneTasks++;
+        if (biochemCloud['6']) doneTasks++;
       } else if (wNum === 12) {
         // 子翔藥理 W12 (Unit 5, 6, 7, 8, 9, 10講) + 生化第7堂 (bc_7)
         const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W12');
@@ -3638,7 +3701,7 @@
           });
         });
         totalTasks++;
-        if (biochemCloud['bc_7']) doneTasks++;
+        if (biochemCloud['7']) doneTasks++;
       } else if (wNum === 13) {
         // 子翔藥理 W13 (Unit 10, 11, 4講) + 生化第8堂 (bc_8)
         const units = (typeof pharmacologyData !== 'undefined' ? pharmacologyData : []).filter(u => u.weekKey === 'W13');
@@ -3649,7 +3712,7 @@
           });
         });
         totalTasks++;
-        if (biochemCloud['bc_8']) doneTasks++;
+        if (biochemCloud['8']) doneTasks++;
       } else {
         // W14, W15, W16
         return checklistCloud[wNum] ? 100 : 0;
@@ -3824,7 +3887,7 @@
           </div>
         `;
       }).join('');
-      lucide.createIcons();
+      window.lucide?.createIcons();
     }
 
     window.jumpToSubjectMilestone = function(wNum) {
@@ -3840,11 +3903,13 @@
     };
 
     window.updateProgressTrendChart = function() {
+      window.updateWorkspace?.();
+      if (currentActiveTab !== 'stats') return;
       const mountEl = document.getElementById('recharts-progress-trend-root');
       if (!mountEl) return;
 
       if (!window.Recharts || !window.React || !window.ReactDOM) {
-        setTimeout(window.updateProgressTrendChart, 100);
+        mountEl.textContent = '圖表暫時無法載入，課程與進度功能仍可使用。';
         return;
       }
 
@@ -3917,7 +3982,7 @@
 
       if (elBannerBadge) {
         elBannerBadge.innerHTML = `<i data-lucide="flame" class="w-3 h-3"></i> 推進動能：${Number(momentumDelta) > 0 ? '正向突破中 (+' + momentumDelta + '%)' : (Number(avgRate) >= 75 ? '穩定達標高水準' : '真實進度即時聯動')}`;
-        lucide.createIcons();
+        window.lucide?.createIcons();
       }
 
       renderTrendMilestones(data);
@@ -4135,7 +4200,7 @@
         const icon = elBtn.querySelector('i');
         if (icon) {
           icon.setAttribute('data-lucide', pomoIsRunning ? 'pause' : 'play');
-          lucide.createIcons();
+          window.lucide?.createIcons();
         }
       }
     }
@@ -4260,10 +4325,44 @@
     updatePomodoroStatsUI();
 
     window.addEventListener('resize', () => {
-      if (currentActiveTab === 'plan') {
+      if (currentActiveTab === 'stats') {
+        window.updateWorkspace?.();
         window.updateProgressTrendChart();
       }
     });
+    window.readStudyStates = () => ({videos:savedVideoState,biochem:savedBiochemState,physiology:savedPhysioState,pharmacology:savedPharmState});
+    window.setStudyCompletion = (path, id, complete) => {
+      const bindings = {
+        videos: [savedVideoState, 'med_exam_videos_cloud', renderAnatomyLessons],
+        biochem: [savedBiochemState, 'med_exam_biochem_cloud', renderBiochemUnits],
+        physiology: [savedPhysioState, 'med_exam_physio_cloud', renderPhysioChecklist],
+        pharmacology: [savedPharmState, 'med_exam_pharm_cloud', renderPharmUnits]
+      };
+      const binding = bindings[path]; if (!binding) return;
+      binding[0][id] = complete;
+      localStorage.setItem(binding[1], JSON.stringify(binding[0]));
+      persistProgress(path, binding[0], [id]);
+      binding[2]();
+    };
+    window.refreshStudyStates = () => {
+      const read = key => { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; } };
+      savedVideoState = read('med_exam_videos_cloud'); savedBiochemState = read('med_exam_biochem_cloud');
+      savedPhysioState = read('med_exam_physio_cloud'); savedPharmState = read('med_exam_pharm_cloud');
+      renderAnatomyLessons(); renderBiochemUnits(); renderPhysioChecklist(); renderPharmUnits();
+    };
+    window.showStudyItem = (path, id) => {
+      const tab = {videos:'anatomy', biochem:'biochem', physiology:'physiology', pharmacology:'pharmacology'}[path];
+      const searchId = {videos:'video', biochem:'biochem', physiology:'physio', pharmacology:'pharm'}[path] + '-search-input';
+      const search = document.getElementById(searchId);
+      if(search) { search.value=''; search.dispatchEvent(new Event('input')); }
+      if(path==='videos') filterAnatomyWeek('ALL');
+      if(path==='biochem') filterBiochemWeek('ALL');
+      if(path==='physiology') filterPhysioChapter('ALL');
+      if(path==='pharmacology') filterPharmWeek('ALL');
+      switchTab(tab);
+    };
+    window.studyData = { physio: physioChaptersData, anatomy: anatomyLessonsData, biochem: biochemData, pharm: pharmacologyData, weeks: weeksData };
   </script>
+  <script type="module" src="/workspace.js"></script>
 </body>
 </html>
