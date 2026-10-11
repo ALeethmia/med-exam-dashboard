@@ -134,7 +134,7 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
       update:async patch=>{writes.push({kind:'update',path,patch});for(const [key,value] of Object.entries(patch))put(path?path+'/'+key:key,value);notify();},
       transaction:async updater=>{const value=updater(structuredClone(get(path)));writes.push({kind:'transaction',path});if(value!==undefined)put(path,value);notify();return {snapshot:{val:()=>structuredClone(get(path))}};}
     })};
-    window.firebase={initializeApp(){},database:()=>db};
+    window.firebase={apps:[],initializeApp(){this.apps.push({});},auth:()=>({onAuthStateChanged:callback=>setTimeout(()=>callback({uid:'test-owner',email:'owner@example.test'}),0)}),database:()=>db};
     window.mockDatabase={records,writes};
   });
   await page.goto('/');await expect(page.locator('#task-list input')).toHaveCount(3);
@@ -231,4 +231,61 @@ test('calendar stays compact and routines read like a timetable on desktop and m
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await navigate(page,'calendar');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const mobileMonth=await page.locator('.calendar-card').boundingBox(),mobileDates=await page.locator('.calendar-dates-card').boundingBox();expect(mobileDates.y).toBeGreaterThan(mobileMonth.y+mobileMonth.height);
+});
+
+test('Google login gates database access and exposes UID without clearing progress', async ({page}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'workspaceLocalOnly', {get: () => false, set() {}});
+    if (!sessionStorage.getItem('auth-test-seeded')) {
+      localStorage.setItem('med_exam_videos_cloud', '{"1":true}');
+      sessionStorage.setItem('auth-test-seeded', 'yes');
+    }
+    const state = window.authTest = {reads: 0, signIns: 0};
+    let notify;
+    const auth = {
+      onAuthStateChanged(callback) { notify = callback; setTimeout(() => callback(null), 0); },
+      async signInWithPopup() {
+        state.signIns++;
+        if (state.signIns === 1) throw {code: 'auth/unauthorized-domain'};
+        notify({uid: 'owner-uid', email: 'owner@example.test'});
+      },
+      async signOut() { notify(null); }
+    };
+    const authFactory = () => auth;
+    authFactory.GoogleAuthProvider = class {};
+    window.firebase = {apps: [], initializeApp() {this.apps.push({});}, auth: authFactory,
+      database() { state.reads++; return {ref: (path) => ({
+        on(event, callback) { setTimeout(() => callback({val: () => path === '.info/connected' ? false : path === 'videos' ? {1: true} : null}), 0); }
+      })}; }
+    };
+  });
+  await page.goto('/');
+  await expect(page.locator('#google-sign-in')).toBeEnabled();
+  expect(await page.evaluate(() => window.authTest.reads)).toBe(0);
+  expect(await page.evaluate(() => window.studyData)).toBeUndefined();
+  await page.locator('#google-sign-in').click();
+  await expect(page.locator('#auth-status')).toContainText('此網址尚未授權');
+  expect(await page.evaluate(() => window.authTest.reads)).toBe(0);
+  await page.locator('#google-sign-in').click();
+  await expect(page.locator('#task-list input')).toHaveCount(3);
+  expect(await page.evaluate(() => window.authTest.reads)).toBe(1);
+  await page.locator('#account-button').click();
+  await expect(page.locator('#account-uid')).toHaveValue('owner-uid');
+  await expect(page.locator('#account-email')).toHaveText('owner@example.test');
+  expect(await page.evaluate(() => localStorage.getItem('med_exam_videos_cloud'))).toBe('{"1":true}');
+  await page.locator('#sign-out').click();
+  await expect(page.locator('#google-sign-in')).toBeEnabled();
+  expect(await page.evaluate(() => window.authTest.reads)).toBe(0);
+  expect(await page.evaluate(() => localStorage.getItem('med_exam_videos_cloud'))).toBe('{"1":true}');
+});
+
+test('missing authentication SDK blocks cloud database initialization', async ({page}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'workspaceLocalOnly', {get: () => false, set() {}});
+    window.firebase = {database() { throw new Error('Database must not start'); }};
+  });
+  await page.goto('/');
+  await expect(page.locator('#auth-status')).toContainText('登入服務未載入');
+  await expect(page.locator('#google-sign-in')).toBeDisabled();
+  expect(await page.evaluate(() => window.studyData)).toBeUndefined();
 });
