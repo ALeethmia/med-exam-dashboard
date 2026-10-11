@@ -36,11 +36,11 @@ Tailwind CSS、Lucide、React / Recharts 趨勢圖從鎖定的 npm 套件產生�
 
 科目與習慣只更新操作涉及的 ID；行程只更新涉及的日期。失敗的雲端學習寫入保存在 `med_exam_pending_writes_v1`，重連或按「重試同步」後再送出。行程的同日陣列仍沿用既有結構，並未改成完整的多使用者協作模型。
 
-舊遊戲化 `gamification/v1/days/YYYY-MM-DD`、`gamification/v1/awards/{subject}__{itemId}` 與本機 `med_exam_gamification_v1` 保留。新的時間目標使用 `gamification/v2/timeTasks/YYYY-MM-DD/{morning|afternoon|review}`，欄位為 `complete`、`awarded`、`hours`；本機副本和失敗寫入佇列保存於 `med_exam_time_tasks_v1`。每個目標使用 Firebase transaction 保留已獲獎狀態，跨裝置共用同日目標，避免重複計算 XP。遊戲化寫入失敗只影響成就同步，不阻擋原有學習紀錄。本專案沒有新增身分／登入模型，遊戲化延續現有共用資料庫的範圍。
+舊遊戲化 `gamification/v1/days/YYYY-MM-DD`、`gamification/v1/awards/{subject}__{itemId}` 與本機 `med_exam_gamification_v1` 保留。新的時間目標使用 `gamification/v2/timeTasks/YYYY-MM-DD/{morning|afternoon|review}`，欄位為 `complete`、`awarded`、`hours`；本機副本和失敗寫入佇列保存於 `med_exam_time_tasks_v1`。每個目標使用 Firebase transaction 保留已獲獎狀態，跨裝置共用同日目標，避免重複計算 XP。遊戲化寫入失敗只影響成就同步，不阻擋原有學習紀錄。Google 登入只控制存取身分；既有資料仍使用原本的共用路徑，沒有搬移到使用者子目錄。
 
 正式環境的 Firebase Security Rules 不在此 Repository 中，也未修改或部署；需要允許新命名空間的讀取與 transaction 才能雲端同步成就。XP 是個人學習提示，不是可信任的競賽計分。正式 Firebase 同步未在本次改版中測試。
 
-既有公開 Firebase 前端設定維持原樣，沒有新增憑證。`.env.example` 的 `FIREBASE_API_KEY` 並不會被程式讀取。不要提交 `.env`、服務帳戶檔或其他秘密。
+沿用既有公開 Firebase 前端設定，並依擁有者核對結果修正 API 金鑰第 9 個字元的大小寫，沒有新增私密憑證。`.env.example` 的 `FIREBASE_API_KEY` 並不會被程式讀取。不要提交 `.env`、服務帳戶檔或其他秘密。
 
 ## 驗證
 
@@ -55,3 +55,24 @@ npm run test:browser
 測試包含原有課程資料雜湊比對、各科計算、搜尋／勾選／批次操作、主題記憶、手機溢位、台北跨午夜、XP 去重、行程文字安全及隔離的 Firebase 替身。瀏覽器測試會阻擋所有外部請求，**不讀寫正式 Firebase**。
 
 Vercel 正式部署設定未修改；此分支需先經 PR 審查再合併。靜態資產包含第三方程式，授權見 `public/THIRD_PARTY_NOTICES.txt`。
+
+## Google 登入與私人同步
+
+正式網站必須先完成 Google 登入，且 UID 符合 `owner-config.js` 的 `OWNER_UID`，才會建立 Realtime Database 連線、載入學習介面及重送待同步紀錄。未授權帳號會登出並顯示拒絕訊息；允許的 UID 未設定時，所有帳號均無法開啟學習介面或啟動同步，不會自動將首次登入者指定為擁有者。本機及 `?mode=local` 仍完全隔離正式資料庫。登出會斷開資料庫並重新載入登入畫面，不清除 localStorage 或既有紀錄。
+
+Firebase Console 需啟用 Authentication → Google，並在授權網域加入正式網站網域；若測試 Vercel Preview 登入，該預覽網域也須加入。尚未有 Firebase 使用者時，可先在已授權的預覽網域以本人 Google 帳號登入；`OWNER_UID` 留空時，登入畫面只顯示該次登入的 UID，隨即登出，不啟動學習介面或資料庫。將本人 UID 填入 `owner-config.js` 並使用相同 UID 設定 Database Rules 後，再部署正式站。已授權登入後，側欄「帳號與同步」可查看與複製 Firebase UID。登入不會自動變更 Security Rules：目前到期的規則仍須由專案擁有者更新。
+
+單人使用且不變更原有資料路徑時，可將 Realtime Database 根層存取限定為本人 UID（將下列佔位文字換成網站顯示的 UID，檢查既有子路徑是否還有其他授權規則）：
+
+```json
+{
+  "rules": {
+    ".read": "auth != null && auth.uid === 'YOUR_FIREBASE_UID'",
+    ".write": "auth != null && auth.uid === 'YOUR_FIREBASE_UID'"
+  }
+}
+```
+
+此規則由使用者在 Firebase Console 審查並發布，本專案不會部署規則或操作正式資料庫測試。這是單人存取限制，沒有新增多人帳號隔離或資料驗證模型。原公開 Web 設定移至 `firebase-config.js`，API 金鑰第 9 個字元依擁有者核對結果修正為大寫，其餘設定未變；它不是服務帳戶私鑰，也不取代 Security Rules。真實 Google 登入仍須在已授權的部署網域上驗證。
+
+網站端 UID 檢查只限制正常介面流程，不能取代 Database Rules，也不能阻止其他人完成 Google 身分驗證或出現在 Authentication 使用者清單。資料庫必須獨立限制同一個擁有者 UID。`?mode=local` 保留無雲端連線的本機預覽能力。
