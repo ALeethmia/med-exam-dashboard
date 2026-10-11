@@ -221,10 +221,14 @@ test('mobile chapter picker restores the book position and leaves completion rec
 
 test('calendar stays compact and routines read like a timetable on desktop and mobile',async({page})=>{
   await page.setViewportSize({width:1440,height:1000});await page.goto('/');await navigate(page,'calendar');
-  expect((await page.locator('#tab-content-calendar').boundingBox()).width).toBeLessThanOrEqual(640);
+  const month=await page.locator('.calendar-card').boundingBox(),dates=await page.locator('.calendar-dates-card').boundingBox();
+  expect(month.width).toBeLessThanOrEqual(640);expect(Math.abs(month.y-dates.y)).toBeLessThan(1);expect(dates.x).toBeGreaterThan(month.x+month.width);
+  await page.locator('#calendar-grid button').first().focus();await page.keyboard.press('Enter');
+  await expect(page.locator('#event-modal')).toBeVisible();await page.evaluate(()=>closeEventModal());
   await navigate(page,'schedule');await page.locator('#sched-btn-weekday').click();
   expect(await page.locator('#sched-content-weekday .schedule-activity').allTextContents()).toEqual(['運動','早餐・淋浴','主科讀書','午餐・午休','題目練習','錯題訂正','晚餐・休息','副科讀書','自由時間']);
   await page.setViewportSize({width:390,height:844});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await navigate(page,'calendar');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  const mobileMonth=await page.locator('.calendar-card').boundingBox(),mobileDates=await page.locator('.calendar-dates-card').boundingBox();expect(mobileDates.y).toBeGreaterThan(mobileMonth.y+mobileMonth.height);
 });
