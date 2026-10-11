@@ -1,0 +1,12 @@
+import {readFileSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+for(const file of ['server.js','theme.js','sync.js','study-core.js','workspace.js']) {
+  const result=spawnSync(process.execPath,['--check',file],{stdio:'inherit'});
+  if(result.status) process.exit(result.status);
+}
+for(const match of readFileSync('index.html','utf8').matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
+  if(!match[1].trim()) continue;
+  const result=spawnSync(process.execPath,['--check'],{input:match[1],stdio:['pipe','inherit','inherit']});
+  if(result.status) process.exit(result.status);
+}
+console.log('JavaScript syntax checked, including inline scripts.');
