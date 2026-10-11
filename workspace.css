@@ -167,9 +167,6 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 .course-group-body { padding:0 24px 8px; }
 .course-batch { display:flex; justify-content:flex-end; gap:16px; border-bottom:1px solid var(--line); padding:0 0 8px; margin-bottom:8px; }
 .course-batch button { border:0; padding:8px 0; min-height:36px; background:none; font-size:12px; color:var(--accent); }
-.course-chapter-notes { font-size:12px; color:var(--muted); margin:8px 0 16px; }
-.course-chapter-notes summary { cursor:pointer; }
-.course-group-note { margin:8px 0; font-size:13px; color:var(--muted); line-height:1.7; }
 .subject-page .course-row { background:transparent!important; border:0!important; border-top:1px solid var(--line)!important; padding:16px 0; box-shadow:none; border-radius:0; }
 .subject-page .course-row:first-child { border-top:0!important; }
 .course-row-label { display:flex; align-items:flex-start; gap:12px; cursor:pointer; }
@@ -179,14 +176,8 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 .course-row-copy small { display:block; flex-shrink:0; color:var(--muted); font-size:12px; line-height:1.7; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .subject-page .course-row.completed .title-text { color:var(--muted); text-decoration:line-through; }
 .course-row.completed input { accent-color:var(--success); }
-.course-item-notes { margin:8px 0 0 30px; font-size:13px; }
-.course-item-notes summary { cursor:pointer; color:var(--muted); font-size:12px; padding:4px 0; }
-.course-item-notes p { margin:8px 0; color:var(--muted); line-height:1.8; overflow-wrap:anywhere; }
-.course-item-notes strong { font-weight:500; color:var(--ink); }
 .course-empty { padding:32px; text-align:center; font-size:14px; color:var(--muted); }
 .course-group + .course-group:not(.hidden) { border-top:1px solid var(--line); }
-.course-guide > summary { cursor:pointer; color:var(--muted); font-size:13px; padding:8px 0; }
-.course-guide-body { padding:16px; margin-top:8px; background:var(--surface); border-radius:12px; }
 @media(max-width:1100px) { .course-library { grid-template-columns:208px minmax(0,1fr); gap:16px; } .course-row-copy { flex-direction:column; gap:4px; } }
 @media(max-width:760px) {
   .course-library { grid-template-columns:1fr; gap:16px; } .course-index { position:static; }

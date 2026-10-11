@@ -1915,7 +1915,7 @@
       const groups=biochemData.filter(item=>(currentBiochemFilter==='ALL' || item.weekKey===currentBiochemFilter) &&
         `${item.id} ${item.date} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase().includes(query)).map(item=>({
           id:item.id,title:item.title,week:item.weekKey,meta:`${item.tag} · ${item.targetWeek} · ${item.date}`,all:[item],
-          items:[{id:item.id,title:'完成課程與複習',meta:item.duration,notes:[['核心考點',item.focus],['複習建議',item.reviewGuide]]}]
+          items:[{id:item.id,title:'完成課程',meta:item.duration,notes:[['核心考點',item.focus],['複習建議',item.reviewGuide]]}]
         }));
       SubjectUI.render({container,path:'biochem',groups,state:savedBiochemState,query,rowClass:'biochem-course-row',onChange:(id,complete)=>window.setStudyCompletion('biochem',id,complete)});
       updateBiochemProgress();

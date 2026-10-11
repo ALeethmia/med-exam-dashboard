@@ -148,7 +148,7 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
   expect(result.writes.filter(w=>w.kind==='update').every(w=>Object.keys(w.patch).every(key=>key.includes('/')))).toBe(true);
 });
 
-test('book navigation remembers selected chapters and notes without changing learning records',async({page})=>{
+test('book navigation remembers selected chapters without changing learning records',async({page})=>{
   await page.goto('/');await navigate(page,'physiology');
   await expect(page.locator('#physio-chapters-container > details')).toHaveCount(7);
   const book=page.locator('#physio-chapters-container-index');
@@ -159,9 +159,8 @@ test('book navigation remembers selected chapters and notes without changing lea
   const checkbox=chapter.locator('input').first();const id=await checkbox.getAttribute('id');
   await checkbox.check();await expect(checkbox).toBeFocused();
   const meter=await page.locator('#physio-progress-bar').boundingBox();expect(meter.height).toBe(4);expect(meter.width).toBeGreaterThan(0);
-  const note=chapter.locator('.course-item-notes').first();await note.locator('summary').click();
-  await checkbox.uncheck();await expect(note).toHaveAttribute('open','');
-  await page.reload();await expect(chapter).toBeVisible();await expect(note).toHaveAttribute('open','');
+  await checkbox.uncheck();
+  await page.reload();await expect(chapter).toBeVisible();
   expect(await page.evaluate(id=>window.readStudyStates().physiology[id],id)).toBe(false);
   await page.locator('#physio-search-input').fill('Nernst');
   await expect(page.locator('[data-group="physiology__甲"]')).toBeVisible();
