@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {OWNER_UID} from '../../owner-config.js';
 async function navigate(page,tab) {
   const group=['physiology','anatomy','biochem','pharmacology'].includes(tab)?'subjects':['schedule','exercise','focus'].includes(tab)?'calendar':tab;
   const primary=page.locator('#tab-btn-'+group);
@@ -235,8 +236,7 @@ test('calendar stays compact and routines read like a timetable on desktop and m
 });
 
 test('Google login gates database access and exposes UID without clearing progress', async ({page}) => {
-  await page.route('**/owner-config.js', route => route.fulfill({contentType:'application/javascript',body:"export const OWNER_UID = 'owner-uid';"}));
-  await page.addInitScript(() => {
+  await page.addInitScript(ownerUid => {
     Object.defineProperty(window, 'workspaceLocalOnly', {get: () => false, set() {}});
     if (!sessionStorage.getItem('auth-test-seeded')) {
       localStorage.setItem('med_exam_videos_cloud', '{"1":true}');
@@ -249,7 +249,7 @@ test('Google login gates database access and exposes UID without clearing progre
       async signInWithPopup() {
         state.signIns++;
         if (state.signIns === 1) throw {code: 'auth/unauthorized-domain'};
-        notify({uid: 'owner-uid', email: 'owner@example.test'});
+        notify({uid: ownerUid, email: 'owner@example.test'});
       },
       async signOut() { notify(null); }
     };
@@ -260,7 +260,7 @@ test('Google login gates database access and exposes UID without clearing progre
         on(event, callback) { setTimeout(() => callback({val: () => path === '.info/connected' ? false : path === 'videos' ? {1: true} : null}), 0); }
       })}; }
     };
-  });
+  }, OWNER_UID);
   await page.goto('/');
   await expect(page.locator('#google-sign-in')).toBeEnabled();
   expect(await page.evaluate(() => window.authTest.reads)).toBe(0);
@@ -272,7 +272,7 @@ test('Google login gates database access and exposes UID without clearing progre
   await expect(page.locator('#task-list input')).toHaveCount(3);
   expect(await page.evaluate(() => window.authTest.reads)).toBe(1);
   await page.locator('#account-button').click();
-  await expect(page.locator('#account-uid')).toHaveValue('owner-uid');
+  await expect(page.locator('#account-uid')).toHaveValue(OWNER_UID);
   await expect(page.locator('#account-email')).toHaveText('owner@example.test');
   expect(await page.evaluate(() => localStorage.getItem('med_exam_videos_cloud'))).toBe('{"1":true}');
   await page.locator('#sign-out').click();
@@ -292,9 +292,9 @@ test('missing authentication SDK blocks cloud database initialization', async ({
   expect(await page.evaluate(() => window.studyData)).toBeUndefined();
 });
 
-for (const owner of ['', 'different-owner']) {
+for (const owner of ['', OWNER_UID]) {
   test(`cloud access rejects an account when owner UID is ${owner ? 'different' : 'unset'}`, async ({page}) => {
-    await page.route('**/owner-config.js', route => route.fulfill({contentType:'application/javascript', body:`export const OWNER_UID = '${owner}';`}));
+    if (!owner) await page.route('**/owner-config.js', route => route.fulfill({contentType:'application/javascript', body:"export const OWNER_UID = '';"}));
     await page.addInitScript(() => {
       Object.defineProperty(window, 'workspaceLocalOnly', {get:()=>false, set(){}});
       window.ownerTest = {databaseCalls:0, signOuts:0};
