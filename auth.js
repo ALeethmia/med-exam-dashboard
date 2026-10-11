@@ -18,13 +18,26 @@ function dialog(markup) {
   return element;
 }
 function authMessage(error) {
-  return ({
+  // Show only the bounded Firebase code, never raw errors, tokens or account details.
+  const code = typeof error?.code === 'string' && /^auth\/[a-z-]{1,64}$/.test(error.code) ? error.code : '';
+  const message = ({
     'auth/unauthorized-domain': '此網址尚未授權。請在 Firebase Authentication 的授權網域加入目前的網站網域。',
     'auth/popup-blocked': '瀏覽器阻擋了登入視窗，請允許此網站開啟彈出式視窗後重試。',
     'auth/popup-closed-by-user': '登入視窗已關閉，可以再次登入。',
+    'auth/cancelled-popup-request': '另一個登入視窗正在開啟，請關閉多餘視窗後重試。',
     'auth/network-request-failed': '無法連線至登入服務，請檢查網路後重試。',
-    'auth/operation-not-allowed': '請先在 Firebase Authentication 啟用 Google 登入。'
-  })[error?.code] || '無法完成登入，請稍後重試。';
+    'auth/operation-not-allowed': '請先在 Firebase Authentication 啟用 Google 登入。',
+    'auth/configuration-not-found': '找不到 Firebase 登入設定，請確認已在網站對應的 Firebase 專案啟用 Authentication。',
+    'auth/invalid-api-key': 'Firebase 網站設定的 API 金鑰無效，請檢查網站設定。',
+    'auth/app-not-authorized': '此網站未獲得 Firebase API 金鑰授權，請檢查金鑰的網站限制。',
+    'auth/web-storage-unsupported': '瀏覽器無法儲存登入狀態，請改用一般瀏覽模式並允許網站儲存資料。',
+    'auth/operation-not-supported-in-this-environment': '此瀏覽環境不支援登入，請在 Safari 或 Chrome 直接開啟預覽網址。',
+    'auth/account-exists-with-different-credential': '此帳號已使用其他登入方式，請檢查 Firebase 使用者的登入方式。',
+    'auth/user-disabled': '此帳號已在 Firebase 停用，請檢查使用者設定。',
+    'auth/too-many-requests': '登入嘗試過於頻繁，請稍後再試。',
+    'auth/internal-error': '登入服務發生內部錯誤，需要根據錯誤代碼進一步檢查。'
+  })[code] || '無法完成登入，請提供下方錯誤代碼以便檢查。';
+  return `${message}（${code || 'client/unknown-error'}）`;
 }
 function addAccount(auth, user) {
   const button = document.createElement('button');

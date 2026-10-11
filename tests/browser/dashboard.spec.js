@@ -318,3 +318,26 @@ for (const owner of ['', 'different-owner']) {
     if (!owner) await expect(page.locator('#setup-uid')).toHaveValue('unapproved-user');
   });
 }
+
+for (const code of ['auth/configuration-not-found', 'auth/unrecognized-error']) {
+  test(`login shows actionable diagnostic code ${code} without exposing raw error details`, async ({page}) => {
+    await page.addInitScript(code => {
+      Object.defineProperty(window, 'workspaceLocalOnly', {get:()=>false,set(){}});
+      const auth = {
+        onAuthStateChanged(callback) {setTimeout(()=>callback(null),0);},
+        async signInWithPopup() {throw {code, message:'private-error-payload'};}
+      };
+      const factory = ()=>auth;
+      factory.GoogleAuthProvider = class {};
+      window.firebase = {apps:[],initializeApp(){this.apps.push({});},auth:factory,
+        database(){throw new Error('Database must not start');}
+      };
+    }, code);
+    await page.goto('/');
+    await page.locator('#google-sign-in').click();
+    await expect(page.locator('#auth-status')).toContainText(code);
+    await expect(page.locator('#auth-status')).not.toContainText('private-error-payload');
+    await expect(page.locator('#google-sign-in')).toBeEnabled();
+    expect(await page.evaluate(()=>window.studyData)).toBeUndefined();
+  });
+}
