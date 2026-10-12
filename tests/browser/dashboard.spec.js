@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {OWNER_UID} from '../../owner-config.js';
 async function navigate(page,tab) {
+  await page.waitForFunction(()=>typeof window.updateWorkspace==='function');
   const group=['physiology','anatomy','biochem','pharmacology'].includes(tab)?'subjects':['schedule','exercise','focus'].includes(tab)?'calendar':tab;
   const primary=page.locator('#tab-btn-'+group);
   if(!await primary.isVisible()) await page.locator('#mobile-menu').click();
@@ -88,8 +89,8 @@ test('all subjects keep search, filters, item checks and batch operations',async
   await page.locator('.course-batch button:visible').filter({hasText:/^全選$/}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().pharmacology).filter(Boolean).length)).toBe(2);
 });
 test('appearance remembers preference and follows system changes',async({page})=>{
-  await page.emulateMedia({colorScheme:'dark'});await page.goto('/');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
-  await page.locator('[data-appearance=light]').click();await page.reload();await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+  await page.emulateMedia({colorScheme:'dark'});await page.goto('/');await page.waitForFunction(()=>typeof window.updateWorkspace==='function');await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await page.locator('[data-appearance=light]').click();await page.reload();await page.waitForFunction(()=>typeof window.updateWorkspace==='function');await expect(page.locator('html')).toHaveAttribute('data-theme','light');
   await page.locator('[data-appearance=system]').click();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   await page.emulateMedia({colorScheme:'light'});await expect(page.locator('html')).toHaveAttribute('data-theme','light');
 });
@@ -102,7 +103,7 @@ test('separate pages retain calendar, routines, exercise and focus timer',async(
   await page.getByRole('button',{name:'新增標註'}).click();await expect(page.locator('#modal-events-list')).toContainText('<img');
   expect(await page.evaluate(()=>window.injected)).toBeUndefined();await page.evaluate(()=>closeEventModal());
   await navigate(page,'schedule');await expect(page.locator('#daily-sport')).toBeVisible();await page.locator('#daily-sport').check();
-  await navigate(page,'exercise');await expect(page.locator('#sport-phase-1')).toBeVisible();
+  await navigate(page,'exercise');await expect(page.locator('#training-stage')).toBeVisible();await expect(page.locator('#training-description')).toContainText('正常完成');
   await navigate(page,'plan');await expect(page.locator('#checklist-container input')).toHaveCount(16);await page.locator('[data-week="1"] > summary').click();await page.locator('#w-1').check();
   await navigate(page,'stats');await expect(page.locator('#progress-trend-card')).toBeVisible();
   await expect(page.locator('.recharts-wrapper')).toBeVisible();
@@ -188,7 +189,7 @@ test('book navigation remembers selected chapters without changing learning reco
 });
 
 test('four subject pages share readable mobile lists in both appearances',async({page})=>{
-  await page.setViewportSize({width:390,height:844});await page.goto('/');
+  await page.setViewportSize({width:390,height:844});await page.goto('/');await page.waitForFunction(()=>typeof window.updateWorkspace==='function');
   for(const theme of ['light','dark']) {
     await page.locator('[data-appearance='+theme+']').click();
     for(const tab of ['physiology','anatomy','biochem','pharmacology']) {

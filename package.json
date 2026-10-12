@@ -8,7 +8,7 @@
     "start": "node server.js",
     "build": "node scripts/build.mjs",
     "lint": "node scripts/check.mjs",
-    "test": "node --test tests/core.test.js tests/planner.test.js",
+    "test": "node --test tests/core.test.js tests/planner.test.js tests/life.test.js",
     "test:browser": "playwright test"
   },
   "dependencies": {
