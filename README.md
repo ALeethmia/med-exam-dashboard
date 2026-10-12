@@ -6,7 +6,7 @@ Becoming 是現實生活目標管理平台；第一章「學者的試煉」以�
 
 ## 版本管理
 
-產品版號以 package.json 為唯一來源，build 產生頁尾版本資訊；詳見 [VERSIONING.md](VERSIONING.md) 與 [CHANGELOG.md](CHANGELOG.md)。Phase 2A 仍為待驗收 Beta，不代表已正式發布。產品版本與 Firebase Schema 版本分離。
+產品版號以 package.json 為唯一來源，build 產生頁尾版本資訊；詳見 [VERSIONING.md](VERSIONING.md) 與 [CHANGELOG.md](CHANGELOG.md)。目前穩定版本候選為 **v0.2.0（待發布）**；v0.2.0-beta.1 已完成使用者回報的正式網站六項驗收，以及課程日期寫入、實際跨裝置與離線恢復同步驗收。未授權帳號的 Security Rules 拒絕存取、同一課程雙裝置同時修改衝突仍未人工驗證；Mock 測試不能代替正式驗收。本次 Release PR 不建立 Tag／GitHub Release，也不修改 Rules。產品版本與 Firebase Schema 版本分離。
 
 ## 開發
 
