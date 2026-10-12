@@ -38,3 +38,9 @@ test('Sunday and Monday follow Taipei calendar week boundaries without changing 
  const courseAwards={videos__1:{xp:20,day:'2026-10-11'},physiology__p:{xp:20,day:'2026-10-12'}},before=JSON.stringify(courseAwards);
  const sunday=growthSnapshot({...input,day:'2026-10-11',courseAwards}),monday=growthSnapshot({...input,day:'2026-10-12',courseAwards});assert.equal(sunday.start,'2026-10-05');assert.equal(sunday.firstCourses.weekly,1);assert.equal(monday.start,'2026-10-12');assert.equal(monday.firstCourses.weekly,1);assert.equal(JSON.stringify(courseAwards),before);
 });
+
+test('explicit course dates override old awards including removal without altering completion or XP',()=>{
+ const awards={physiology__p:{xp:20,day:'2026-10-12'}};
+ const recorded=growthSnapshot({...input,courseAwards:awards,courseDates:{physiology__p:{day:'2026-10-13'}}});assert.equal(recorded.firstCourses.weekly,1);
+ const removed=growthSnapshot({...input,courseAwards:awards,courseDates:{physiology__p:{day:null}}});assert.equal(removed.firstCourses.weekly,0);assert.equal(removed.courses.done,1);assert.equal(awards.physiology__p.day,'2026-10-12');
+});

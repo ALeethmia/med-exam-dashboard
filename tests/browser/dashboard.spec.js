@@ -74,19 +74,19 @@ test('all subjects keep search, filters, item checks and batch operations',async
   await navigate(page,'anatomy');await expect(page.locator('.anatomy-lec-card')).toHaveCount(30);
   await page.locator('#video-search-input').fill('頭顱');expect(await page.locator('.anatomy-lec-card').count()).toBeGreaterThan(0);
   await page.locator('#video-search-input').fill('no-match-123');await expect(page.locator('.anatomy-lec-card')).toHaveCount(0);
-  await page.locator('#video-search-input').fill('');await page.locator('.anatomy-lec-card input').first().check();
+  await page.locator('#video-search-input').fill('');await page.locator('.anatomy-lec-card input[type=checkbox]').first().check();
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('med_exam_videos_cloud'))['1'])).toBe(true);
   await page.locator('.course-batch button:visible').filter({hasText:/^全選$/}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().videos).filter(Boolean).length)).toBe(2);
   await navigate(page,'biochem');await expect(page.locator('#biochem-units-container > details')).toHaveCount(8);
-  await page.locator('#biochem-search-input').fill('no-match-123');await expect(page.locator('#biochem-units-container input')).toHaveCount(0);
-  await page.locator('#biochem-search-input').fill('');await page.locator('#biochem-units-container input').first().check();
+  await page.locator('#biochem-search-input').fill('no-match-123');await expect(page.locator('#biochem-units-container input[type=checkbox]')).toHaveCount(0);
+  await page.locator('#biochem-search-input').fill('');await page.locator('#biochem-units-container input[type=checkbox]').first().check();
   expect(await page.evaluate(()=>window.readStudyStates().biochem['1'])).toBe(true);
-  await navigate(page,'physiology');await expect(page.locator('#physio-chapters-container input')).toHaveCount(39);
-  await page.locator('#physio-search-input').fill('no-match-123');await expect(page.locator('#physio-chapters-container input')).toHaveCount(0);
-  await page.locator('#physio-search-input').fill('');await page.locator('#physio-chapters-container input').first().check();
+  await navigate(page,'physiology');await expect(page.locator('#physio-chapters-container input[type=checkbox]')).toHaveCount(39);
+  await page.locator('#physio-search-input').fill('no-match-123');await expect(page.locator('#physio-chapters-container input[type=checkbox]')).toHaveCount(0);
+  await page.locator('#physio-search-input').fill('');await page.locator('#physio-chapters-container input[type=checkbox]').first().check();
   await navigate(page,'pharmacology');await expect(page.locator('.pharm-lec-card')).toHaveCount(38);
   await page.locator('#pharm-search-input').fill('no-match-123');await expect(page.locator('.pharm-lec-card')).toHaveCount(0);
-  await page.locator('#pharm-search-input').fill('');await page.locator('.pharm-lec-card input').first().check();
+  await page.locator('#pharm-search-input').fill('');await page.locator('.pharm-lec-card input[type=checkbox]').first().check();
   await page.locator('.course-batch button:visible').filter({hasText:/^全選$/}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().pharmacology).filter(Boolean).length)).toBe(2);
 });
 test('appearance remembers preference and follows system changes',async({page})=>{
@@ -157,7 +157,7 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
   await page.locator('#task-list input').first().check();await expect(page.locator('#xp-detail')).toContainText('20 XP');
   await expect.poll(()=>page.evaluate(()=>Object.values(window.mockDatabase.records.gamification?.v3?.planner?.tasks || {}).filter(t=>t.award?.xp===20).length)).toBe(1);
   await page.locator('#task-list input').first().uncheck();await page.locator('#task-list input').first().check();
-  await navigate(page,'anatomy');await page.locator('.anatomy-lec-card input').nth(1).check();
+  await navigate(page,'anatomy');await page.locator('.anatomy-lec-card input[type=checkbox]').nth(1).check();
   await expect.poll(()=>page.evaluate(()=>window.mockDatabase.records.videos['2'])).toBe(true);
   const result=await page.evaluate(()=>window.mockDatabase);
   expect(result.records.videos['1']).toBe(true);expect(result.records.videos.unrelated).toBe(true);expect(result.records.biochem['8']).toBe(true);
@@ -228,7 +228,7 @@ test('mobile chapter picker restores the book position and leaves completion rec
   await expect(select).toBeVisible();await select.selectOption('庚');
   await expect(page.locator('[data-group="physiology__庚"]')).toBeVisible();
   await expect(page.locator('[data-group="physiology__甲"]')).not.toBeVisible();
-  await expect(page.locator('[data-group="physiology__庚"] input')).toHaveCount(8);
+  await expect(page.locator('[data-group="physiology__庚"] input[type=checkbox]')).toHaveCount(8);
   expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({});
   await page.reload();await expect(select).toHaveValue('庚');
   await expect(page.locator('[data-group="physiology__庚"]')).toBeVisible();
@@ -390,8 +390,8 @@ test('planner selects across subjects, keeps task and course completion separate
   await page.locator('#task-list .task-link').first().click();
   await expect(page.locator('#page-title')).toHaveText('First Choice 生理學');
   await expect(page.locator('[data-study-key="physiology__fc_p_3_a"]')).toBeVisible();
-  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input')).toBeFocused();
-  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input')).not.toBeChecked();
+  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input[type=checkbox]')).toBeFocused();
+  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input[type=checkbox]')).not.toBeChecked();
 });
 
 test('free tasks retain ID through edits, ordering, postponement and deletion; copying starts a new activity',async({page})=>{

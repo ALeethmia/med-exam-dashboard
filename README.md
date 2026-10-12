@@ -256,9 +256,9 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 ### 驗證與預覽
 
 - `npm run lint`：通過，包括章節、王國模組及 HTML inline scripts。
-- `npm test`：97 項通過（原有 82 項＋王國／編年史 7 項＋成長統計 8 項），四科與原始 16 週資料 hash 不變。
+- `npm test`：101 項通過（原有 82 項＋王國／編年史 7 項＋成長統計 8 項），四科與原始 16 週資料 hash 不變。
 - `npm run build`：通過。
-- `npm run test:browser`：99 項完整回歸通過（包含 15 項王國／編年史與 9 項成長統計／領主檔案／圖表掛載測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
+- `npm run test:browser`：102 項完整回歸通過（包含 15 項王國／編年史與 9 項成長統計／領主檔案／圖表掛載測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
 
 截圖使用本機示例資料：`docs/screenshots/becoming-kingdom-desktop.png`、`docs/screenshots/becoming-kingdom-mobile.png`。
 
@@ -310,3 +310,13 @@ gamification/v1/awards 的舊課程鍵為 path__id，值為 {xp:20, day:YYYY-MM-
 growthSnapshot 新增唯讀 firstCourses 計算，courseAwards 直接取舊 game.awards。依 flattenSubjects 的四科有效 ID 與 awardKey 建立去重映射，只接受 canonical path__id、xp:20、有效且不晚於今日的 day。以台灣週一至週日篩選；孤立、別名、Planner、時間目標、不合法或未來日期不納入。另顯示本週紀錄目前仍完成／未勾選的數量，以及目前完成但缺日期的單元數。首次歷史和現在完成狀態不同，不能宣稱等同全部本週實際讀完課程。
 
 運動、歷史 XP、王國／編年史與週計畫圖表的位置和資料來源保持原樣。沒有資料遷移、額外打卡、課程 ID／原始課表／XP 變更；正式 Firebase 未測試。新增測試涵蓋無 Planner 的科目完成、有日期／無日期、四科有效獎勵篩選、取消重勾、週日／週一、遠端重複快照和離線重連。
+
+### 科目首次完成日期（獨立紀錄）
+
+今後首次勾選完成會記錄 Asia/Taipei 當天日期；取消或重勾不改日期。載入時已完成的舊單元不自動回填，既有有效課程獎勵日期可供顯示。各科每個單元可手動設定／修改日期（不晚於今天），紅色「移除日期」位於右側、立即移除；不取消課程完成、不刪 XP。舊課程若缺日期，使用者可填入自己確認的真實日期。
+
+新增 `questOS/v1/courseFirstCompletion/{path__id}`，欄位為 `day`（YYYY-MM-DD 或移除時 null／缺省）與 `_version`（操作 ID）。移除保留有版本的空日期標記，避免舊 awards 或重新勾選讓日期復活。新紀錄優先於舊獎勵日期供成長統計使用；XP／原四科布林完成資料不變，不遷移或回填歷史。移除後仍可手動重新填入。
+
+本機保存於 `med_exam_course_dates_v1`，隔離預覽使用 `_local` 後綴；內容為 records 與 pending。每個有效課程 ID 各自 transaction，同 ID 跨裝置手動修改衝突保留待同步並提供「採用雲端日期／保留本機日期」；同時自動首次記錄保留已存在的遠端原日期。離線佇列可跨重新整理，online／Firebase 重連／重試同步後送出。無直接操作正式資料庫；沿用 owner 根層 Rules 的授權，如自訂子路徑 Rules 限制 questOS，需人工確認新路徑可供本人讀寫。
+
+測試包含四科記錄、日期驗證、移除／重新整理／重勾、手動覆蓋舊獎勵日期、XP 不變、離線重連、同 ID 衝突與自動首次寫入競爭，以及桌面／手機完整操作。截圖：docs/screenshots/course-dates-desktop.png、course-dates-mobile.png（本機示例資料）。前節「沒有新的日期紀錄」描述僅適用於先前版本，此功能新增獨立日期資料，不改舊獎勵發放。

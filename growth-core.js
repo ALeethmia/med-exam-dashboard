@@ -1,14 +1,14 @@
 import {validDate} from './daily-planner.js';
 import {weekKey,subjectStats,gameStats,flattenSubjects,awardKey} from './study-core.js';
 import {addDays} from './adaptive-core.js';
-export function growthSnapshot({data,states,tasks,awards={},courseAwards={},day,getHabits,training}) {
+export function growthSnapshot({data,states,tasks,awards={},courseAwards={},courseDates={},day,getHabits,training}) {
   const start=weekKey(day),end=addDays(start,6),unique=new Map(tasks.map(task=>[task.id,task]));
   const weekly=[...unique.values()].filter(t=>!t.deleted&&!t.planning?.waiting&&t.date>=start&&t.date<=end),completed=weekly.filter(t=>t.complete);
   const subjects=subjectStats(data,states),done=subjects.reduce((n,s)=>n+s.done,0),total=subjects.reduce((n,s)=>n+s.total,0);
   const units=new Map(flattenSubjects(data).map(unit=>[awardKey(unit),unit]));
   const dated=[],undatedCurrent=[];
-  for(const [key,unit] of units){const award=courseAwards[key],currentlyComplete=!!states[unit.path]?.[unit.id];
-    if(award?.xp===20&&validDate(award.day)&&award.day<=day)dated.push({key,day:award.day,currentlyComplete});
+  for(const [key,unit] of units){const award=courseAwards[key],record=courseDates[key],firstDay=Object.hasOwn(courseDates,key)?record?.day:award?.xp===20?award.day:null,currentlyComplete=!!states[unit.path]?.[unit.id];
+    if(validDate(firstDay)&&firstDay<=day)dated.push({key,day:firstDay,currentlyComplete});
     else if(currentlyComplete)undatedCurrent.push(key);
   }
   const firstThisWeek=dated.filter(record=>record.day>=start&&record.day<=end);

@@ -1,3 +1,4 @@
+import {createCourseDates} from './course-dates.js';
 import {createGrowthUI} from './growth-ui.js';
 import {createKingdomUI} from './kingdom-ui.js';
 import {createStudySettings,normalizeSettings,STUDY_SETTINGS_PATH} from './adaptive-store.js';
@@ -27,6 +28,11 @@ let gameFailed = false;
 const save = () => localStorage.setItem(GAME_KEY, JSON.stringify(game));
 const db = window.learningDB;
 const states = () => window.readStudyStates();
+const courseDates=createCourseDates({keys:new Set(validItems.keys()),db,localOnly:window.workspaceLocalOnly,onChange:()=>{window.SubjectUI?.refreshDates?.();window.updateWorkspace?.();}});
+window.courseDates={...courseDates,today:()=>dateKey(),day:key=>Object.hasOwn(courseDates.records(),key)?courseDates.records()[key]?.day||null:game.awards[key]?.day||null};
+const initiallyCompleted=new Set(allItems.filter(item=>states()[item.path]?.[item.id]).map(awardKey));
+window.addEventListener('study-completed',event=>{const {path,id,complete}=event.detail,key=path+'__'+id;if(complete&&validItems.has(key)&&!initiallyCompleted.has(key)&&!game.awards[key])courseDates.set(key,dateKey(),{firstOnly:true});});
+
 const timeTasks=createTimeTasks({db,localOnly:window.workspaceLocalOnly,day,onChange:()=>window.updateWorkspace?.()});
 let studySettings;
 function studyContext(){return {settings:studySettings?.config()||normalizeSettings(),events:window.readCalendarEvents()||{}};}
@@ -110,7 +116,7 @@ const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
 const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,courseAwards:()=>game.awards,events:()=>window.readCalendarEvents()||{}});
 const kingdomUI=createKingdomUI({data,states,planner,settings:studySettings,life,awards:readAwards});
-const growthUI=createGrowthUI({data,states,planner,life,awards:readAwards,courseAwards:()=>game.awards});
+const growthUI=createGrowthUI({data,states,planner,life,awards:readAwards,courseAwards:()=>game.awards,courseDates:()=>courseDates.records()});
 window.renderBiochemUnits?.();window.renderCalendar?.();
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));
 const appearance=document.getElementById('appearance');
@@ -125,7 +131,7 @@ document.getElementById('mobile-menu').addEventListener('click',()=>{
   const open=document.getElementById('workspace-nav').classList.toggle('mobile-open');
   document.getElementById('mobile-menu').setAttribute('aria-expanded',String(open));
 });
-document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
+document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void courseDates.retry();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
 
 function setMeter(id, percent) {
   const meter = document.getElementById(id);
@@ -161,6 +167,7 @@ function renderPlanningSummary() {
 }
 
 function render() {
+  window.SubjectUI?.refreshDates?.();
   const current=states();
   document.getElementById('today-label').textContent=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
   window.refreshBiochemScheduleDisplay();plannerUI.render();weekUI.refresh();lifeUI.render();adaptiveUI.render();kingdomUI.render();growthUI.render();
@@ -229,7 +236,7 @@ if (db && !window.workspaceLocalOnly) {
 function checkDay() { if(dateKey()!==day) location.reload(); }
 setInterval(checkDay,30000);
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) { checkDay(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry(); } });
-window.addEventListener('online',()=>{window.retryLearningSync(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
+window.addEventListener('online',()=>{window.retryLearningSync();void courseDates.retry(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
 render();
 void syncGame();
 void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();

@@ -46,6 +46,19 @@
       layout.append(index,container);page.replaceChildren(summary,tools,layout);
     }
   }
+  function dateControls(row) {
+    const service=window.courseDates;if(!service)return;
+    let tools=row.querySelector('.course-first-date');if(!tools){tools=node('div','course-first-date');tools.addEventListener('focusout',()=>setTimeout(()=>dateControls(row),0));row.append(tools);}
+    const focused=tools.querySelector('input')===document.activeElement;if(focused)return;
+    tools.replaceChildren();const key=row.dataset.studyKey,day=service.day(key),status=service.status(key);
+    const label=node('label','','首次完成');const input=node('input','');input.type='date';input.value=day||'';input.max=service.today();input.setAttribute('aria-label','首次完成日期');
+    const message=node('span','workspace-note');message.setAttribute('role','status');
+    input.addEventListener('change',()=>{try{service.set(key,input.value||null);input.blur();dateControls(row);}catch(e){message.textContent=e.message;input.value=day||'';}});label.append(input);tools.append(label);
+    const remove=node('button','course-date-remove','移除日期');remove.type='button';remove.disabled=!day;remove.addEventListener('click',()=>service.set(key,null));tools.append(remove);
+    message.textContent=status.conflict?'日期已在其他裝置變更，請選擇保留哪份紀錄。':status.error|| (status.pending?'日期待同步':'');tools.append(message);
+    if(status.conflict)for(const [text,keep] of [['採用雲端日期',false],['保留本機日期',true]]){const button=node('button','workspace-link',text);button.type='button';button.addEventListener('click',()=>service.resolve(key,keep));tools.append(button);}
+  }
+  function refreshDates(){document.querySelectorAll('[data-study-key]').forEach(dateControls);}
   function render({container,path,groups,state,query,onChange,onBatch,rowClass}) {
     const focused=document.activeElement;
     const focusId=container.contains(focused)?focused.dataset.focusId:null;
@@ -97,7 +110,7 @@
         if(path==='physiology')cb.id=item.id;
         cb.addEventListener('change',()=>onChange(item.id,cb.checked));
         const copy=node('span','course-row-copy');copy.append(node('strong','title-text',item.title),node('small','',item.meta));label.append(cb,copy);row.append(label);
-        body.append(row);
+        dateControls(row);body.append(row);
       }details.append(body);container.append(details);
     }
     if(!groups.length){const empty=node('p','course-empty','找不到符合條件的課程，請調整搜尋或篩選。');empty.setAttribute('role','status');container.append(empty);}
@@ -115,5 +128,5 @@
     index.querySelector('select').value=selected[path];group.open=true;
     requestAnimationFrame(()=>{row.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});row.querySelector('input').focus({preventScroll:true});});
   }
-  window.SubjectUI={prepare,render,locate};
+  window.SubjectUI={prepare,render,locate,refreshDates};
 })();
