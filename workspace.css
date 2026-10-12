@@ -413,3 +413,5 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 .adaptive-dialog .planner-form-grid select,.adaptive-dialog .planner-form-grid input { min-width:0; width:100%; }
 .adaptive-baseline-title { margin:24px 0 16px; font-size:18px; font-weight:600; }
 @media(max-width:640px) { .adaptive-toolbar label { width:100%; } .adaptive-panel .panel-heading { align-items:flex-start; } .adaptive-inline { align-items:flex-start; } .adaptive-inline span { flex:1; min-width:0; overflow-wrap:anywhere; } }
+
+.adaptive-dialog label.adaptive-inline { align-items:stretch; text-align:left; }

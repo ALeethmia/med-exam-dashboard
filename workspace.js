@@ -101,7 +101,7 @@ progression.innerHTML=`<section class="workspace-panel game-summary" aria-label=
 const plannerUI=createPlannerUI({data,planner,states});
 const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
-const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,events:()=>window.readCalendarEvents()||{}});
+const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,courseAwards:()=>game.awards,events:()=>window.readCalendarEvents()||{}});
 window.renderBiochemUnits?.();window.renderCalendar?.();
 const legacyHistory=document.createElement('details');legacyHistory.className='planner-history';legacyHistory.innerHTML='<summary>舊時間目標紀錄</summary><div id="legacy-time-history"></div>';progression.append(legacyHistory);
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));

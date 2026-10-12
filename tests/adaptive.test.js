@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {defaultStudySettings,fixedClasses,BIOCHEM_SLOTS,dailyCapacity,studyWeek,proposeSchedule,unionMinutes,taskPlanning,calendarConstraints,addDays} from '../adaptive-core.js';
+import {defaultStudySettings,fixedClasses,BIOCHEM_SLOTS,dailyCapacity,studyWeek,proposeSchedule,unionMinutes,taskPlanning,calendarConstraints,addDays,reviseSchedule,progressSummary} from '../adaptive-core.js';
 import {createStudySettings,STUDY_SETTINGS_PATH,STUDY_SETTINGS_KEY} from '../adaptive-store.js';
 import {createPlanner,PLANNER_PATH,PLANNER_KEY,planningSnapshotSame} from '../daily-planner.js';
 import {dateKey} from '../study-core.js';
@@ -31,17 +31,17 @@ test('fixed tasks and completed tasks remain untouched while biochemistry self r
  const tasks=[task('fixed',240,{planning:{version:1,fixedId:'biochem-class-1'},date:'2026-11-06'}),task('done',60,{complete:true}),task('review',60,{links:[{path:'biochem',id:'1'}]})];const result=suggest(tasks);assert.deepEqual(result.moves.map(m=>m.id),['review']);assert.equal(result.unplaced.length,2);assert.equal(result.fixed[0].date,'2026-11-06');assert.equal(tasks[0].date,'2026-11-06');assert.equal(tasks[1].complete,true);
 });
 test('core then normal then flexible priorities spread into available days and preserve original milestone metadata',()=>{
- const tasks=[task('flex',60,{planning:{version:1,priority:'flexible'}}),task('normal'),task('core',60,{planning:{version:1,priority:'core'}})];const result=suggest(tasks,{settings:cfg({weekMinutes:Array(7).fill(60),bufferPercent:0})});assert.deepEqual(result.moves.map(m=>[m.id,m.to]),[['core','2026-10-12'],['normal','2026-10-13'],['flex','2026-10-14']]);assert.equal(result.moves[1].patch.planning.originalDate,'2026-10-12');assert.ok(result.moves[1].patch.planning.originalWeek);assert.ok(result.feasible);
+ const tasks=[task('flex',60,{planning:{version:1,priority:'flexible'}}),task('normal'),task('core',60,{planning:{version:1,priority:'core'}})];const result=suggest(tasks,{settings:cfg({weekMinutes:Array(7).fill(60),bufferPercent:0})});assert.deepEqual(result.moves.map(m=>[m.id,m.to]),[['core','2026-10-12'],['normal','2026-10-13'],['flex','2026-10-14']]);assert.equal(result.moves[1].patch.planning.originalDate,'2026-10-12');assert.ok(result.moves[1].patch.planning.originalWeek);assert.equal(result.feasible,false);
 });
 test('unknown estimates and excess work remain explicit, are not zero-load, and unplaced tasks remain in actual day loads',()=>{
- const tasks=[task('unknown',null),task('huge',200)];const result=suggest(tasks,{settings:cfg({weekMinutes:Array(7).fill(60),bufferPercent:0}),end:'2026-10-12'});assert.equal(result.moves.length,0);assert.equal(result.unplaced.length,2);assert.equal(result.unplacedMinutes,200);assert.equal(result.unknownMinutes,1);assert.equal(result.loads[0].unknown,1);assert.equal(result.loads[0].assigned,200);assert.equal(result.loads[0].remaining,-140);assert.equal(result.feasible,false);
+ const tasks=[task('unknown',null),task('huge',200)];const result=suggest(tasks,{settings:cfg({weekMinutes:Array(7).fill(60),bufferPercent:0}),end:'2026-10-12'});assert.equal(result.moves.length,2);assert.equal(result.unplaced.length,0);assert.ok(result.moves.every(m=>m.to==='2026-10-12'));assert.ok(result.moves.every(m=>!Object.hasOwn(m.patch,'minutes')));assert.equal(result.loads[0].unknown,1);assert.equal(result.loads[0].assigned,200);assert.equal(result.loads[0].remaining,-140);assert.equal(result.feasible,false);
 });
 test('scheduler respects fixed and task time intervals but makes no full-hour claim for untimed work',()=>{
- const timed=task('timed',60,{date:'2026-11-05',planning:{version:1,start:'19:00',end:'20:00'}});const result=suggest([timed],{start:'2026-11-06',end:'2026-11-07',settings:cfg({weekMinutes:Array(7).fill(600),bufferPercent:0})});assert.equal(result.moves[0].to,'2026-11-07');assert.ok(result.timeCoverage.includes('無時段任務只檢查每日容量'));const conflict=dailyCapacity('2026-11-06',cfg(),fixedClasses(data),[{...timed,date:'2026-11-06'}]);assert.equal(conflict.timedConflicts.length,1);
+ const timed=task('timed',60,{date:'2026-11-05',planning:{version:1,start:'19:00',end:'20:00'}});const result=suggest([timed],{start:'2026-11-06',end:'2026-11-07',settings:cfg({weekMinutes:Array(7).fill(600),bufferPercent:0})});assert.equal(result.moves[0].to,'2026-11-07');assert.ok(result.timeCoverage.includes('時間需求未知'));const conflict=dailyCapacity('2026-11-06',cfg(),fixedClasses(data),[{...timed,date:'2026-11-06'}]);assert.equal(conflict.timedConflicts.length,1);
  const span=task('span',30,{planning:{version:1,start:'08:00',end:'10:00'}});assert.equal(dailyCapacity(span.date,cfg(),fixedClasses(data),[span]).assigned,120);
 });
 test('exam day and later never receive an automatic assignment; rest days and buffers are not relaxed',()=>{
- const s=cfg({examDate:'2026-10-14',weekMinutes:Array(7).fill(60),bufferPercent:20,dateMinutes:{'2026-10-12':0}});const result=suggest([task('core',60)],{settings:s,end:'2026-10-13'});assert.equal(result.moves.length,0);assert.equal(result.unplacedMinutes,60);assert.equal(result.fixed[0].date,'2026-11-06');assert.throws(()=>suggest([task('x')],{settings:s,end:'2026-10-14'}));assert.equal(s.dateMinutes['2026-10-12'],0);
+ const s=cfg({examDate:'2026-10-14',weekMinutes:Array(7).fill(60),bufferPercent:20,dateMinutes:{'2026-10-12':0}});const result=suggest([task('core',60)],{settings:s,end:'2026-10-13'});assert.equal(result.moves.length,1);assert.equal(result.moves[0].to,'2026-10-13');assert.equal(result.feasible,false);assert.equal(result.fixed[0].date,'2026-11-06');assert.throws(()=>suggest([task('x')],{settings:s,end:'2026-10-14'}));assert.equal(s.dateMinutes['2026-10-12'],0);
 });
 test('waiting metadata retains a valid date, visibility and course links without changing awards',()=>{
  const h=local(),id=h.planner.add({title:'生化複習',minutes:60,links:[{path:'biochem',id:'1'}]});h.planner.update(id,{complete:true});h.planner.update(id,{complete:false});const award=copy(h.planner.awards()),snapshot=h.planner.snapshot(),result=suggest(h.planner.all(),{mode:'waiting'});h.planner.batch({[id]:result.moves[0].patch},{expected:snapshot});assert.equal(h.planner.get(id).date,'2026-10-12');assert.equal(h.planner.list('2026-10-12').length,0);assert.equal(h.planner.all()[0].planning.waiting,true);assert.equal(h.planner.get(id).deleted,false);assert.deepEqual(h.planner.awards(),award);const back=suggest(h.planner.all(),{mode:'date',target:'2026-10-13'});h.planner.batch({[id]:back.moves[0].patch},{expected:h.planner.snapshot()});assert.equal(h.planner.list('2026-10-13').length,1);assert.deepEqual(h.planner.awards(),award);assert.deepEqual(h.planner.get(id).links,[{path:'biochem',id:'1'}]);
@@ -89,4 +89,35 @@ test('rejected new-task validation cannot leave an orphan task or change persist
 
 test('acknowledging this device own offline capacity settings does not falsely invalidate its task batch',async()=>{
  const server=planningBackend(),{db,connection}=server.client(),storage=memoryStorage();let count=0;const settings=createStudySettings({db,storage,events:mockEvents(),newId:()=> 's'+(++count)});const context=()=>({settings:settings.config(),events:{}});const p=createPlanner({db,storage,events:mockEvents(),newId:()=> 't'+(++count),today:()=> '2026-10-12',batchContext:context,readBatchContext:async()=>{await settings.retry();if(settings.status().pending)throw {code:'SETTINGS_PENDING'};return context();}});await settle(settings,p);const id=p.add({title:'x',minutes:60});await settle(p);connection.online=false;settings.set({bufferPercent:10});await settle(settings);p.batch({[id]:{date:'2026-10-13'}});await settle(p);connection.online=true;await settings.retry();await settle(settings);await p.retry();await settle(p);assert.equal(p.status().batch,null);assert.equal(server.get(PLANNER_PATH+'/'+id).date,'2026-10-13');assert.equal(settings.config().bufferPercent,10);
+});
+
+test('no-estimate tasks support date, spread and waiting without touching custom minutes or completion data',()=>{
+ const tasks=[task('a',null),task('b',null),task('c',173)];const before=copy(tasks);
+ const spread=suggest(tasks);assert.deepEqual(spread.moves.map(m=>m.to),['2026-10-12','2026-10-13','2026-10-14']);assert.equal(spread.feasible,false);
+ for(const mode of ['date','waiting']){const r=suggest(tasks,{mode,target:'2026-10-13'});assert.equal(r.moves.length,3);assert.ok(r.moves.every(m=>!Object.hasOwn(m.patch,'minutes')));}
+ assert.deepEqual(tasks,before);
+});
+test('optional count limits default to unlimited; rest and zero remaining budget are never assigned',()=>{
+ const tasks=[task('a',null),task('b',null)];assert.equal(suggest(tasks,{end:'2026-10-12'}).moves.length,2);
+ const limited=suggest(tasks,{end:'2026-10-12',settings:cfg({dailyTaskLimit:1})});assert.equal(limited.moves.length,1);assert.equal(limited.unplaced.length,1);
+ assert.equal(suggest(tasks,{end:'2026-10-12',settings:cfg({dateMinutes:{'2026-10-12':0}})}).moves.length,0);
+ const r=suggest(tasks,{start:'2026-11-06',end:'2026-11-07',settings:cfg({weekMinutes:Array(7).fill(240)})});assert.ok(r.moves.every(m=>m.to==='2026-11-07'));
+});
+test('preview date edits are pure, validate constraints and cannot bypass locks or task limits',()=>{
+ const tasks=[task('a',null),task('b',143)];const settings=cfg({dailyTaskLimit:1,dateMinutes:{'2026-10-14':0}}),r=suggest(tasks,{settings});
+ const args={data,settings,tasks,start:'2026-10-12',end:'2026-10-15',today:'2026-10-12'};
+ const moved=reviseSchedule(r,{...args,dates:{a:'2026-10-15'}});assert.equal(moved.moves[0].to,'2026-10-15');assert.equal(r.moves[0].to,'2026-10-12');assert.equal(tasks[1].minutes,143);
+ for(const day of ['','2026-10-14','2026-10-13','2027-01-16','2026-10-11'])assert.throws(()=>reviseSchedule(r,{...args,dates:{a:day}}));
+ assert.throws(()=>reviseSchedule(r,{...args,tasks:[{...tasks[0],complete:true},tasks[1]]}));
+});
+test('progress uses independent actual course states and dated first task completions, never assigned dates',()=>{
+ const unit=data.physio[0].sections[0],states={physiology:{[unit.id]:true}},tasks=[task('done',null,{date:'2026-12-01',complete:true,award:{day:'2026-10-12',xp:20}}),task('pending',null,{award:{day:'2026-10-12',xp:20}})];
+ const r=progressSummary(data,states,tasks,{['physiology__'+unit.id]:{day:'2026-10-12',xp:20}},'2026-10-12');assert.equal(r.weekCourses,1);assert.equal(r.weekTasks,1);assert.equal(r.recentTasks,1);assert.equal(r.subjects[0].done,1);
+ const undated=progressSummary(data,states,tasks,{},'2026-10-12');assert.equal(undated.weekCourses,0);assert.equal(undated.undatedCourses,1);
+});
+
+test('no-estimate batches reconnect across devices, preserve custom minutes and stop on remote completion',async()=>{
+ const server=planningBackend(),[a,b]=clients(server);await settle(a.planner,b.planner);const x=a.planner.add({title:'no estimate'}),y=a.planner.add({title:'custom',minutes:173});await settle(a.planner,b.planner);
+ a.connection.online=false;const r=suggest(a.planner.all());a.planner.batch(Object.fromEntries(r.moves.map(m=>[m.id,m.patch])),{expected:a.planner.snapshot()});await settle(a.planner);a.connection.online=true;await a.planner.retry();await settle(a.planner,b.planner);assert.equal(b.planner.get(x).date,'2026-10-12');assert.equal(b.planner.get(x).minutes,null);assert.equal(b.planner.get(y).date,'2026-10-13');assert.equal(b.planner.get(y).minutes,173);assert.deepEqual(a.planner.awards(),{});
+ b.connection.online=false;const next=suggest(b.planner.all(),{mode:'date',target:'2026-10-15'});b.planner.batch(Object.fromEntries(next.moves.map(m=>[m.id,m.patch])),{expected:b.planner.snapshot()});await settle(b.planner);a.planner.update(x,{complete:true});await settle(a.planner);b.connection.online=true;await b.planner.retry();await settle(a.planner,b.planner);assert.ok(b.planner.status().batch.conflict);assert.equal(server.get(PLANNER_PATH+'/'+y).date,'2026-10-13');assert.equal(server.get(PLANNER_PATH+'/'+y).minutes,173);assert.equal(Object.keys(a.planner.awards()).length,1);
 });

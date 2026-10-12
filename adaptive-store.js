@@ -5,6 +5,7 @@ export const STUDY_SETTINGS_KEY='med_exam_adaptive_study_v1';
 export function normalizeSettings(value={}) {return {...defaultStudySettings(),...value,dateMinutes:value?.dateMinutes||{},fixedOverrides:value?.fixedOverrides||{}};}
 export function validateSettings(value) {
   const c=normalizeSettings(value);
+  if(c.dailyTaskLimit!=null&&(!Number.isInteger(c.dailyTaskLimit)||c.dailyTaskLimit<1||c.dailyTaskLimit>100))throw new Error('每日任務上限需為 1–100 或留空。');
   if(!validDate(c.examDate))throw new Error('考試日期無效。');
   if(!Array.isArray(c.weekMinutes)||c.weekMinutes.length!==7||c.weekMinutes.some(n=>!Number.isInteger(n)||n<0||n>1440))throw new Error('每日總學習容量需為 0–1440 分鐘。');
   if(!Number.isInteger(c.bufferPercent)||c.bufferPercent<0||c.bufferPercent>80)throw new Error('緩衝比例需為 0–80%。');
