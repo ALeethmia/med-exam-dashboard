@@ -2,6 +2,8 @@ import {createPlanner} from './daily-planner.js';
 import {createPlannerUI} from './planner-ui.js';
 import {createWeekPlanUI} from './week-plan-ui.js';
 import {createTimeTasks} from './time-tasks.js';
+import {createLifeStore} from './life-store.js';
+import {createLifeUI} from './life-ui.js';
 import {GAME_KEY, GAME_PATH, dateKey, awardKey, flattenSubjects, subjectStats, gameStats} from './study-core.js';
 
 const data = window.studyData;
@@ -24,6 +26,14 @@ const db = window.learningDB;
 const states = () => window.readStudyStates();
 const timeTasks=createTimeTasks({db,localOnly:window.workspaceLocalOnly,day,onChange:()=>window.updateWorkspace?.()});
 const planner=createPlanner({db,localOnly:window.workspaceLocalOnly,onChange:()=>window.updateWorkspace?.()});
+const life=createLifeStore({db,localOnly:window.workspaceLocalOnly,onChange:()=>window.updateWorkspace?.(),onHabits:(date,habits)=>window.applyLifeHabits?.(date,habits),mergeLegacy:(date,value)=>window.mergeLearningSnapshot('habits/'+date,value)});
+window.lifeHabits={set:life.setHabit};
+window.readLifeHabits=life.habits;
+window.readLifeExercise=life.exercise;
+window.eligibleLifeHabits=(date,habits)=>{
+  const exercise=life.exercise(date),leisure=habits.questOS_v1?.leisure;
+  return ['daily-exam',...(!['symptom_rest','not_scheduled'].includes(exercise.status)?['daily-sport']:[]),...(leisure?.status==='not_scheduled'?[]:['daily-game'])];
+};
 const home = document.getElementById('tab-content-home');
 const content = document.createElement('div');
 content.innerHTML = `
@@ -66,6 +76,7 @@ progression.innerHTML=`<section class="workspace-panel game-summary" aria-label=
   <div style="grid-column:1/-1"><h3>學習里程碑</h3><div class="achievement-list" id="achievements"></div></div>
 </section><p class="workspace-note">XP 記錄學習行動，不代表醫學知識熟練度。休息不會扣除已累積的成長。</p>`;
 const plannerUI=createPlannerUI({data,planner,states});
+const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
 const legacyHistory=document.createElement('details');legacyHistory.className='planner-history';legacyHistory.innerHTML='<summary>舊時間目標紀錄</summary><div id="legacy-time-history"></div>';progression.append(legacyHistory);
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));
@@ -81,7 +92,7 @@ document.getElementById('mobile-menu').addEventListener('click',()=>{
   const open=document.getElementById('workspace-nav').classList.toggle('mobile-open');
   document.getElementById('mobile-menu').setAttribute('aria-expanded',String(open));
 });
-document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void syncGame();void timeTasks.retry();void planner.retry();});
+document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();});
 
 function setMeter(id, percent) {
   const meter = document.getElementById(id);
@@ -117,7 +128,7 @@ function renderPlanningSummary() {
 function render() {
   const current=states();
   document.getElementById('today-label').textContent=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
-  plannerUI.render();weekUI.refresh();
+  plannerUI.render();weekUI.refresh();lifeUI.render();
   const legacy=document.getElementById('legacy-time-history');legacy.replaceChildren();
   const historical=timeTasks.history();
   for(const date of Object.keys(historical).filter(date=>Object.keys(historical[date]).length).sort().reverse()){const row=document.createElement('p');row.className='workspace-note';row.textContent=date+' · '+Object.entries(historical[date]).map(([id,task])=>({morning:'上午',afternoon:'下午',review:'複習'}[id]||id)+': '+(task.complete?'完成':'未完成')+(task.awarded?'（已領 XP）':'')).join(' · ');legacy.append(row);}
@@ -191,8 +202,8 @@ if (db && !window.workspaceLocalOnly) {
 // Refresh across midnight so legacy habits and the focus timer bind to the new date.
 function checkDay() { if(dateKey()!==day) location.reload(); }
 setInterval(checkDay,30000);
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) { checkDay(); void syncGame();void timeTasks.retry();void planner.retry(); } });
-window.addEventListener('online',()=>{window.retryLearningSync(); void syncGame();void timeTasks.retry();void planner.retry();});
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) { checkDay(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry(); } });
+window.addEventListener('online',()=>{window.retryLearningSync(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();});
 render();
 void syncGame();
-void timeTasks.retry();void planner.retry();
+void timeTasks.retry();void planner.retry();void life.retry();

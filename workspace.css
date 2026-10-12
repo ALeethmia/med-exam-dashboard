@@ -318,3 +318,61 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 .week-plan-heading::before { content:'›'; color:var(--muted); font-size:18px; line-height:1.2; }
 .week-plan-item[open] > .week-plan-heading::before { transform:rotate(90deg); }
 .week-plan-heading > span:first-of-type { flex:1; }
+
+/* Phase 1: compact life summary and a calm, actionable training workspace. */
+.life-overview { margin-bottom:24px; padding:16px 0; border-block:1px solid var(--line); }
+.life-overview h2 { font-size:14px; font-weight:600; }
+.life-overview .panel-heading { margin-bottom:16px; }
+.life-goals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+.life-goals > div { min-width:0; }
+.life-goals strong { font-size:13px; }
+.life-goals p { font-size:14px; margin:8px 0 4px; overflow-wrap:anywhere; }
+.life-goals small { display:block; color:var(--muted); font-size:12px; }
+.life-goals .workspace-link { display:inline-flex; align-items:center; min-height:40px; margin-top:4px; font-size:13px; }
+.life-check { display:flex!important; flex-direction:row!important; align-items:center; gap:8px!important; color:var(--ink)!important; font-size:13px; min-height:40px; }
+.life-check input { flex-shrink:0; }
+#life-sync:empty { display:none; }
+#life-conflicts pre { max-width:100%; white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px; }
+#tab-content-exercise { max-width:1040px; margin-inline:auto; }
+.training-stage { display:flex; align-items:baseline; gap:16px; justify-content:space-between; flex-wrap:wrap; }
+.training-stage strong { font-size:20px; font-weight:600; }
+.training-stage > span { color:var(--muted); font-size:13px; }
+.training-safety { margin-top:16px; font-size:13px; color:var(--muted); }
+.training-safety summary { cursor:pointer; min-height:32px; color:var(--ink); }
+.training-safety p { line-height:1.7; margin-top:8px; }
+.training-week { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; }
+.training-day { padding:16px 8px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--ink); text-align:left; min-width:0; }
+.training-day[aria-pressed=true] { background:var(--tint); border-color:var(--accent); }
+.training-day strong,.training-day time,.training-day span,.training-day small { display:block; font-size:12px; overflow-wrap:anywhere; }
+.training-day strong { font-size:13px; margin-bottom:8px; }
+.training-day time,.training-day small { color:var(--muted); }
+.training-day span { margin:8px 0; }
+#training-date { width:auto; max-width:100%; min-width:0; }
+.training-toolbar,.training-controls { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
+.training-controls .life-check { flex-basis:100%; }
+.training-controls .workspace-note { flex-basis:100%; }
+.training-action { padding:16px 0; border-bottom:1px solid var(--line); }
+.training-action > label { display:flex; align-items:flex-start; gap:12px; cursor:pointer; }
+.training-action input { margin-top:4px; }
+.training-action strong { display:block; font-size:15px; font-weight:550; }
+.training-action small { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
+.training-action p { margin:8px 0 0 30px; font-size:14px; line-height:1.7; }
+.training-action p.workspace-note { font-size:13px; }
+.training-action .training-dose { color:var(--accent); font-size:13px; font-weight:550; }
+.training-empty { color:var(--muted); padding:24px 0; line-height:1.7; }
+.training-settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 16px; margin-top:16px; }
+.workspace-button:disabled { opacity:.5; cursor:default; }
+#leisure-error,#settings-error,#exercise-schedule-error,#study-time-error { color:var(--error); }
+#legacy-streak-display { display:none!important; }
+@media(max-width:1000px) { .training-week { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media(max-width:640px) {
+ .life-goals { gap:16px; }
+ .life-overview .panel-heading > span { display:none; }
+ .life-goals .workspace-link { min-height:44px; }
+ .training-week { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .training-day { min-height:112px; }
+ #tab-content-exercise .panel-heading { flex-wrap:wrap; }
+ .training-controls .workspace-button { flex:1 1 140px; }
+ .training-settings-grid { grid-template-columns:1fr; }
+}
+.life-goals .life-check { display:inline-flex!important; vertical-align:middle; margin-left:8px; }

@@ -1280,46 +1280,6 @@
     }
 
     // ==========================================
-    // 🏃 運動菜單當前階段自動比對標示
-    // ==========================================
-    function updateCurrentSportPhase() {
-      const now = new Date();
-      const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
-      
-      const cards = document.querySelectorAll('.sport-phase-card');
-      let matched = false;
-
-      cards.forEach(card => {
-        const start = card.getAttribute('data-start');
-        const end = card.getAttribute('data-end');
-        const tag = card.querySelector('.phase-tag');
-
-        if (todayStr >= start && todayStr <= end) {
-          card.classList.add('current-sport-phase');
-          if (tag) {
-            tag.innerHTML = `<span class="text-emerald-300 font-bold flex items-center gap-0.5"><span class="current-pointer-arrow">▶</span> 執行中</span>`;
-            tag.className = 'phase-tag text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full font-semibold';
-          }
-          matched = true;
-        } else {
-          card.classList.remove('current-sport-phase');
-        }
-      });
-
-      if (!matched && todayStr < '2026-10-01') {
-        const phase1 = document.getElementById('sport-phase-1');
-        if (phase1) {
-          phase1.classList.add('current-sport-phase');
-          const tag = phase1.querySelector('.phase-tag');
-          if (tag) {
-            tag.innerHTML = `<span class="text-sky-300 font-bold">即將啟動 (10/1)</span>`;
-            tag.className = 'phase-tag text-[10px] px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/40 rounded-full font-semibold';
-          }
-        }
-      }
-    }
-
-    // ==========================================
     // 🔧 Firebase 雲端即時同步設定
     // ==========================================
     const firebaseConfig = window.examFirebaseConfig;
@@ -1347,7 +1307,6 @@
     setInterval(updateClock, 1000);
     updateClock();
     initAutoScheduleByDay();
-    updateCurrentSportPhase();
 
     // 2. 每日三大自律習慣
     const now = new Date();
@@ -1380,9 +1339,14 @@
       const el = document.getElementById(id);
       el.checked = !!todayHabits[id];
       el.addEventListener('change', () => {
+        if (window.lifeHabits && ['daily-sport','daily-game'].includes(id)) {
+          window.lifeHabits.set(id, el.checked);
+          return;
+        }
         todayHabits[id] = el.checked;
         localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
         persistProgress(`habits/${todayStr}`, todayHabits, [id]);
+        window.dispatchEvent(new CustomEvent('legacy-habit-change', {detail:{day:todayStr,id,value:el.checked}}));
         calculateStreak();
         if (typeof window.updateProgressTrendChart === 'function') {
           window.updateWorkspace?.();
@@ -1391,10 +1355,20 @@
       });
     });
 
+    // Phase 1 bridge: both interfaces share one activity state; do not requeue writes.
+    window.applyLifeHabits = (day, value) => {
+      if (day !== todayStr) return;
+      todayHabits = {...value};
+      if (!window.workspaceLocalOnly) localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
+      habits.forEach(id => { document.getElementById(id).checked = !!todayHabits[id]; });
+      calculateStreak();
+      window.updateProgressTrendChart?.();
+    };
     if (db) {
       db.ref(`habits/${todayStr}`).on('value', snap => {
         const val = snap.val();
         {
+          if (window.lifeHabits) return;
           todayHabits = mergeLearningSnapshot(`habits/${todayStr}`, val);
           localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
           habits.forEach(id => {
@@ -3184,6 +3158,7 @@
 
       let elapsedDays = 0;
       let habitDoneCount = 0;
+      let eligibleCount = 0;
 
       while (cur <= endDate) {
         if (cur <= today) {
@@ -3192,18 +3167,18 @@
           const m = String(cur.getMonth() + 1).padStart(2, '0');
           const d = String(cur.getDate()).padStart(2, '0');
           const dayKey = `${y}-${m}-${d}`;
-          const dayHabits = (dayKey === todayStr && typeof todayHabits !== 'undefined')
+          const dayHabits = window.readLifeHabits ? window.readLifeHabits(dayKey) : (dayKey === todayStr && typeof todayHabits !== 'undefined')
             ? todayHabits
             : JSON.parse(localStorage.getItem(`med_exam_habits_${dayKey}`) || '{}');
-          if (dayHabits['daily-sport']) habitDoneCount++;
-          if (dayHabits['daily-exam']) habitDoneCount++;
-          if (dayHabits['daily-game']) habitDoneCount++;
+          const eligible = window.eligibleLifeHabits ? window.eligibleLifeHabits(dayKey, dayHabits) : habits;
+          eligibleCount += eligible.length;
+          habitDoneCount += eligible.filter(id => dayHabits[id]).length;
         }
         cur.setDate(cur.getDate() + 1);
       }
 
       if (elapsedDays === 0) return 0;
-      return Math.round((habitDoneCount / (elapsedDays * 3)) * 100);
+      return eligibleCount ? Math.round((habitDoneCount / eligibleCount) * 100) : 0;
     }
 
     function calculateTrendData() {
@@ -3424,8 +3399,9 @@
       }
 
       // Calculate today's real habit percentage
-      const todayHabitsCount = habits.filter(h => typeof todayHabits !== 'undefined' && !!todayHabits[h]).length;
-      const todayHabitPercent = Math.round((todayHabitsCount / habits.length) * 100);
+      const eligibleHabits = window.eligibleLifeHabits ? window.eligibleLifeHabits(todayStr, todayHabits) : habits;
+      const todayHabitsCount = eligibleHabits.filter(h => !!todayHabits[h]).length;
+      const todayHabitPercent = eligibleHabits.length ? Math.round((todayHabitsCount / eligibleHabits.length) * 100) : 0;
       const displayHabitVal = todayHabitsCount > 0 ? todayHabitPercent : currentItem.habit;
 
       if (elHabitVal) elHabitVal.innerText = displayHabitVal.toFixed(1) + '%';

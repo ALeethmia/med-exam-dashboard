@@ -90,3 +90,47 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 你已發布的根層 `.read`／`.write` 限定擁有者 UID 時，授權會涵蓋新的 v3 子路徑，預期不需增加 Rules。未在 Console 發布任何規則；若實際另有 `.validate` 或其他設定，需在預覽部署由擁有者確認。前端 UID 檢查仍不能取代 Rules。
 
 所有自動化新任務測試使用隔離的本機或 Firebase 替身，驗證兩裝置欄位合併、同欄位衝突、離線重送、XP 去重、刪除保留獎勵、傳送途中再編輯及操作介面。真實新任務 OAuth／跨裝置／網路斷線測試留待已授權的預覽網域由擁有者驗證，沒有使用正式資料庫做測試。
+
+## Quest OS Phase 1：生活目標與體能重建
+
+本次以 main `a70f7ce` 為基準增量開發，沒有改動 Google 登入、OWNER_UID、Firebase 設定、課程 ID、Planner v3 或 XP 規則。沒有資源經濟、城堡、軍隊或額外 RPG 頁面。
+
+### 使用方式
+
+- 首頁「今日目標」讀書摘要直接統計 **今天（Asia/Taipei）** 的 Planner v3 任務，即使規劃器正在查看其他日期，摘要仍顯示今天。時間目標可選填，任務與課程完成分開記錄。
+- 「安排休閒」可設定名稱、選填分鐘及完成狀態，清空名稱可取消安排。休閒不發 XP，也不因延長時間發放任何獎勵。
+- 行事曆 → 運動計畫 → 訓練設定，可開始兩週適應期並調整每週七天安排。點選日期看完整菜單，逐項勾選後按「完成今日訓練」；動作勾選本身還不代表整體訓練已完成。
+- 「修改日期／類型」設定單日覆寫；移到別日會保留原日已開始或已完成的紀錄，原日尚未開始則改為未安排。已儲存的日期不會被後續週模板或升階修改。日期欄位與週安排可查看歷史及未來日期。
+- 八週是四階段、每階段至少兩週的參考架構，**不依日期自動升階**。滿十四天後，仍須勾選耐受良好、症狀沒有明顯加重並主動確認。可維持、降低一階、暫停；暫停會保留既有菜單與紀錄，不能完成新訓練。站姿支撐動作需另行確認適合，只在階段 3–4 提供。
+- 初期坐姿菜單為踝關節活動 10 下、膝伸直每側 8 下、肩胛後收 8 下、手肘彎曲 10 下，均一組。正常步行依階段建議 5／8／10／15 分鐘，可分段；替代訓練使用一組減量坐姿動作（5／每側 4／4／5 下）。不強制跑步、跳躍、HIIT 或閉眼平衡。
+- 「症狀休息」、恢復日、未安排均不列為運動未達標，不扣 XP，不需要補做。既有習慣統計的運動分母排除這些狀態，舊的連續自律數字收起；學習完成率與 XP 算法不變。持續晃動或重心不穩時應先暫停步行並接受醫療評估。
+
+### Phase 1 資料來源與欄位
+
+| 類別 | 資料來源 | 欄位／狀態 |
+| --- | --- | --- |
+| 讀書任務 | `gamification/v3/planner/tasks/{taskId}` | 沿用 v3，不搬移、不改寫原任務或課程完成值 |
+| 今日時間目標 | `habits/YYYY-MM-DD/questOS_v1/studyMinutes` | 選填分鐘，1–1440；null 表示不設定 |
+| 訓練設定 | `questOS/v1/training` | `category: exercise`、`stage`（1–4）、`startedOn`、`stageSince`、`paused`、`supportedStanding`、`week`（週一至週日 type）、`_version` |
+| 每日運動 | `habits/YYYY-MM-DD/questOS_v1/exercise` | `category: exercise`、`type`（walk／seated／rest／none）、`stage`、`minutes`、`supportedStanding`、`mode`（alternative 或未設定）、`actions`（動作 ID → boolean）、`status` |
+| 每日休閒 | `habits/YYYY-MM-DD/questOS_v1/leisure` | `category: leisure`、`title`、選填 `minutes`、`status`（pending／complete／not_scheduled） |
+| 日記錄版本 | `habits/YYYY-MM-DD/questOS_v1/_versions/{exercise\|leisure\|studyMinutes}` | 各活動操作 ID，供離線／跨裝置衝突檢查 |
+
+運動 `status` 包含 `pending`、`complete`、`alternative`、`symptom_rest`、`not_scheduled`。恢復日以 type `rest` 區分；介面呈現「恢復日 · 無須打卡」。正常完成與替代完成可計入每週完成次數，症狀休息排除運動目標分母。時間是規劃參考，不是實測讀書或運動時數。
+
+類別 `study`／`exercise`／`leisure` 預留未來映射研究點、訓練點、士氣點的可能性，**現在不發資源或改變 XP**。`life-core.js` 負責菜單與純狀態計算，`life-store.js` 負責同步，`life-ui.js` 使用現有 Design Tokens 呈現。
+
+### 舊資料與同步相容性
+
+- 不做批次遷移、不在首次載入回填、不刪除舊運動／休息資料。尚無 Phase 1 詳細紀錄時，原 `daily-sport: true` 顯示舊運動打卡完成，`daily-game: true` 顯示舊休息完成；不虛構任何已完成動作。
+- 新介面與作息頁舊運動／休息勾選都使用同一模型。每次運動或休閒修改，**只 transaction 一天的 `habits/YYYY-MM-DD`**，合併該活動欄位與其舊 boolean 投影。`daily-sport` 僅在 complete／alternative 為 true；`daily-game` 僅在休閒 complete 為 true。未修改的 `daily-exam`、其他欄位、其他日期及歷史結果原樣保留。
+- 舊運動勾選仍是自我回報，未勾選的詳細動作不會自動填為完成。詳細菜單的完成按鈕要求逐項勾選。這兩種入口共用同一個整體訓練狀態，不各存一份結果。
+- 本機保存於 `med_exam_life_v1`，內容為 `days`、`training`、`pending`；隔離本機模式使用 `med_exam_life_v1_local`。舊 `med_exam_habits_日期` 鍵仍保留，雲端模式的今日副本投影為同一狀態，供既有統計／打卡讀取。本機模式僅更新記憶體中的舊打卡呈現與獨立 life 副本，不把新生活操作寫回舊習慣 localStorage。不修改舊課程、Planner、遊戲化或時間目標 localStorage 鍵。
+- 離線操作持久保存意圖，重連、回到頁面、online 事件或「重試同步」重送。一天的讀書時間、運動、休閒分別做版本檢查，不同活動可合併；同一活動或訓練設定在另一裝置變動時，保留本機與雲端內容並在總覽提供明確選擇。訓練內容／完成結果是一個一致的活動單位，避免用新菜單混配舊動作或完成狀態。
+- 根層本人 UID Rules 預期涵蓋新增設定路徑與 habits 子欄位；沒有在 Console 發布規則或操作正式 DB。若有額外 `.validate` 限制，需由擁有者在預覽確認。
+
+### 測試與待人工驗證
+
+自動化全部使用本機／隔離 Firebase Mock，涵蓋生命週期、原科目與週計畫資料雜湊、Planner 來源、菜單劑量、動作保存、正常／替代完成、症狀休息、階段門檻、舊資料相容、台灣跨午夜、離線重新整理後重送、兩裝置衝突處理、XP 不變、三種主題及手機操作。執行 `npm run lint`、`npm test`、`npm run build`、`npm run test:browser`。
+
+真實 OAuth 與同步需擁有者在已授權的 Vercel Preview 網域人工確認；本機預覽 `?mode=local` 不連 Firebase。建議依序驗證：兩裝置看到相同訓練設定；A 修改動作、B 收到相同結果；替代完成與作息頁勾選一致；症狀休息後兩邊都取消運動勾選；離線修改後重新連線；兩裝置同日不同活動可合併、同活動衝突先提示再選擇。測試時只建立明確的測試日期紀錄，避免改動真實歷史；不需要重置任何資料。
