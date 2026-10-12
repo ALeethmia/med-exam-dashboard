@@ -1110,7 +1110,7 @@
       main.className = 'workspace-main';
       const shell = document.createElement('div'); shell.className = 'workspace-shell';
       const sidebar = document.createElement('aside'); sidebar.className = 'workspace-sidebar';
-      sidebar.innerHTML = '<div class="workspace-brand"><span>◈ Becoming</span><small>每一步成長，都是人生的新篇章。</small></div><nav aria-label="主要導覽" id="workspace-nav"></nav><div class="sidebar-foot"><span id="sidebar-level">學習者 · Lv. 1</span><small>一步一步，累積自己的進度。</small></div>';
+      sidebar.innerHTML = '<div class="workspace-brand"><span>◈ Becoming</span><small>每一步成長，都是人生的新篇章。</small></div><nav aria-label="主要導覽" id="workspace-nav"></nav><div class="sidebar-foot"><span>學者的試煉</span><small>一步一步，累積自己的進度。</small></div>';
       main.before(shell); shell.append(sidebar, main);
       sidebar.querySelector('nav').append(document.getElementById('main-tabs-header-container'));
       const oldNav = main.querySelector('.overflow-x-auto.pb-1'); if (oldNav) oldNav.remove();
@@ -1163,7 +1163,6 @@
       {id:'plan', title:'週計畫', icon:'calendar-check'},
       {id:'calendar', title:'行事曆', icon:'calendar-days'},
       {id:'stats', title:'統計', icon:'chart-no-axes-combined'},
-      {id:'progression', title:'角色與成就', icon:'sparkles'},
       {id:'kingdom', title:'我的王國', icon:'castle'},
       {id:'physiology', title:'生理學', group:'subjects'},
       {id:'anatomy', title:'解剖學', group:'subjects'},
@@ -1174,6 +1173,8 @@
       {id:'focus', title:'專注計時', group:'calendar'}
     ];
     let currentActiveTab = localStorage.getItem('med_exam_active_tab') || 'home';
+    const chroniclesBookmark=()=>['#progression','#tab-content-progression','#kingdom-chronicles'].includes(location.hash)||new URLSearchParams(location.search).get('tab')==='progression';
+    if(currentActiveTab==='progression'||chroniclesBookmark()){currentActiveTab='kingdom';window.openChroniclesRequested=true;}
     if (!defaultTabs.some(t=>t.id===currentActiveTab)) currentActiveTab='home';
     function renderMainTabsNav() {
       const main=document.getElementById('main-tabs-header-container'); main.replaceChildren();
@@ -1190,6 +1191,7 @@
       window.lucide?.createIcons();
     }
     window.switchTab = function(tabName) {
+      if(tabName==='progression'){tabName='kingdom';window.openChroniclesRequested=true;}
       if(tabName==='subjects') {
         const saved=localStorage.getItem('med_exam_active_subject');
         tabName=['physiology','anatomy','biochem','pharmacology'].includes(saved)?saved:'physiology';
@@ -1206,15 +1208,17 @@
         const selected=button.id==='tab-btn-'+tabName || (button.id==='calendar-overview' && tabName==='calendar'); button.classList.toggle('active',selected); button.setAttribute('aria-current',selected?'page':'false');
       }
       document.getElementById('subject-tabs').classList.toggle('hidden',group!=='subjects'); document.getElementById('calendar-tabs').classList.toggle('hidden',group!=='calendar');
-      const titles={home:['今天的任務，從這裡開始。','用自己的節奏，為國考累積每一步。'],plan:['週計畫','掌握當週目標，循序完成 16 週讀書計畫。'],calendar:['行事曆','讓課程、重要日程與休息各有位置。'],stats:['學習統計','從真實進度，看見下一步的方向。'],progression:['角色與成就','每一次學習，都值得被記錄。'],kingdom:['我的王國','Aetheria · 現實的成長，點亮另一個世界。'],physiology:['First Choice 生理學','7 大篇章 · 39 小節'],anatomy:['趙俊彥解剖學','15 節課 · 30 講'],biochem:['鐸鐸生化學','8 堂課 · 循序完成與複習'],pharmacology:['子翔藥理學','19 單元 · 38 講'],schedule:['作息與習慣','留出學習、生活與休息的時間。'],exercise:['運動計畫','照顧身體，也照顧讀書的節奏。'],focus:['專注計時','一次只專注眼前這件事。']};
+      const titles={home:['今天的任務，從這裡開始。','用自己的節奏，為國考累積每一步。'],plan:['週計畫','掌握當週目標，循序完成 16 週讀書計畫。'],calendar:['行事曆','讓課程、重要日程與休息各有位置。'],stats:['學習統計','從真實進度，看見下一步的方向。'],kingdom:['我的王國','Aetheria · 現實的成長，點亮另一個世界。'],physiology:['First Choice 生理學','7 大篇章 · 39 小節'],anatomy:['趙俊彥解剖學','15 節課 · 30 講'],biochem:['鐸鐸生化學','8 堂課 · 循序完成與複習'],pharmacology:['子翔藥理學','19 單元 · 38 講'],schedule:['作息與習慣','留出學習、生活與休息的時間。'],exercise:['運動計畫','照顧身體，也照顧讀書的節奏。'],focus:['專注計時','一次只專注眼前這件事。']};
       const [title,description]=titles[tabName] || titles.home; document.getElementById('page-title').textContent=title; document.getElementById('page-description').textContent=description; document.getElementById('workspace-crumb').textContent=meta.group ? defaultTabs.find(t=>t.id===meta.group).title+' / '+meta.title : meta.title;
       document.getElementById('workspace-nav').classList.remove('mobile-open'); document.getElementById('mobile-menu').setAttribute('aria-expanded','false');
       window.dispatchEvent(new CustomEvent('workspace-page-change',{detail:{tab:tabName,group}}));
+      if(tabName==='kingdom'&&window.openChroniclesRequested)window.openKingdomChronicles?.();
       if(tabName==='stats' && typeof window.updateProgressTrendChart==='function') setTimeout(()=>{window.dispatchEvent(new Event('resize'));window.updateProgressTrendChart();},50);
     };
 
     renderMainTabsNav();
     switchTab(currentActiveTab);
+    window.addEventListener('hashchange',()=>{if(chroniclesBookmark())switchTab('progression');});
 
     // ==========================================
     // 📅 作息表子分頁切換

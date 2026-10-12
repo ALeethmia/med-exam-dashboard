@@ -33,3 +33,7 @@ test('reading the kingdom with actual Planner and legacy habits never mutates ta
 test('kingdom modules cannot initialize Firebase, storage, XP awards or resource transactions',()=>{
  for(const file of ['chapters.js','kingdom-core.js','kingdom-ui.js']){const source=readFileSync(new URL('../'+file,import.meta.url),'utf8');assert.ok(!/localStorage|sessionStorage|firebase|\.transaction\(|\.setItem\(|planner\.update\(|planner\.add\(/.test(source),file);}
 });
+
+test('chronicles use original immutable XP and achievement calculations, never kingdom currencies',async()=>{
+ const {gameStats}=await import('../study-core.js');const awards=Object.fromEntries(Array.from({length:10},(_,i)=>['historic-'+i,{xp:20,day:'2026-10-12'}]));const before=JSON.stringify(awards),current=gameStats(awards,'2026-10-12');assert.equal(current.xp,200);assert.equal(current.weekly,10);assert.equal(current.achievements.filter(a=>a.unlocked).length,3);assert.deepEqual(current.achievements.map(a=>a.title),['開始前進','今日專注','持續累積']);const later=gameStats(awards,'2026-10-19');assert.equal(later.xp,200);assert.equal(later.weekly,0);assert.ok(later.achievements.every(a=>a.unlocked));assert.equal(JSON.stringify(awards),before);assert.equal(later.resources,undefined);
+});

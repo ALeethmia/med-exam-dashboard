@@ -2,6 +2,7 @@ import {test,expect} from '@playwright/test';
 import {OWNER_UID} from '../../owner-config.js';
 async function navigate(page,tab) {
   await page.waitForFunction(()=>typeof window.updateWorkspace==='function');
+  if(tab==='progression'){await page.evaluate(()=>window.switchTab('progression'));return;}
   const group=['physiology','anatomy','biochem','pharmacology'].includes(tab)?'subjects':['schedule','exercise','focus'].includes(tab)?'calendar':tab;
   const primary=page.locator('#tab-btn-'+group);
   if(!await primary.isVisible()) await page.locator('#mobile-menu').click();
@@ -37,9 +38,9 @@ test('planned tasks award XP once and never change course completion',async({pag
   expect(errors).toEqual([]);expect(await page.evaluate(()=>window.learningDB)).toBe(null);
 });
 
-test('Becoming shell uses seven destinations, equal columns and exact theme tokens',async({page})=>{
+test('Becoming shell uses six destinations, equal columns and exact theme tokens',async({page})=>{
   await page.setViewportSize({width:1440,height:1000});await page.goto('/');
-  await expect(page.locator('#main-tabs-header-container button')).toHaveCount(7);
+  await expect(page.locator('#main-tabs-header-container button')).toHaveCount(6);
   await expect(page.locator('#tab-content-home #achievements')).toHaveCount(0);
   await expect(page.locator('#tab-content-home .focus-tool')).toHaveCount(0);
   const columns=await page.locator('.workspace-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').map(Number.parseFloat));
@@ -400,19 +401,19 @@ test('free tasks retain ID through edits, ordering, postponement and deletion; c
   await page.locator('.planner-task').nth(1).locator('summary').click();await page.locator('.planner-task').nth(1).getByRole('button',{name:'上移',exact:true}).click();
   await expect(page.locator('.planner-task').first()).toContainText('閱讀');
   const task=page.locator(`[data-task-id="${original}"]`);
-  await task.locator('input').check();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await task.locator('input').check();await expect(page.locator('#xp-detail')).toHaveText('20 XP');
   await task.locator('summary').click();await task.getByRole('button',{name:'編輯',exact:true}).click();
   await page.locator('#edit-title').fill('考古题 60 題');await page.locator('#edit-minutes').fill('45');
   await page.getByRole('button',{name:'儲存任務'}).click();await expect(task).toContainText('預計 45 分鐘');
   await task.locator('summary').click();await task.getByRole('button',{name:'延後',exact:true}).click();await page.locator('#edit-date').fill('2026-10-13');await page.getByRole('button',{name:'儲存任務'}).click();
   await expect(task).toHaveCount(0);await page.locator('#planner-date').fill('2026-10-13');await expect(task).toBeVisible();
-  await task.locator('input').uncheck();await task.locator('input').check();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
-  await task.locator('summary').click();await task.getByRole('button',{name:'刪除',exact:true}).click();await expect(task).toHaveCount(0);await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await task.locator('input').uncheck();await task.locator('input').check();await expect(page.locator('#xp-detail')).toHaveText('20 XP');
+  await task.locator('summary').click();await task.getByRole('button',{name:'刪除',exact:true}).click();await expect(task).toHaveCount(0);await expect(page.locator('#xp-detail')).toHaveText('20 XP');
   await page.getByRole('button',{name:'復原刪除'}).click();await expect(task).toBeVisible();
   await task.locator('summary').click();await task.getByRole('button',{name:'複製至今天',exact:true}).click();
   await expect(page.locator('#planner-date')).toHaveValue('2026-10-12');
   const copied=page.locator('.planner-task').filter({hasText:'考古题 60 題'});await expect(copied.locator('input')).not.toBeChecked();expect(await copied.getAttribute('data-task-id')).not.toBe(original);
-  await page.reload();await expect(copied).toBeVisible();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await page.reload();await expect(copied).toBeVisible();await expect(page.locator('#xp-detail')).toHaveText('20 XP');
 });
 
 test('week plan opens only current week and offers optional course selection without creating tasks',async({page})=>{
@@ -434,8 +435,8 @@ test('legacy time goals and course awards retain XP and readable history',async(
     localStorage.setItem('med_exam_gamification_v1',JSON.stringify({days:{},awards:{physiology__fc_p_1_a:{xp:20,day:'2026-10-09'}}}));
     localStorage.setItem('med_exam_physio_cloud','{"fc_p_1_a":true}');
   });
-  await page.goto('/');await expect(page.locator('#growth-xp')).toHaveText('40 XP');await expect(page.locator('#task-list input')).toHaveCount(0);
-  await addCustom(page);await page.locator('#task-list input').check();await expect(page.locator('#growth-xp')).toHaveText('60 XP');
+  await page.goto('/');await expect(page.locator('#xp-detail')).toHaveText('40 XP');await expect(page.locator('#task-list input')).toHaveCount(0);
+  await addCustom(page);await page.locator('#task-list input').check();await expect(page.locator('#xp-detail')).toHaveText('60 XP');
   await navigate(page,'progression');await page.getByText('舊時間目標紀錄',{exact:true}).click();await expect(page.locator('#legacy-time-history')).toContainText('2026-10-10');await expect(page.locator('#legacy-time-history')).toContainText('上午: 完成');
   expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({fc_p_1_a:true});
 });

@@ -37,3 +37,7 @@
  .kingdom-subject { flex-wrap:wrap; gap:8px; }
  .kingdom-subject span:last-child { text-align:left; }
 }
+
+.kingdom-chronicles > summary { font-size:16px; font-weight:600; cursor:pointer; }
+.kingdom-chronicles[open] > summary { margin-bottom:16px; }
+.kingdom-chronicles .achievement-list { margin:16px 0; }

@@ -23,8 +23,6 @@ let day = dateKey();
 let gameSyncing = false;
 let gameDirty = false;
 let gameFailed = false;
-let lastLevel=null;
-let levelNoticeTimer;
 const save = () => localStorage.setItem(GAME_KEY, JSON.stringify(game));
 const db = window.learningDB;
 const states = () => window.readStudyStates();
@@ -72,7 +70,7 @@ window.eligibleLifeHabits=(date,habits)=>{
 const home = document.getElementById('tab-content-home');
 const content = document.createElement('div');
 content.innerHTML = `
-  <div class="growth-strip"><span><strong id="growth-level">Lv. 1</strong> <span id="growth-xp">0 XP</span> · 每一次學習，都是累積 <span id="level-notice" role="status"></span></span><button class="workspace-link" data-go="progression">角色與成就 →</button></div>
+
   <div class="workspace-grid">
     <div class="workspace-stack">
       <section class="workspace-panel" aria-labelledby="tasks-title">
@@ -105,19 +103,13 @@ content.innerHTML = `
   </div>`;
 home.prepend(content);
 const brandNote=document.createElement('p');brandNote.className='workspace-note becoming-home-brand';brandNote.textContent='Becoming · Your life. Your story. Your world.';home.append(brandNote);
-const progression=document.getElementById('tab-content-progression');
-progression.innerHTML=`<section class="workspace-panel game-summary" aria-label="學習成就">
-  <div><h3 id="level-title"></h3><p id="xp-detail"></p><div class="workspace-meter"><span id="xp-meter"></span></div><p id="game-sync-status" role="status"></p></div>
-  <div><h3>每週挑戰</h3><p id="weekly-detail"></p><div class="workspace-meter success"><span id="weekly-meter"></span></div></div>
-  <div style="grid-column:1/-1"><h3>學習里程碑</h3><div class="achievement-list" id="achievements"></div></div>
-</section><p class="workspace-note">XP 記錄學習行動，不代表醫學知識熟練度。休息不會扣除已累積的成長。</p>`;
+const weeklyRecords=document.createElement('section');weeklyRecords.className='workspace-panel';weeklyRecords.innerHTML='<h3>本週學習成果</h3><p id="weekly-detail"></p><p class="workspace-note">依首次完成的學習紀錄計算，取消或重新勾選不會增加次數。</p>';document.getElementById('tab-content-stats').append(weeklyRecords);
 const plannerUI=createPlannerUI({data,planner,states});
 const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
 const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,courseAwards:()=>game.awards,events:()=>window.readCalendarEvents()||{}});
 const kingdomUI=createKingdomUI({data,states,planner,settings:studySettings,life});
 window.renderBiochemUnits?.();window.renderCalendar?.();
-const legacyHistory=document.createElement('details');legacyHistory.className='planner-history';legacyHistory.innerHTML='<summary>舊時間目標紀錄</summary><div id="legacy-time-history"></div>';progression.append(legacyHistory);
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));
 const appearance=document.getElementById('appearance');
 function updateAppearanceControls() {
@@ -191,16 +183,8 @@ function render() {
   }
   renderPlanningSummary();
   const stats=gameStats({...game.awards,...timeTasks.awards(),...planner.awards()},day);
-  if(lastLevel!==null && stats.level>lastLevel){const notice=document.getElementById('level-notice');notice.textContent='升到 Lv. '+stats.level;clearTimeout(levelNoticeTimer);levelNoticeTimer=setTimeout(()=>{notice.textContent='';},8000);}
-  lastLevel=stats.level;
-  document.getElementById('growth-level').textContent=`Lv. ${stats.level} · 學習者`;
-  document.getElementById('growth-xp').textContent=`${stats.xp} XP`;
-  document.getElementById('sidebar-level').textContent=`學習者 · Lv. ${stats.level}`;
-  document.getElementById('level-title').textContent=`Lv. ${stats.level} · 學習者`;
-  document.getElementById('xp-detail').textContent=`${stats.xp} XP · 距下一級 ${stats.next} XP`;
-  document.getElementById('xp-meter').style.width=stats.xp%100+'%';
-  document.getElementById('weekly-detail').textContent=`本週完成 ${stats.weekly} / 10 個任務 · 週一重新計算`;
-  document.getElementById('weekly-meter').style.width=Math.min(100,stats.weekly/10*100)+'%';
+  document.getElementById('xp-detail').textContent=`${stats.xp} XP`;
+  document.getElementById('weekly-detail').textContent=`本週首次完成 ${stats.weekly} 筆學習紀錄 · 課程、任務與舊時間目標`;
   document.getElementById('game-sync-status').textContent=(gameFailed||timeTasks.failed()||planner.status().error)?'成就雲端同步失敗，本機紀錄已保留；可使用重試同步。':db?'成就獨立同步，不影響原有學習紀錄。':'XP 與成就保存在此瀏覽器。';
   const achievements=document.getElementById('achievements'); achievements.replaceChildren();
   for(const a of stats.achievements) {
