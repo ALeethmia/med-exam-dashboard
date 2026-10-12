@@ -67,7 +67,6 @@ export function createTerritoryUI(page){
   const basis=node('details','building-basis');basis.append(node('summary','','資料來源與計算說明'),node('p','building-source workspace-note'),node('p','workspace-note','成果依已記錄日期由新到舊排列；沒有日期的成果排在後面，標示「日期未記錄」。紀錄所屬日期不代表實際完成時刻，也不推測缺少的歷史日期。'),node('p','workspace-note','目前階段依現有紀錄判定；更正課程或活動會重新計算。休息與未登入不扣分。'),node('h5','','詳細升級門檻'));
   if(id==='keep')basis.append(node('h6','','目前階段'),node('ul','keep-current-paths'));
   basis.append(node('ul','building-next'));body.append(basis);details.append(summary,body);card.append(details);container.append(card);
-  details.addEventListener('toggle',()=>{if(details.open)container.querySelectorAll('.building-details').forEach(other=>{if(other!==details)other.open=false;});});
  }
  const activity=node('details','workspace-panel realm-activity');activity.id='realm-activity';activity.append(node('summary','','領地紀事'),node('p','workspace-note','每一步都留下足跡。先看有日期的成果，再回顧未記日期的成果。'),node('ul','realm-events'));
  const note=node('details','realm-history-note');note.append(node('summary','workspace-note','關於紀事日期'),node('p','workspace-note','只使用已記錄的完成日期；未記日期的成果無法判定何時發生。紀事不把目前建築階段當作新事件，也不推測缺少的歷史紀錄。'));activity.append(note);

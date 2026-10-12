@@ -2,10 +2,6 @@
 .kingdom-page { --kingdom-rune:#5967a3; --kingdom-stone:#eef1ed; gap:24px; }
 :root[data-theme=dark] .kingdom-page { --kingdom-rune:#a8b2ec; --kingdom-stone:#252e2d; }
 .kingdom-eyebrow { color:var(--kingdom-rune); text-transform:uppercase; letter-spacing:.12em; font-size:12px; margin:0 0 8px; }
-.kingdom-intro { padding:8px 0; max-width:840px; }
-.kingdom-intro h2 { font-size:18px; font-weight:500; color:var(--muted); margin:0 0 16px; }
-.kingdom-intro h2 span { display:block; font-size:32px; color:var(--ink); margin-top:4px; font-weight:650; letter-spacing:-.5px; }
-.kingdom-intro > p:not(.kingdom-eyebrow) { line-height:1.85; color:var(--muted); }
 .kingdom-chapter-meta { display:flex; flex-wrap:wrap; gap:8px 24px; font-size:13px; color:var(--muted); margin-top:16px; }
 .kingdom-territory { background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
 .kingdom-territory > .panel-heading { padding:24px 24px 0; margin-bottom:16px; }
@@ -28,7 +24,6 @@
 .kingdom-outlook ul { padding:0; margin:0 0 12px; list-style:none; }
 .kingdom-footer { text-align:center; font-size:13px; color:var(--muted); line-height:1.8; margin:8px 0; }
 @media(max-width:700px) {
- .kingdom-intro h2 span { font-size:28px; }
  .kingdom-buildings,.kingdom-life,.kingdom-outlook { grid-template-columns:1fr; gap:24px; }
  .kingdom-buildings { padding:16px; }
  .kingdom-territory > .panel-heading { padding:16px 16px 0; align-items:flex-start; }
@@ -105,3 +100,41 @@
  .kingdom-chronicles .achievement { padding:16px; }
  .kingdom-chronicles .achievement::before { display:inline-block; vertical-align:middle; margin:0 12px 0 0; }
 }
+
+/* One character/story region; content grows without stretching the adjacent pass. */
+.character-story { display:grid; grid-template-columns:minmax(380px,1fr) minmax(380px,1.1fr); gap:24px; align-items:start; }
+.character-story > * { min-width:0; margin:0; min-height:250px; }
+.character-story .lord-profile { grid-template-columns:72px minmax(0,1fr); gap:16px; padding:24px; }
+.character-story .lord-emblem { width:72px; height:72px; }
+.character-story .lord-card-progress { grid-column:1/-1; border-left:0; border-top:1px solid var(--line); padding:12px 0 0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.character-story .lord-summary { flex-direction:row; flex-wrap:wrap; gap:4px 16px; font-size:12px; }
+.character-story #lord-open-chronicles { padding:8px 0; }
+.chronicle-card { padding:24px; }
+.chronicle-card-heading { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.chronicle-card-heading h2 { font-size:18px; font-weight:600; margin:0; }
+.chronicle-card-heading .workspace-note { font-size:12px; }
+.chronicle-card .chronicle-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; margin:16px 0; }
+.chronicle-card .chronicle-tabs button { padding:8px 4px; font-size:12px; }
+.chronicle-card .kingdom-chronicles > summary { display:block; cursor:pointer; list-style:none; }
+.chronicle-card .kingdom-chronicles > summary::-webkit-details-marker { display:none; }
+.chronicle-card .kingdom-chronicles > summary:focus-visible { outline:2px solid var(--accent); outline-offset:4px; border-radius:8px; }
+.chronicle-card #chronicle-chapter { font-size:15px; margin:0 0 8px; color:var(--kingdom-rune); }
+.chronicle-card #kingdom-story { font-size:13px; line-height:1.8; color:var(--muted); margin:0 0 8px; }
+.chronicle-card .chronicle-expand-hint { color:var(--kingdom-rune); font-size:11px; }
+.chronicle-card .kingdom-chronicles[open]:not([data-view=story])[data-view] #kingdom-story { display:none; }
+.chronicle-card .chronicle-story { border:0; background:none; padding:0; }
+.chronicle-card .chronicle-panel { padding-bottom:4px; }
+.chronicle-card .achievement-list { grid-template-columns:1fr; }
+.chronicle-card .achievement { padding:12px 16px; }
+.chronicle-card .achievement::before { display:inline-block; vertical-align:middle; margin:0 12px 0 0; }
+.kingdom-chapter-meta { margin-top:0; line-height:1.7; }
+@media(max-width:1100px) {
+ .character-story { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .character-story > * { min-height:0; }
+}
+@media(max-width:700px) {
+ .character-story .lord-profile { grid-template-columns:64px minmax(0,1fr); padding:16px; gap:12px; }
+ .character-story .lord-emblem { width:64px; height:64px; }
+ .chronicle-card { padding:16px; }
+}
+.chronicle-card .kingdom-chronicles:not([open]) #kingdom-story { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
