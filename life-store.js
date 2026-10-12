@@ -1,6 +1,6 @@
 import {dateKey} from './study-core.js';
 import {validDate} from './daily-planner.js';
-import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS} from './life-core.js';
+import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise} from './life-core.js';
 export const LIFE_KEY='med_exam_life_v1';
 export const TRAINING_PATH='questOS/v1/training';
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -31,11 +31,11 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
   };
   const training=()=>({...defaultTraining(),...(saved.training||{})});
   const changed=()=>{persist();onHabits(today(),habits(today()));onChange();};
-  function queue(id,field,value) {
+  function queue(id,field,value,options={}) {
     const day=id==='training'?null:id.slice(0,10);
     const base=day?habits(day).questOS_v1?._versions?.[field]:saved.training?._version;
     const previous=saved.pending[id];
-    saved.pending[id]={field,value:clone(value),base:previous?previous.base:(base||null),token:newId(),day};
+    saved.pending[id]={...(previous?.archiveOnReplace?{archiveOnReplace:true,archiveDay:previous.archiveDay}:{}),...options,field,value:clone(value),base:previous?previous.base:(base||null),token:newId(),day};
     if(day)saved.days[day]=applyDay(habits(day),field,value,base||null);
     else saved.training=clone(value);
     if(localOnly){delete saved.pending[id];delete conflicts[id];}
@@ -56,31 +56,49 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
   function lower() {setStage(Math.max(1,training().stage-1));}
   function checkDate(day) {if(!validDate(day))throw new Error('請選擇有效日期。');}
   function minutes(value) {if(value!==null&&(!Number.isInteger(value)||value<1||value>240))throw new Error('時間需為 1–240 分鐘，或留空。');return value;}
-  function exercise(day=today()) {return exerciseForDay(training(),day,habits(day));}
-  function setExercise(day,patch) {
+  function exercise(day=today()) {return exerciseForDay(training(),day,habits(day),today());}
+  function setExercise(day,patch,options={}) {
     checkDate(day);const value={...exercise(day),...clone(patch),category:'exercise'};delete value.legacy;
     if(!Object.hasOwn(TYPES,value.type)||!Object.hasOwn(STATUS,value.status))throw new Error('訓練狀態無效。');
     if(!Number.isInteger(value.stage)||value.stage<1||value.stage>4)throw new Error('訓練階段無效。');
     value.minutes=minutes(value.minutes??null);value.actions=value.actions||{};
-    queue(day+':exercise','exercise',value);
+    queue(day+':exercise','exercise',value,options);
   }
   function schedule(day,type,time=null) {
     if(!Object.hasOwn(TYPES,type))throw new Error('訓練類型無效。');
     const config=training();
-    setExercise(day,{type,stage:config.stage,supportedStanding:config.supportedStanding,minutes:time??(type==='walk'?[5,8,10,15][config.stage-1]:type==='seated'?8:null),status:['none','rest'].includes(type)?'not_scheduled':'pending',mode:null,actions:{}});
+    setExercise(day,{type,stage:config.stage,supportedStanding:config.supportedStanding,menuVersion:MENU_VERSION,timeSource:time===null?'stage':'custom',minutes:time??(type==='walk'?STAGES[config.stage-1].walk:type==='seated'?STAGES[config.stage-1].seatedMinutes:null),status:['none','rest'].includes(type)?'not_scheduled':'pending',mode:null,actions:{},startedOn:null});
   }
   function toggleAction(day,id,complete) {
     if(training().paused)throw new Error('目前暫停訓練；請先恢復設定，或記錄休息。');
     const current=exercise(day),menu=exerciseMenu({...current,alternative:current.mode==='alternative'});
     if(!menu.some(action=>action.id===id)||['symptom_rest','not_scheduled'].includes(current.status))return;
-    setExercise(day,{actions:{...current.actions,[id]:!!complete},status:'pending'});
+    setExercise(day,{actions:{...current.actions,[id]:!!complete},startedOn:current.startedOn||today(),status:'pending'});
   }
-  function alternative(day) {const current=exercise(day);setExercise(day,{type:'seated',mode:'alternative',minutes:5,status:'pending',actions:{},stage:current.stage,supportedStanding:false});}
+  function startExercise(day) {
+    const current=exercise(day);if(training().paused||current.status!=='pending')throw new Error('請先安排可開始的訓練。');
+    setExercise(day,{startedOn:current.startedOn||today()});
+  }
+  function applyStage(day,{confirmed=false,expected=null,targetStage=training().stage}={}) {
+    checkDate(day);const current=exercise(day),config=training();
+    if(!['walk','seated'].includes(current.type))throw new Error('此日期沒有可替換的訓練菜單。');
+    if(config.stage!==targetStage || (expected&&!same(current,expected)))throw new Error('菜單或設定已更新，請重新查看變更內容再套用。');
+    const protectedRecord=!untouchedExercise(current)||day<today();
+    if(protectedRecord&&!confirmed)throw new Error('此日期已有紀錄或屬於歷史日期，請先確認；原菜單與結果將保存。');
+    const next=stageExercise(current,config);
+    if(protectedRecord) {
+      const previous=clone(current);delete previous.revisions;delete previous.legacy;
+      next.revisions={...(current.revisions||{}),[newId()]:{...previous,archivedOn:today()}};
+    }
+    delete next.legacy;
+    setExercise(day,{...next,actions:{},startedOn:null,status:'pending'},{archiveOnReplace:protectedRecord,archiveDay:today()});
+  }
+  function alternative(day) {const current=exercise(day);setExercise(day,{type:'seated',mode:'alternative',minutes:5,timeSource:'stage',status:'pending',actions:{},startedOn:null,stage:current.stage,supportedStanding:false});}
   function finish(day) {
     if(training().paused)throw new Error('目前暫停訓練；休息不需要補做。');
     const current=exercise(day),menu=exerciseMenu({...current,alternative:current.mode==='alternative'});
     if(!menu.length||menu.some(action=>!current.actions[action.id]))throw new Error('請完成菜單動作；不舒服時可直接記錄症狀休息。');
-    setExercise(day,{status:current.mode==='alternative'?'alternative':'complete'});
+    setExercise(day,{status:current.mode==='alternative'?'alternative':'complete',startedOn:current.startedOn||today()});
   }
   function symptomRest(day) {setExercise(day,{status:'symptom_rest',actions:{}});}
   function setLeisure(day,{title='',minutes:time=null,status='pending'}) {
@@ -94,7 +112,7 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
     if(id==='daily-sport') {
       const current=exercise(day);
       // A legacy quick check is a self-reported completion, not fabricated action checks.
-      setExercise(day,{status:complete?'complete':(['none','rest'].includes(current.type)?'not_scheduled':'pending')});
+      setExercise(day,{...(complete?{startedOn:current.startedOn||today()}:{}),status:complete?'complete':(['none','rest'].includes(current.type)?'not_scheduled':'pending')});
     } else if(id==='daily-game') {
       const current=leisureForDay(habits(day));setLeisure(day,{...current,title:current.title||'休息',status:complete?'complete':'pending'});
     }
@@ -116,13 +134,23 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
         if(reference.once)await reference.once('value');
         const result=await reference.transaction(current=>{
           if(isConflict(current,intent))return;
-          return intent.day?applyDay(current,intent.field,intent.value,intent.token):{...(current||{}),...intent.value,_version:intent.token};
+          let nextValue=intent.value;
+          if(intent.archiveOnReplace&&current?.questOS_v1?.exercise) {
+            const snapshot=record=>{const v=clone(record);delete v.revisions;delete v.legacy;delete v.archivedOn;v.menuVersion ||= 1;return v;};
+            const previous=snapshot(current.questOS_v1.exercise);
+            if(!Object.values(nextValue.revisions||{}).some(record=>same(snapshot(record),previous)))nextValue={...nextValue,revisions:{...(nextValue.revisions||{}),[intent.token+'_previous']:{...previous,archivedOn:intent.archiveDay}}};
+          }
+          return intent.day?applyDay(current,intent.field,nextValue,intent.token):{...(current||{}),...nextValue,_version:intent.token};
         },undefined,false);
         const current=result.snapshot.val();remote[id]=current;
         if(result.committed===false){conflicts[id]=true;overlay(id,current);continue;}
         const pending=saved.pending[id];
         if(pending?.token===intent.token)delete saved.pending[id];
-        else if(pending?.base===intent.base)pending.base=version(current,intent);
+        else if(pending) {
+          if(pending.base===intent.base)pending.base=version(current,intent);
+          if(intent.field==='exercise'&&current?.questOS_v1?.exercise?.revisions)pending.value.revisions={...current.questOS_v1.exercise.revisions,...(pending.value.revisions||{})};
+          if(intent.archiveOnReplace){delete pending.archiveOnReplace;delete pending.archiveDay;}
+        }
         delete conflicts[id];overlay(id,current);
         // Reapply any other fields still queued for this day.
         if(intent.day)for(const [other,p] of Object.entries(saved.pending))if(p.day===intent.day)overlay(other,saved.days[intent.day]);
@@ -161,7 +189,7 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
       onHabits(today(),habits(today()));onChange();void retry();
     }catch{}
   });
-  return {habits,training,start,advance,lower,setStage,setTraining,exercise,setExercise,schedule,toggleAction,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
+  return {habits,training,start,advance,lower,setStage,setTraining,exercise,setExercise,schedule,toggleAction,startExercise,applyStage,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
     status:()=>({syncing,error,pending:Object.keys(saved.pending).length,conflicts:clone(conflicts)}),
     choices:id=>({local:clone(saved.pending[id]?.value??null),cloud:clone(saved.pending[id]?value(remote[id],saved.pending[id])??null:null)})};
 }

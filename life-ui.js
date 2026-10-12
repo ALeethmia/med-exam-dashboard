@@ -1,6 +1,8 @@
 import {dateKey} from './study-core.js';
-import {lifeSummary,trainingWeek,exerciseMenu,TYPES,STATUS,STAGES} from './life-core.js';
+import {lifeSummary,trainingWeek,exerciseMenu,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise} from './life-core.js';
 const statusLabel=exercise=>exercise.type==='rest'&&exercise.status==='not_scheduled'?'恢復日 · 無須打卡':STATUS[exercise.status];
+const doseText=action=>`${action.sets} 組 × ${action.minutes?action.minutes+' 分鐘':(action.perSide?'每側 ':'')+action.reps+' 下'}`;
+const menuFor=record=>exerciseMenu({...record,alternative:record.mode==='alternative'});
 const node=(tag,cls,text)=>{const el=document.createElement(tag);el.className=cls;if(text!==undefined)el.textContent=text;return el;};
 const button=(text,action,cls='workspace-button')=>{const el=node('button',cls,text);el.type='button';el.onclick=action;return el;};
 export function createLifeUI({store,planner,today=()=>dateKey()}) {
@@ -14,6 +16,8 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
   const week=node('section','workspace-panel');week.innerHTML='<div class="panel-heading"><h2>本週安排</h2><span class="workspace-note">點選日期查看菜單</span></div><div id="training-week" class="training-week"></div>';
   const workout=node('section','workspace-panel');workout.innerHTML='<div class="panel-heading"><h2 id="training-date-title">今日訓練</h2><label class="visually-hidden" for="training-date">查看訓練日期</label><input id="training-date" type="date" class="workspace-input"></div><div class="training-toolbar" id="training-toolbar"></div><p id="training-description" class="workspace-note"></p><div id="training-actions"></div><div id="training-controls" class="training-controls"></div><p id="training-feedback" class="workspace-note" role="status"></p>';
   page.append(header,week,workout);
+  const mismatch=node('div','stage-mismatch');mismatch.id='training-stage-mismatch';workout.querySelector('#training-description').after(mismatch);
+  const revisionHistory=node('details','planner-history');revisionHistory.id='training-revisions';revisionHistory.append(node('summary','','保留的原菜單與結果'));const revisionList=node('div','');revisionHistory.append(revisionList);workout.append(revisionHistory);
   const date=workout.querySelector('#training-date');date.value=selectedDay;date.onchange=()=>{if(date.value){selectedDay=date.value;render();}};
   function dialog(markup) {const el=node('dialog','workspace-dialog');el.innerHTML=markup;document.body.append(el);el.querySelector('[data-close]').onclick=()=>el.close();return el;}
   const leisure=dialog('<form id="leisure-form"><div class="dialog-heading"><h2>今日休閒</h2><button type="button" data-close>關閉</button></div><label>活動名稱<input id="leisure-title" maxlength="120" placeholder="遊戲、放鬆、閱讀…"></label><label>時間目標（選填，分鐘）<input id="leisure-minutes" type="number" min="1" max="240" placeholder="不設定時間"></label><label class="life-check"><input type="checkbox" id="leisure-complete"> 已完成</label><p class="workspace-note">休閒是恢復與平衡；時間長短不會增加 XP 或獎勵。清空名稱可取消安排。</p><p role="alert" id="leisure-error"></p><div class="dialog-actions"><button type="submit" class="workspace-button primary">儲存休閒</button></div></form>');
@@ -24,6 +28,19 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
   const settings=dialog('<form id="training-settings-form"><div class="dialog-heading"><h2>訓練設定</h2><button type="button" data-close>關閉</button></div><p id="settings-stage" class="workspace-note"></p><div id="stage-actions" class="training-controls"></div><label class="life-check"><input id="training-paused" type="checkbox"> 暫停訓練（未記錄日期顯示恢復日）</label><label class="life-check"><input id="training-standing" type="checkbox"> 步態穩定，且已經評估適合支撐站姿動作</label><p class="workspace-note">支撐站姿只在階段 3–4 選用；關閉時仍使用坐姿菜單。</p><h3>每週安排</h3><p class="workspace-note">套用到尚未記錄的日期；已儲存的菜單與結果保持原樣。</p><div id="training-week-settings" class="training-settings-grid"></div><p role="alert" id="settings-error"></p><div class="dialog-actions"><button type="submit" class="workspace-button primary">儲存設定</button></div></form>');
   const weekdays=['週一','週二','週三','週四','週五','週六','週日'];
   for(let i=0;i<7;i++){const label=node('label','',weekdays[i]);const select=node('select','');select.id='training-weekday-'+i;for(const [value,title] of Object.entries(TYPES)){const option=node('option','',title);option.value=value;select.append(option);}label.append(select);settings.querySelector('#training-week-settings').append(label);}
+  const previews=node('section','stage-previews');previews.id='training-stage-previews';settings.querySelector('#stage-actions').after(previews);
+  function stagePreviews() {
+    const selected=Number(settings.querySelector('#training-stage-select').value),standing=settings.querySelector('#training-standing').checked;
+    previews.replaceChildren(node('h3','','四階段菜單預覽'));
+    for(const stage of STAGES) {
+      const detail=node('details','stage-preview');detail.dataset.stage=String(stage.id);detail.open=stage.id===selected;detail.setAttribute('data-selected',String(stage.id===selected));
+      detail.append(node('summary','',`階段 ${stage.id} · ${stage.title} · 步行 ${stage.walk} 分鐘`),node('p','workspace-note',stage.description),node('p','workspace-note',`坐姿約 ${stage.seatedMinutes} 分鐘 · 組間休息 30–60 秒，可隨時減量。`));
+      const list=node('ul','');for(const move of exerciseMenu({type:'seated',stage:stage.id,supportedStanding:standing}))list.append(node('li','',`${move.name} · ${doseText(move)}`));detail.append(list);
+      if(stage.id>=3)detail.append(node('p','workspace-note','支撐站姿是選配，僅在步態穩定且已評估適合時加入；沒有勾選適合時仍使用坐姿菜單。'));
+      previews.append(detail);
+    }
+  }
+  settings.querySelector('#training-standing').onchange=stagePreviews;
   function saveSettings(start=false) {
     try {
       const config=store.training();
@@ -36,7 +53,8 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
     const actions=settings.querySelector('#stage-actions');actions.replaceChildren();
     const label=node('label','','訓練階段');const select=node('select','');select.id='training-stage-select';
     for(const stage of STAGES){const option=node('option','',`階段 ${stage.id} · ${stage.title}`);option.value=String(stage.id);select.append(option);}select.value=String(config.stage);label.append(select);
-    const pickerRow=node('div','stage-picker-row');pickerRow.append(label,button('回到階段 1',()=>{select.value='1';}));actions.append(pickerRow,node('p','workspace-note','可隨時選擇任一階段；兩週節奏僅供參考。儲存後套用到尚未記錄的日期，已有菜單與結果不會被更改。'));
+    const pickerRow=node('div','stage-picker-row');pickerRow.append(label,button('回到階段 1',()=>{select.value='1';stagePreviews();}));actions.append(pickerRow,node('p','workspace-note','可隨時選擇任一階段；兩週節奏僅供參考。今天及未來尚未開始、沒有動作紀錄的菜單會立即更新；已開始、已完成、症狀休息與歷史日期保留原菜單。'));
+    select.onchange=stagePreviews;stagePreviews();
     if(!config.startedOn)actions.append(button('開始訓練',()=>saveSettings(true)));
   }
   header.querySelector('#training-settings').onclick=()=>{const config=store.training();settings.querySelector('#training-paused').checked=config.paused;settings.querySelector('#training-standing').checked=config.supportedStanding;config.week.forEach((type,i)=>settings.querySelector('#training-weekday-'+i).value=type);settings.querySelector('#settings-error').textContent='';settingsStage();settings.showModal();};
@@ -47,6 +65,18 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
   let editingDay=null;
   function openSchedule() {editingDay=selectedDay;const current=store.exercise(selectedDay);schedule.querySelector('#exercise-schedule-date').value=selectedDay;schedule.querySelector('select').value=current.type;schedule.querySelector('#exercise-schedule-minutes').value=current.minutes??'';schedule.querySelector('#exercise-schedule-error').textContent='';schedule.showModal();}
   schedule.querySelector('form').onsubmit=event=>{event.preventDefault();try{const target=schedule.querySelector('#exercise-schedule-date').value;const time=schedule.querySelector('#exercise-schedule-minutes').value;store.schedule(target,schedule.querySelector('select').value,time?Number(time):null);const previous=store.exercise(editingDay);if(target!==editingDay&&previous.status==='pending'&&!Object.values(previous.actions).some(Boolean))store.schedule(editingDay,'none');selectedDay=target;date.value=target;schedule.close();render();}catch(error){schedule.querySelector('#exercise-schedule-error').textContent=error.message;}};
+  const stageApply=dialog('<form id="apply-stage-form"><div class="dialog-heading"><h2>套用目前階段</h2><button type="button" data-close>取消</button></div><p id="apply-stage-description" class="workspace-note"></p><div id="apply-stage-comparison" class="stage-comparison"></div><label class="life-check" id="apply-stage-confirm-label"><input id="apply-stage-confirm" type="checkbox"> 我確認重新安排；原菜單、勾選與結果將保存，新菜單從未完成開始。</label><p id="apply-stage-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="workspace-button primary">確認套用</button></div></form>');
+  let applying=null;
+  function openStageApply() {
+    const current=store.exercise(selectedDay),config=store.training(),next=stageExercise(current,config);
+    applying={day:selectedDay,current,targetStage:config.stage,protected:!untouchedExercise(current)||selectedDay<today()};
+    stageApply.querySelector('#apply-stage-confirm-label').hidden=!applying.protected;stageApply.querySelector('#apply-stage-confirm').checked=false;stageApply.querySelector('#apply-stage-error').textContent='';
+    stageApply.querySelector('#apply-stage-description').textContent=`${selectedDay}：階段 ${current.stage} → ${config.stage}。保留訓練類型${current.mode==='alternative'?'與減量替代模式':''}，${next.timeSource==='custom'?'保留自訂時間':'更新建議時間'}。${applying.protected?'目前的動作勾選與 '+statusLabel(current)+' 結果將另存保留；新菜單需重新完成，不增加 XP。':'更新菜單，不影響其他日期。'}`;
+    const comparison=stageApply.querySelector('#apply-stage-comparison');comparison.replaceChildren();
+    for(const [title,record] of [['原菜單',current],['新菜單',next]]){const section=node('div','');section.append(node('h3','',title),node('p','workspace-note',record.minutes?`預計 ${record.minutes} 分鐘`:'不設定時間'));const list=node('ul','');for(const move of menuFor(record))list.append(node('li','',move.name+' · '+doseText(move)));section.append(list);comparison.append(section);}
+    stageApply.showModal();
+  }
+  stageApply.querySelector('form').onsubmit=event=>{event.preventDefault();try{if(applying.protected&&!stageApply.querySelector('#apply-stage-confirm').checked)throw new Error('請確認原紀錄保留、新菜單重新開始。');store.applyStage(applying.day,{confirmed:stageApply.querySelector('#apply-stage-confirm').checked,expected:applying.current,targetStage:applying.targetStage});stageApply.close();render();}catch(error){stageApply.querySelector('#apply-stage-error').textContent=error.message;}};
   function perform(action) {try{action();workout.querySelector('#training-feedback').textContent='已保存在本機；休息也是照顧自己。';}catch(error){workout.querySelector('#training-feedback').textContent=error.message;}}
   function describeChoice(value) {
     if(value===null)return '尚未設定';
@@ -76,15 +106,23 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
     const days=week.querySelector('#training-week');days.replaceChildren();
     weekly.days.forEach((day,i)=>{const b=button('',()=>{selectedDay=day.date;date.value=selectedDay;render();},'training-day');b.setAttribute('aria-pressed',String(day.date===selectedDay));b.append(node('strong','',weekdays[i]),node('time','',day.date.slice(5).replace('-','/')),node('span','',day.legacy?'舊打卡':TYPES[day.type]),node('small','',statusLabel(day)));days.append(b);});
     workout.querySelector('#training-date-title').textContent=selectedDay===today()?'今日訓練':selectedDay+' 訓練';
-    const current=store.exercise(selectedDay),menu=exerciseMenu({...current,alternative:current.mode==='alternative'}),canCheck=!config.paused&&!['symptom_rest','not_scheduled'].includes(current.status);
+    const current=store.exercise(selectedDay),menu=menuFor(current),canCheck=!config.paused&&!['symptom_rest','not_scheduled'].includes(current.status);
     const toolbar=workout.querySelector('#training-toolbar');toolbar.replaceChildren(button('修改日期／類型',openSchedule),button('回到今天',()=>{selectedDay=today();date.value=selectedDay;render();}));
-    workout.querySelector('#training-description').textContent=`${current.legacy?'舊運動打卡 · 沒有動作明細':TYPES[current.type]+(current.mode==='alternative'?'（低強度替代）':'')+(current.minutes?' · 預計 '+current.minutes+' 分鐘':'')} · ${statusLabel(current)}`;
+    workout.querySelector('#training-description').textContent=`${current.legacy?'舊運動打卡 · 沒有動作明細':TYPES[current.type]+(current.mode==='alternative'?'（低強度替代）':'')+(current.minutes?' · 預計 '+current.minutes+' 分鐘':'')} · ${statusLabel(current)} · 階段 ${current.stage} 菜單`;
+    mismatch.replaceChildren();
+    if(current.stage!==config.stage || (current.menuVersion!==MENU_VERSION&&['walk','seated'].includes(current.type))) {
+      mismatch.append(node('p','workspace-note',`此日期保留階段 ${current.stage} 菜單，目前設定為階段 ${config.stage}${current.menuVersion!==MENU_VERSION?' · 保留原版動作劑量':''}`));
+      if(['walk','seated'].includes(current.type))mismatch.append(button('套用目前階段',openStageApply));
+    }
+    revisionList.replaceChildren();revisionHistory.hidden=!Object.keys(current.revisions||{}).length;
+    for(const previous of Object.values(current.revisions||{})){const detail=node('details','stage-preview');detail.append(node('summary','',`階段 ${previous.stage} · ${statusLabel(previous)} · ${Object.values(previous.actions||{}).filter(Boolean).length} 個動作已勾選`));for(const move of menuFor(previous))detail.append(node('p','workspace-note',`${previous.actions?.[move.id]?'✓':'○'} ${move.name} · ${doseText(move)}`));revisionList.append(detail);}
     const actions=workout.querySelector('#training-actions'),focused=document.activeElement?.dataset.exerciseAction;actions.replaceChildren();
     if(!menu.length||['symptom_rest','not_scheduled'].includes(current.status))actions.append(node('p','training-empty',config.paused?'目前暫停訓練，休息不需要補做。':current.status==='symptom_rest'?'今天先恢復，不需要完成訓練。':current.status==='complete'?'舊打卡已完成；沒有回填動作紀錄。':current.type==='rest'?'恢復日，不需打卡或補做。':'今天沒有訓練安排，按需要調整即可。'));
-    else for(const action of menu){const row=node('div','training-action');const label=node('label','');const cb=node('input','');cb.type='checkbox';cb.checked=!!current.actions[action.id];cb.disabled=!canCheck;cb.dataset.exerciseAction=action.id;cb.onchange=()=>perform(()=>store.toggleAction(selectedDay,action.id,cb.checked));const copy=node('span','');copy.append(node('strong','',action.name),node('small','',action.en));label.append(cb,copy);row.append(label,node('p','training-dose',`${action.sets} 組 × ${action.minutes?action.minutes+' 分鐘':(action.perSide?'每側 ':'')+action.reps+' 下'}`),node('p','',action.instruction),node('p','workspace-note',action.caution));actions.append(row);}
+    else for(const action of menu){const row=node('div','training-action');const label=node('label','');const cb=node('input','');cb.type='checkbox';cb.checked=!!current.actions[action.id];cb.disabled=!canCheck;cb.dataset.exerciseAction=action.id;cb.onchange=()=>perform(()=>store.toggleAction(selectedDay,action.id,cb.checked));const copy=node('span','');copy.append(node('strong','',action.name),node('small','',action.en));label.append(cb,copy);row.append(label,node('p','training-dose',doseText(action)),node('p','',action.instruction),node('p','workspace-note',action.caution));actions.append(row);}
     if(focused)actions.querySelector('[data-exercise-action="'+CSS.escape(focused)+'"]')?.focus({preventScroll:true});
     const controls=workout.querySelector('#training-controls');controls.replaceChildren();
-    const finish=button('完成今日訓練',()=>perform(()=>store.finish(selectedDay)),'workspace-button primary');finish.id='finish-training';finish.disabled=!canCheck||!menu.length||menu.some(action=>!current.actions[action.id]);controls.append(finish,button('改用低強度替代',()=>perform(()=>store.alternative(selectedDay))),button('症狀休息',()=>perform(()=>store.symptomRest(selectedDay))),button('設為恢復日',()=>perform(()=>store.schedule(selectedDay,'rest'))));
+    const finish=button('完成今日訓練',()=>perform(()=>store.finish(selectedDay)),'workspace-button primary');finish.id='finish-training';finish.disabled=!canCheck||!menu.length||menu.some(action=>!current.actions[action.id]);if(canCheck&&untouchedExercise(current)){const start=button('開始本次訓練',()=>perform(()=>store.startExercise(selectedDay)));controls.append(start);}
+    controls.append(finish,button('改用低強度替代',()=>perform(()=>store.alternative(selectedDay))),button('症狀休息',()=>perform(()=>store.symptomRest(selectedDay))),button('設為恢復日',()=>perform(()=>store.schedule(selectedDay,'rest'))));
   }
   // Old sport/rest checkboxes now call the same model; hide the punitive streak display.
   const streak=document.getElementById('streak-days')?.parentElement;

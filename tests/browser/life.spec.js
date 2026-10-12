@@ -108,3 +108,30 @@ test('mock Firebase persists training offline through reload and reconnect witho
  await page.evaluate(()=>window.mockLife.setOnline(true));await expect.poll(()=>page.evaluate(()=>window.mockLife.records.habits['2026-10-12'].questOS_v1?.exercise?.status)).toBe('complete');await expect(page.locator('#life-sync')).toBeEmpty();
  const result=await page.evaluate(()=>window.mockLife.records);expect(result.habits['2026-10-12']['daily-sport']).toBe(true);expect(result.habits['2026-10-12']['daily-exam']).toBe(true);expect(result.habits['2026-10-12'].keep).toBe('old');expect(result.habits['2026-10-01']).toEqual({'daily-sport':true,'daily-game':true});expect(result.physiology).toEqual({fc_p_1_a:true});expect(result.gamification.v1.awards.physiology__fc_p_1_a.xp).toBe(20);await expect(page.locator('#xp-detail')).toContainText('20 XP');
 });
+
+test('empty saved menu follows selected phase and all four phase previews show concrete progression',async({page})=>{
+ await page.goto('/');await go(page,'exercise');await arrange(page,'seated');
+ await page.locator('#training-settings').click();const previews=page.locator('#training-stage-previews');await expect(previews.locator('details')).toHaveCount(4);
+ await expect(previews).toContainText('步行 5 分鐘');await expect(previews).toContainText('步行 8 分鐘');await expect(previews).toContainText('步行 10 分鐘');await expect(previews).toContainText('步行 12 分鐘');
+ await page.locator('#training-stage-select').selectOption('2');await expect(previews.locator('[data-stage="2"]')).toHaveAttribute('open','');await expect(previews.locator('[data-stage="2"]')).toContainText('坐姿抬膝');await expect(previews.locator('[data-stage="2"]')).toContainText('1 組 × 12 下');
+ await page.locator('#training-stage-select').selectOption('4');await expect(previews.locator('[data-stage="4"]')).toContainText('2 組 × 12 下');await page.locator('#training-settings-form button[type=submit]').click();
+ await expect(page.locator('#training-description')).toContainText('階段 4 菜單');await expect(page.locator('#training-actions input')).toHaveCount(5);await expect(page.locator('#training-actions')).toContainText('坐姿抬膝');await expect(page.locator('#training-actions')).toContainText('2 組 × 12 下');await expect(page.locator('#training-stage-mismatch')).toBeEmpty();
+ await page.reload();await expect(page.locator('#training-description')).toContainText('階段 4 菜單');
+});
+test('retained phase has a clear explanation and explicit replacement preserves original checks and doses',async({page})=>{
+ await page.goto('/');await go(page,'exercise');await arrange(page,'seated');await page.locator('#training-actions input').first().check();
+ await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('4');await page.locator('#training-settings-form button[type=submit]').click();
+ await expect(page.locator('#training-stage-mismatch')).toContainText('此日期保留階段 1 菜單，目前設定為階段 4');await expect(page.locator('#training-actions input').first()).toBeChecked();
+ await page.getByRole('button',{name:'套用目前階段',exact:true}).click();await expect(page.locator('#apply-stage-comparison')).toContainText('原菜單');await expect(page.locator('#apply-stage-comparison')).toContainText('新菜單');await expect(page.locator('#apply-stage-comparison')).toContainText('2 組 × 12 下');
+ await page.locator('#apply-stage-form button[type=submit]').click();await expect(page.locator('#apply-stage-error')).toContainText('請確認');await expect(page.locator('#training-actions input').first()).toBeChecked();
+ await page.locator('#apply-stage-confirm').check();await page.locator('#apply-stage-form button[type=submit]').click();await expect(page.locator('#training-description')).toContainText('階段 4 菜單');await expect(page.locator('#training-actions input').first()).not.toBeChecked();
+ await page.locator('#training-revisions > summary').click();await page.locator('#training-revisions details > summary').click();await expect(page.locator('#training-revisions')).toContainText('階段 1');await expect(page.locator('#training-revisions')).toContainText('✓ 坐姿踝關節活動 · 1 組 × 10 下');await page.reload();await expect(page.locator('#training-revisions')).toBeVisible();
+});
+test('explicit start without action checks locks the menu; cancelling application keeps all data',async({page})=>{
+ await page.goto('/');await go(page,'exercise');await arrange(page);await page.getByRole('button',{name:'開始本次訓練'}).click();await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('3');await page.locator('#training-settings-form button[type=submit]').click();
+ await expect(page.locator('#training-description')).toContainText('階段 1 菜單');await page.getByRole('button',{name:'套用目前階段',exact:true}).click();await page.locator('#apply-stage-form [data-close]').click();await expect(page.locator('#training-description')).toContainText('階段 1 菜單');await expect(page.locator('#training-actions input')).toHaveCount(4);
+});
+test('mobile phase preview and replacement confirmation fit without overflow',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/');await go(page,'exercise');await arrange(page);await page.locator('#training-actions input').first().check();await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('4');
+ const settings=page.locator('#training-settings-form');expect(await settings.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);await settings.locator('button[type=submit]').click();await page.getByRole('button',{name:'套用目前階段',exact:true}).click();const dialog=page.locator('#apply-stage-form');expect(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);await page.locator('#apply-stage-confirm').check();await dialog.locator('button[type=submit]').click();await expect(page.locator('#training-description')).toContainText('階段 4 菜單');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
