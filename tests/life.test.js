@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createLifeStore,LIFE_KEY,TRAINING_PATH} from '../life-store.js';
 import {createPlanner} from '../daily-planner.js';
 import {dateKey,gameStats} from '../study-core.js';
-import {defaultTraining,exerciseForDay,exerciseMenu,lifeSummary,trainingWeek,STAGES,RECOMMENDED_WEEK,menuConfig} from '../life-core.js';
+import {defaultTraining,exerciseForDay,exerciseMenu,lifeSummary,trainingWeek,STAGES,RECOMMENDED_WEEK,menuConfig,stageExercise} from '../life-core.js';
 const copy=value=>JSON.parse(JSON.stringify(value));
 const storage=()=>{const values=new Map();return {getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value),values};};
 const events=()=>({addEventListener(){}});
@@ -126,7 +126,7 @@ test('stored but untouched schedules follow current stage immediately while cust
   const h=local(),day='2026-10-12';h.store.schedule(day,'seated');h.store.schedule('2026-10-14','walk');h.store.schedule('2026-10-15','walk',7);
   h.store.setStage(4);
   assert.equal(h.store.exercise(day).stage,4);assert.equal(h.store.exercise(day).minutes,25);assert.equal(exerciseMenu(h.store.exercise(day))[0].sets,2);
-  assert.equal(h.store.exercise('2026-10-14').minutes,5);assert.equal(h.store.exercise('2026-10-15').minutes,7);
+  assert.equal(h.store.exercise('2026-10-14').minutes,20);assert.equal(h.store.exercise('2026-10-15').minutes,7);
   h.store.toggleAction(day,'knee',true);assert.equal(h.store.habits(day).questOS_v1.exercise.stage,4);assert.equal(h.store.habits(day).questOS_v1.exercise.menuVersion,3);
   h.store.setStage(1);assert.equal(h.store.exercise(day).stage,4);assert.equal(h.store.exercise('2026-10-14').stage,1);
 });
@@ -225,4 +225,30 @@ test('offline walking targets and date modes reconnect consistently across devic
  const server=backend(),a=server.client('a'),b=server.client('b');await settle(a.store,b.store);a.store.schedule('2026-10-12','walk',11);await settle(a.store,b.store);
  b.connection.online=false;b.store.setWalkGoal('2026-10-12',22);await settle(b.store);a.store.setStage(4);await settle(a.store);b.connection.online=true;await b.store.retry();await settle(a.store,b.store);assert.equal(a.store.exercise().minutes,22);assert.equal(b.store.exercise().minutes,22);
  a.store.changeMode('2026-10-12','alternative');await settle(a.store,b.store);assert.equal(b.store.exercise().mode,'alternative');a.store.changeMode('2026-10-12','general');await settle(a.store,b.store);assert.equal(b.store.exercise().minutes,22);
+});
+
+
+test('time provenance is explicit across stages, modes and legacy minutes',()=>{
+ for(const type of ['walk','strength_a','strength_b'])for(const stage of [1,2,3,4])for(const source of ['stage','custom',undefined]) {
+  const record={type,stage:1,status:'pending',minutes:5,actions:{},menuVersion:3,modeSource:'settings',...(source?{timeSource:source}:{})};
+  const config={...defaultTraining(),stage};const expected=source==='stage'?(type==='walk'?STAGES[stage-1].walk:STAGES[stage-1].seatedMinutes):5;
+  const normal=stageExercise(record,config);assert.equal(normal.minutes,expected);assert.equal(normal.timeSource,source??null);
+  const alt=stageExercise(record,{...config,trainingMode:'alternative'});assert.equal(alt.minutes,5);assert.equal(alt.normalPlan.minutes,expected);assert.equal(alt.normalPlan.timeSource,source??null);
+  const restored=stageExercise(alt,config);assert.equal(restored.minutes,expected);assert.equal(restored.timeSource,source??null);
+ }
+ assert.equal(stageExercise({type:'walk',stage:1,mode:'alternative',modeSource:'settings',minutes:5,timeSource:'stage',normalPlan:{minutes:9}}, {...defaultTraining(),stage:4}).minutes,9);
+ const h=local();h.store.setExercise('2026-10-12',{type:'walk',stage:1,status:'pending',minutes:5,timeSource:null});h.store.setStage(4);assert.equal(h.store.exercise().minutes,5);
+ h.store.changeMode('2026-10-12','alternative');h.store.changeMode('2026-10-12','general');h.store.setStage(2);assert.equal(h.store.exercise().minutes,5);assert.equal(h.store.exercise().timeSource,null);
+});
+test('recommended week upgrade changes only the template and preserves every saved date byte',()=>{
+ const h=local(),old=['seated','walk','rest','seated','walk','rest','rest'];h.store.setTraining({week:old});h.store.start();
+ h.store.schedule('2026-10-12','seated');h.store.startExercise('2026-10-12');h.store.schedule('2026-10-13','walk');h.store.toggleAction('2026-10-13','walk',true);h.store.finish('2026-10-13');h.store.schedule('2026-10-14','seated');h.store.symptomRest('2026-10-14');h.store.schedule('2026-10-15','seated');h.store.schedule('2026-10-11','seated');
+ const before=copy(JSON.parse(h.saved.getItem(LIFE_KEY+'_local')).days);h.store.applyRecommendedWeek(old);
+ assert.deepEqual(h.store.training().week,RECOMMENDED_WEEK);assert.deepEqual(JSON.parse(h.saved.getItem(LIFE_KEY+'_local')).days,before);assert.equal(h.store.exercise('2026-10-19').type,'strength_a');assert.equal(h.store.exercise('2026-10-22').type,'strength_b');assert.equal(h.store.exercise('2026-10-15').type,'seated');assert.throws(()=>h.store.applyRecommendedWeek(old));
+});
+test('offline week upgrade conflicts explicitly and never writes any day or history',async()=>{
+ const server=backend(),a=server.client('a'),b=server.client('b');await settle(a.store,b.store);
+ a.store.setTraining({week:['seated','walk','rest','seated','walk','rest','rest']});a.store.start();a.store.schedule('2026-10-12','seated');a.store.startExercise('2026-10-12');await settle(a.store,b.store);const before=copy(server.get('habits'));const writes=server.writes.length;
+ b.connection.online=false;b.store.applyRecommendedWeek();await settle(b.store);a.store.setTraining({week:['rest','walk','rest','seated','walk','rest','rest']});await settle(a.store);b.connection.online=true;await b.store.retry();await settle(a.store,b.store);
+ assert.ok(b.store.status().conflicts.training);assert.deepEqual(server.get('habits'),before);b.store.resolve('training',true);await settle(a.store,b.store);assert.deepEqual(a.store.training().week,RECOMMENDED_WEEK);assert.deepEqual(a.store.habits('2026-10-12'),b.store.habits('2026-10-12'));assert.deepEqual(server.get('habits'),before);assert.ok(server.writes.slice(writes).every(path=>path===TRAINING_PATH));
 });

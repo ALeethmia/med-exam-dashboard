@@ -1,6 +1,6 @@
 import {dateKey} from './study-core.js';
 import {validDate} from './daily-planner.js';
-import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise,isStrength,hasTrainingMenu,modeExercise,menuConfig} from './life-core.js';
+import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise,isStrength,hasTrainingMenu,modeExercise,menuConfig,RECOMMENDED_WEEK} from './life-core.js';
 export const LIFE_KEY='med_exam_life_v1';
 export const TRAINING_PATH='questOS/v1/training';
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -50,6 +50,11 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
     if(!['general','alternative'].includes(config.trainingMode))throw new Error('請選擇訓練模式。');
     config.paused=!!config.paused;config.supportedStanding=!!config.supportedStanding;
     queue('training','training',config);
+  }
+  function applyRecommendedWeek(expectedWeek=training().week) {
+    if(!same(training().week,expectedWeek))throw new Error('週安排已在其他裝置更新，請重新查看比較。');
+    // Change only the template: saved single-day menus/results are never rewritten.
+    setTraining({week:[...RECOMMENDED_WEEK]});
   }
   function start() {setTraining({startedOn:today(),stageSince:today(),paused:false});}
   function setStage(stage) {setTraining({stage});}
@@ -206,7 +211,7 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
       onHabits(today(),habits(today()));onChange();void retry();
     }catch{}
   });
-  return {habits,training,start,advance,lower,setStage,setTraining,exercise,setExercise,schedule,toggleAction,startExercise,applyStage,changeMode,setWalkGoal,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
+  return {habits,training,start,advance,lower,setStage,setTraining,applyRecommendedWeek,exercise,setExercise,schedule,toggleAction,startExercise,applyStage,changeMode,setWalkGoal,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
     status:()=>({syncing,error,pending:Object.keys(saved.pending).length,conflicts:clone(conflicts)}),
     choices:id=>({local:clone(saved.pending[id]?.value??null),cloud:clone(saved.pending[id]?value(remote[id],saved.pending[id])??null:null)})};
 }

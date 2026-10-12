@@ -67,7 +67,7 @@ export function exerciseMenu(record={}) {
 }
 export const menuConfig=config=>({stage:config.stage,supportedStanding:!!config.supportedStanding,trainingMode:config.trainingMode||'general'});
 export function modeExercise(record,config,mode) {
-  const normalPlan=record.mode==='alternative'&&record.normalPlan?record.normalPlan:{minutes:record.minutes??null,timeSource:record.timeSource||'stage'};
+  const normalPlan=record.mode==='alternative'&&record.normalPlan?record.normalPlan:{minutes:record.minutes??null,timeSource:record.timeSource??null};
   return {...record,mode:mode==='alternative'?'alternative':null,modeSource:'date',menuVersion:MENU_VERSION,supportedStanding:mode==='alternative'?false:config.supportedStanding,
     normalPlan,minutes:mode==='alternative'?5:normalPlan.minutes??(record.type==='walk'?STAGES[record.stage-1].walk:STAGES[record.stage-1].seatedMinutes),timeSource:mode==='alternative'?'stage':normalPlan.timeSource};
 }
@@ -78,14 +78,15 @@ export function canFollowStage(record,day,today=dateKey()) {
   return day>=today && untouchedExercise(record) && hasTrainingMenu(record.type) && (record.mode!=='alternative'||record.modeSource==='settings');
 }
 export function stageExercise(record,config) {
-  const base=record.mode==='alternative'&&record.normalPlan?{...record,...record.normalPlan}:record;
-  const legacy=record.menuVersion===undefined||record.menuVersion===1;
-  const oldDefault=record.type==='walk'?(legacy?LEGACY_STAGES:record.menuVersion===2?V2_STAGES:STAGES)[record.stage-1]?.walk:legacy?8:(record.menuVersion===2?V2_STAGES:STAGES)[record.stage-1]?.seatedMinutes;
-  const timeSource=record.type==='walk'&&base.minutes!=null?'custom':base.timeSource||(base.minutes==null||base.minutes===oldDefault?'stage':'custom');
+  const base=record.mode==='alternative'&&record.normalPlan?{...record,...record.normalPlan,timeSource:record.normalPlan.timeSource??null}:record;
+  // Only explicit stage provenance authorizes changing an existing time.
+  // Legacy records without provenance retain their value, even at an old lower bound.
+  const timeSource=base.timeSource??null;
+  const minutes=timeSource==='stage'||base.minutes==null?(record.type==='walk'?STAGES[config.stage-1].walk:STAGES[config.stage-1].seatedMinutes):base.minutes;
   const mode=record.modeSource==='date'||(record.mode==='alternative'&&!record.modeSource)?record.mode||null:config.trainingMode==='alternative'?'alternative':null;
   return {...record,stage:config.stage,mode,menuVersion:MENU_VERSION,supportedStanding:mode==='alternative'?false:config.supportedStanding,
-    normalPlan:mode==='alternative'?(record.normalPlan||{minutes:base.minutes??null,timeSource}):record.normalPlan||null,
-    timeSource,minutes:mode==='alternative'?5:timeSource==='custom'?base.minutes:record.type==='walk'?STAGES[config.stage-1].walk:STAGES[config.stage-1].seatedMinutes};
+    normalPlan:mode==='alternative'?{minutes,timeSource}:null,
+    timeSource:mode==='alternative'?'stage':timeSource,minutes:mode==='alternative'?5:minutes};
 }
 export function exerciseForDay(config,day,habits={},today=dateKey()) {
   const record=habits.questOS_v1?.exercise;
