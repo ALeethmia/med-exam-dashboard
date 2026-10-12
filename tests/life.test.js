@@ -58,7 +58,7 @@ test('actions and final result persist; cancellation, substitution and symptom r
   restored.finish(day);assert.equal(restored.exercise(day).status,'alternative');assert.equal(restored.habits(day)['daily-sport'],true);
   restored.symptomRest(day);assert.equal(restored.exercise(day).status,'symptom_rest');assert.equal(restored.habits(day)['daily-sport'],false);
   const weekly=trainingWeek(restored.training(),day,restored.habits);assert.equal(weekly.planned,0);assert.equal(weekly.completed,0);assert.equal(weekly.rest,1);
-  restored.schedule(day,'none');assert.equal(restored.exercise(day).status,'not_scheduled');assert.equal(restored.status().pending,0);
+  restored.schedule(day,'none',null,{confirmed:true});assert.equal(restored.exercise(day).status,'not_scheduled');assert.equal(restored.status().pending,0);
 });
 test('stages can freely move both directions on the same day, including while paused, without calendar upgrades',()=>{
   const h=local();h.store.start();h.store.setStage(4);assert.equal(h.store.training().stage,4);
@@ -99,7 +99,7 @@ test('same-activity offline conflict never overwrites another device before user
   b.connection.online=false;b.store.alternative('2026-10-12');await settle(b.store);a.store.symptomRest('2026-10-12');await settle(a.store);
   b.connection.online=true;await b.store.retry();await settle(a.store,b.store);assert.equal(b.store.status().conflicts['2026-10-12:exercise'],true);assert.equal(server.get('habits/2026-10-12/questOS_v1/exercise/status'),'symptom_rest');
   b.store.resolve('2026-10-12:exercise',false);await settle(a.store,b.store);assert.equal(b.store.exercise().status,'symptom_rest');assert.equal(b.store.status().pending,0);
-  b.connection.online=false;b.store.schedule('2026-10-12','walk');await settle(b.store);a.store.schedule('2026-10-12','rest');await settle(a.store);b.connection.online=true;await b.store.retry();await settle(a.store,b.store);b.store.resolve('2026-10-12:exercise',true);await settle(a.store,b.store);assert.equal(a.store.exercise().type,'walk');
+  b.connection.online=false;b.store.schedule('2026-10-12','walk',null,{confirmed:true});await settle(b.store);a.store.schedule('2026-10-12','rest',null,{confirmed:true});await settle(a.store);b.connection.online=true;await b.store.retry();await settle(a.store,b.store);b.store.resolve('2026-10-12:exercise',true);await settle(a.store,b.store);assert.equal(a.store.exercise().type,'walk');
 });
 test('offline reload, reconnection and in-flight edits preserve final choices',async()=>{
   const server=backend(),a=server.client('a');await settle(a.store);a.connection.online=false;a.store.symptomRest('2026-10-12');await settle(a.store);assert.equal(a.store.status().pending,1);
@@ -243,12 +243,43 @@ test('time provenance is explicit across stages, modes and legacy minutes',()=>{
 test('recommended week upgrade changes only the template and preserves every saved date byte',()=>{
  const h=local(),old=['seated','walk','rest','seated','walk','rest','rest'];h.store.setTraining({week:old});h.store.start();
  h.store.schedule('2026-10-12','seated');h.store.startExercise('2026-10-12');h.store.schedule('2026-10-13','walk');h.store.toggleAction('2026-10-13','walk',true);h.store.finish('2026-10-13');h.store.schedule('2026-10-14','seated');h.store.symptomRest('2026-10-14');h.store.schedule('2026-10-15','seated');h.store.schedule('2026-10-11','seated');
- const before=copy(JSON.parse(h.saved.getItem(LIFE_KEY+'_local')).days);h.store.applyRecommendedWeek(old);
- assert.deepEqual(h.store.training().week,RECOMMENDED_WEEK);assert.deepEqual(JSON.parse(h.saved.getItem(LIFE_KEY+'_local')).days,before);assert.equal(h.store.exercise('2026-10-19').type,'strength_a');assert.equal(h.store.exercise('2026-10-22').type,'strength_b');assert.equal(h.store.exercise('2026-10-15').type,'seated');assert.throws(()=>h.store.applyRecommendedWeek(old));
+ const before=copy(JSON.parse(h.saved.getItem(LIFE_KEY+'_local')).days);h.store.setTraining({week:[...RECOMMENDED_WEEK]},{expected:h.store.training()});
+ assert.deepEqual(h.store.training().week,RECOMMENDED_WEEK);assert.deepEqual(JSON.parse(h.saved.getItem(LIFE_KEY+'_local')).days,before);assert.equal(h.store.exercise('2026-10-19').type,'strength_a');assert.equal(h.store.exercise('2026-10-22').type,'strength_b');assert.equal(h.store.exercise('2026-10-15').type,'seated');assert.throws(()=>h.store.setTraining({week:old},{expected:{...h.store.training(),week:old}}));
 });
 test('offline week upgrade conflicts explicitly and never writes any day or history',async()=>{
  const server=backend(),a=server.client('a'),b=server.client('b');await settle(a.store,b.store);
  a.store.setTraining({week:['seated','walk','rest','seated','walk','rest','rest']});a.store.start();a.store.schedule('2026-10-12','seated');a.store.startExercise('2026-10-12');await settle(a.store,b.store);const before=copy(server.get('habits'));const writes=server.writes.length;
- b.connection.online=false;b.store.applyRecommendedWeek();await settle(b.store);a.store.setTraining({week:['rest','walk','rest','seated','walk','rest','rest']});await settle(a.store);b.connection.online=true;await b.store.retry();await settle(a.store,b.store);
+ b.connection.online=false;b.store.setTraining({week:[...RECOMMENDED_WEEK]},{expected:b.store.training()});await settle(b.store);a.store.setTraining({week:['rest','walk','rest','seated','walk','rest','rest']});await settle(a.store);b.connection.online=true;await b.store.retry();await settle(a.store,b.store);
  assert.ok(b.store.status().conflicts.training);assert.deepEqual(server.get('habits'),before);b.store.resolve('training',true);await settle(a.store,b.store);assert.deepEqual(a.store.training().week,RECOMMENDED_WEEK);assert.deepEqual(a.store.habits('2026-10-12'),b.store.habits('2026-10-12'));assert.deepEqual(server.get('habits'),before);assert.ok(server.writes.slice(writes).every(path=>path===TRAINING_PATH));
+});
+
+
+test('single-day rescheduling requires confirmation for every protected result and archives the exact old menu',()=>{
+ for(const status of ['pending','complete','alternative','symptom_rest']) {
+  const h=local(),day='2026-10-12';h.store.schedule(day,'walk',23);h.store.setExercise(day,{status,startedOn:day,actions:{walk:status==='complete'},menuVersion:2});
+  const before=h.saved.getItem(LIFE_KEY+'_local'),previous=h.store.exercise(day);assert.throws(()=>h.store.schedule(day,'strength_b'));assert.equal(h.saved.getItem(LIFE_KEY+'_local'),before);
+  h.store.schedule(day,'strength_b',null,{confirmed:true,expected:previous});const record=h.store.exercise(day);assert.equal(record.type,'strength_b');assert.equal(record.status,'pending');assert.deepEqual(record.actions,{});
+  const archived=Object.values(record.revisions)[0];assert.equal(archived.status,status);assert.equal(archived.minutes,23);assert.equal(archived.menuVersion,2);assert.deepEqual(archived.actions,previous.actions);
+  const restored=createLifeStore(h.options);assert.deepEqual(restored.exercise(day).revisions,record.revisions);
+ }
+});
+test('moving a protected source preserves its bytes; protected targets cannot be replaced without confirmation',()=>{
+ const h=local(),source='2026-10-12',target='2026-10-13';h.store.schedule(source,'walk',18);h.store.startExercise(source);h.store.schedule(target,'walk',9);h.store.symptomRest(target);
+ const before=h.saved.getItem(LIFE_KEY+'_local'),sourceRecord=h.store.habits(source),expected=h.store.exercise(target);assert.throws(()=>h.store.moveSchedule(source,target,'strength_a'));assert.equal(h.saved.getItem(LIFE_KEY+'_local'),before);
+ h.store.moveSchedule(source,target,'strength_a',null,{confirmed:true,expected,expectedSource:h.store.exercise(source)});assert.deepEqual(h.store.habits(source),sourceRecord);assert.equal(h.store.exercise(target).type,'strength_a');assert.ok(Object.values(h.store.exercise(target).revisions).some(record=>record.status==='symptom_rest'&&record.minutes===9));
+ const preview=h.store.exercise(target);h.store.startExercise(target);const changed=h.saved.getItem(LIFE_KEY+'_local');assert.throws(()=>h.store.moveSchedule(source,target,'walk',12,{confirmed:true,expected:preview,expectedSource:h.store.exercise(source)}));assert.equal(h.saved.getItem(LIFE_KEY+'_local'),changed);
+});
+test('moving an untouched draft clears only that source; source progress arriving during preview cancels all writes',()=>{
+ const h=local(),source='2026-10-12',target='2026-10-13';h.store.schedule(source,'walk',18);const preview=h.store.exercise(source);h.store.startExercise(source);const before=h.saved.getItem(LIFE_KEY+'_local');assert.throws(()=>h.store.moveSchedule(source,target,'walk',18,{expectedSource:preview}));assert.equal(h.saved.getItem(LIFE_KEY+'_local'),before);
+ const draft='2026-10-14';h.store.schedule(draft,'walk',12);h.store.moveSchedule(draft,'2026-10-15','walk',12,{expectedSource:h.store.exercise(draft)});assert.equal(h.store.exercise(draft).type,'none');assert.equal(h.store.exercise('2026-10-15').minutes,12);
+});
+test('confirmed offline rescheduling keeps newer cloud results when resolving to the local replacement',async()=>{
+ const server=backend(),a=server.client('a'),b=server.client('b');await settle(a.store,b.store);a.store.schedule('2026-10-12','walk',23);await settle(a.store,b.store);a.store.toggleAction('2026-10-12','walk',true);a.store.finish('2026-10-12');await settle(a.store,b.store);
+ b.connection.online=false;b.store.schedule('2026-10-12','strength_b',null,{confirmed:true,expected:b.store.exercise()});await settle(b.store);a.store.symptomRest('2026-10-12');await settle(a.store);b.connection.online=true;await b.store.retry();await settle(a.store,b.store);assert.ok(b.store.status().conflicts['2026-10-12:exercise']);assert.equal(server.get('habits/2026-10-12/questOS_v1/exercise/status'),'symptom_rest');b.store.resolve('2026-10-12:exercise',true);await settle(a.store,b.store);
+ const record=server.get('habits/2026-10-12/questOS_v1/exercise');assert.equal(record.type,'strength_b');assert.ok(Object.values(record.revisions).some(old=>old.status==='complete'&&old.minutes===23));assert.ok(Object.values(record.revisions).some(old=>old.status==='symptom_rest'));assert.deepEqual(a.store.exercise(),b.store.exercise());
+});
+
+
+test('past recovery schedules also require confirmation and retain their original date and menu',()=>{
+ const h=local(),day='2026-10-11';h.store.schedule(day,'rest',12);const before=h.saved.getItem(LIFE_KEY+'_local'),record=h.store.exercise(day);assert.throws(()=>h.store.schedule(day,'walk',5));assert.equal(h.saved.getItem(LIFE_KEY+'_local'),before);h.store.schedule(day,'walk',5,{confirmed:true,expected:record});assert.ok(Object.values(h.store.exercise(day).revisions).some(old=>old.type==='rest'&&old.status==='not_scheduled'&&old.minutes===12));
 });

@@ -1,6 +1,6 @@
 import {dateKey} from './study-core.js';
 import {validDate} from './daily-planner.js';
-import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise,isStrength,hasTrainingMenu,modeExercise,menuConfig,RECOMMENDED_WEEK} from './life-core.js';
+import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise,isStrength,hasTrainingMenu,modeExercise,menuConfig,scheduleNeedsConfirmation} from './life-core.js';
 export const LIFE_KEY='med_exam_life_v1';
 export const TRAINING_PATH='questOS/v1/training';
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -41,7 +41,8 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
     if(localOnly){delete saved.pending[id];delete conflicts[id];}
     changed();void retry();
   }
-  function setTraining(patch) {
+  function setTraining(patch,{expected=null}={}) {
+    if(expected&&!same(training(),expected))throw new Error('設定已在其他裝置更新，請關閉後重新查看再儲存。');
     const config={...training(),...patch,category:'exercise'};
     if(!Number.isInteger(config.stage)||config.stage<1||config.stage>4)throw new Error('訓練階段需為 1–4。');
     if(!Array.isArray(config.week)||config.week.length!==7||config.week.some(type=>!Object.hasOwn(TYPES,type)))throw new Error('請設定七天的訓練類型。');
@@ -50,11 +51,6 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
     if(!['general','alternative'].includes(config.trainingMode))throw new Error('請選擇訓練模式。');
     config.paused=!!config.paused;config.supportedStanding=!!config.supportedStanding;
     queue('training','training',config);
-  }
-  function applyRecommendedWeek(expectedWeek=training().week) {
-    if(!same(training().week,expectedWeek))throw new Error('週安排已在其他裝置更新，請重新查看比較。');
-    // Change only the template: saved single-day menus/results are never rewritten.
-    setTraining({week:[...RECOMMENDED_WEEK]});
   }
   function start() {setTraining({startedOn:today(),stageSince:today(),paused:false});}
   function setStage(stage) {setTraining({stage});}
@@ -70,11 +66,25 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
     value.minutes=minutes(value.minutes??null);value.actions=value.actions||{};
     queue(day+':exercise','exercise',value,options);
   }
-  function schedule(day,type,time=null) {
+  function previewSchedule(type,time=null) {
+    minutes(time);
     if(!Object.hasOwn(TYPES,type))throw new Error('訓練類型無效。');
     const config=training();
     const plan={type,stage:config.stage,supportedStanding:config.supportedStanding,menuVersion:MENU_VERSION,timeSource:time===null?'stage':'custom',minutes:time??(type==='walk'?STAGES[config.stage-1].walk:isStrength(type)?STAGES[config.stage-1].seatedMinutes:null),status:['none','rest'].includes(type)?'not_scheduled':'pending',mode:null,modeSource:'settings',normalPlan:null,actions:{},startedOn:null};
-    const value=config.trainingMode==='alternative'&&hasTrainingMenu(type)?modeExercise(plan,config,'alternative'):plan;value.modeSource='settings';setExercise(day,value);
+    const value=config.trainingMode==='alternative'&&hasTrainingMenu(type)?modeExercise(plan,config,'alternative'):plan;value.modeSource='settings';return value;
+  }
+  function schedule(day,type,time=null,options={}) {
+    checkDate(day);
+    if(options.expectedConfig&&!same(training(),options.expectedConfig))throw new Error('訓練設定已更新，請重新查看安排。');
+    replaceExercise(day,previewSchedule(type,time),{...options,protect:scheduleNeedsConfirmation(exercise(day),day,today()),archiveOnReplace:true});
+  }
+  function moveSchedule(source,target,type,time=null,options={}) {
+    checkDate(source);checkDate(target);previewSchedule(type,time);
+    if(options.expectedSource&&!same(exercise(source),options.expectedSource))throw new Error('來源日期已更新，請重新查看安排。');
+    const previous=exercise(source);
+    schedule(target,type,time,options);
+    // Moving never removes started/results/history. Only untouched current/future drafts move.
+    if(source!==target && source>=today() && untouchedExercise(previous))schedule(source,'none',null,{expected:previous});
   }
   function toggleAction(day,id,complete) {
     if(training().paused)throw new Error('目前暫停訓練；請先恢復設定，或記錄休息。');
@@ -86,17 +96,17 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
     const current=exercise(day);if(training().paused||current.status!=='pending')throw new Error('請先安排可開始的訓練。');
     setExercise(day,{startedOn:current.startedOn||today()});
   }
-  function replaceExercise(day,next,{confirmed=false,expected=null}={}) {
+  function replaceExercise(day,next,{confirmed=false,expected=null,protect=null,archiveOnReplace=null}={}) {
     checkDate(day);const current=exercise(day);
     if(expected&&!same(current,expected))throw new Error('菜單已更新，請重新查看變更內容再套用。');
-    const protectedRecord=!untouchedExercise(current)||day<today();
+    const protectedRecord=protect??(!untouchedExercise(current)||day<today());
     if(protectedRecord&&!confirmed)throw new Error('此日期已有紀錄或屬於歷史日期，請先確認；原菜單與結果將保存。');
     if(protectedRecord) {
       const previous=clone(current);delete previous.revisions;delete previous.legacy;
       next.revisions={...(current.revisions||{}),[newId()]:{...previous,archivedOn:today()}};
     }
     delete next.legacy;
-    setExercise(day,{...next,actions:{},startedOn:null,status:'pending'},{archiveOnReplace:protectedRecord,archiveDay:today()});
+    setExercise(day,{...next,actions:{},startedOn:null,status:['none','rest'].includes(next.type)?'not_scheduled':'pending'},{archiveOnReplace:archiveOnReplace??protectedRecord,archiveDay:today()});
   }
   function applyStage(day,{confirmed=false,expected=null,targetStage=training().stage,expectedConfig=null}={}) {
     const current=exercise(day),config=training();
@@ -211,7 +221,7 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
       onHabits(today(),habits(today()));onChange();void retry();
     }catch{}
   });
-  return {habits,training,start,advance,lower,setStage,setTraining,applyRecommendedWeek,exercise,setExercise,schedule,toggleAction,startExercise,applyStage,changeMode,setWalkGoal,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
+  return {habits,training,start,advance,lower,setStage,setTraining,exercise,setExercise,previewSchedule,schedule,moveSchedule,toggleAction,startExercise,applyStage,changeMode,setWalkGoal,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
     status:()=>({syncing,error,pending:Object.keys(saved.pending).length,conflicts:clone(conflicts)}),
     choices:id=>({local:clone(saved.pending[id]?.value??null),cloud:clone(saved.pending[id]?value(remote[id],saved.pending[id])??null:null)})};
 }

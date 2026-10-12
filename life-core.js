@@ -74,6 +74,11 @@ export function modeExercise(record,config,mode) {
 export function untouchedExercise(record) {
   return !!record && record.status==='pending' && !record.startedOn && !Object.keys(record.actions||{}).length;
 }
+export function scheduleNeedsConfirmation(record,day,today=dateKey()) {
+  return !!record && (!!record.startedOn || Object.keys(record.actions||{}).length>0 ||
+    ['complete','alternative','symptom_rest'].includes(record.status) ||
+    (day<today && record.type!=='none'));
+}
 export function canFollowStage(record,day,today=dateKey()) {
   return day>=today && untouchedExercise(record) && hasTrainingMenu(record.type) && (record.mode!=='alternative'||record.modeSource==='settings');
 }

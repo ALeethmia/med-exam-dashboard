@@ -1,5 +1,5 @@
 import {dateKey} from './study-core.js';
-import {lifeSummary,trainingWeek,exerciseMenu,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise,RECOMMENDED_WEEK,walkRangeText,hasTrainingMenu,modeExercise,menuConfig} from './life-core.js';
+import {lifeSummary,trainingWeek,exerciseMenu,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise,RECOMMENDED_WEEK,walkRangeText,hasTrainingMenu,modeExercise,menuConfig,scheduleNeedsConfirmation} from './life-core.js';
 const statusLabel=exercise=>exercise.type==='rest'&&exercise.status==='not_scheduled'?'恢復日 · 無須打卡':STATUS[exercise.status];
 const doseText=action=>`${action.sets} 組 × ${action.minutes?action.minutes+' 分鐘':action.seconds?action.seconds+' 秒':(action.perSide?'每側 ':'')+action.reps+' 下'}${action.holdSeconds?'（每次 '+action.holdSeconds+' 秒）':''}`;
 const menuFor=record=>exerciseMenu({...record,alternative:record.mode==='alternative'});
@@ -51,10 +51,11 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
     }
   }
   settings.querySelector('#training-readiness').onchange=stagePreviews;settings.querySelector('#training-mode').onchange=stagePreviews;
-  function saveSettings(start=false) {
+  let settingsBase=null,settingsStart=false;
+  function saveSettings(start=settingsStart) {
     try {
       const config=store.training();
-      store.setTraining({stage:Number(settings.querySelector('#training-stage-select').value),paused:start?false:settings.querySelector('#training-paused').checked,supportedStanding:settings.querySelector('#training-readiness').value==='supported',trainingMode:settings.querySelector('#training-mode').value,week:weekdays.map((_,i)=>settings.querySelector('#training-weekday-'+i).value),...(start?{startedOn:config.startedOn||today(),stageSince:config.stageSince||today()}:{} )});
+      store.setTraining({stage:Number(settings.querySelector('#training-stage-select').value),paused:start?false:settings.querySelector('#training-paused').checked,supportedStanding:settings.querySelector('#training-readiness').value==='supported',trainingMode:settings.querySelector('#training-mode').value,week:weekdays.map((_,i)=>settings.querySelector('#training-weekday-'+i).value),...(start?{startedOn:config.startedOn||today(),stageSince:config.stageSince||today()}:{} )},{expected:settingsBase});
       settings.close();
     }catch(error){settings.querySelector('#settings-error').textContent=error.message;}
   }
@@ -63,22 +64,40 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
     const actions=settings.querySelector('#stage-actions');actions.replaceChildren();
     const label=node('label','','訓練階段');const select=node('select','');select.id='training-stage-select';
     for(const stage of STAGES){const option=node('option','',`階段 ${stage.id} · ${stage.title}`);option.value=String(stage.id);select.append(option);}select.value=String(config.stage);label.append(select);
-    const pickerRow=node('div','stage-picker-row');pickerRow.append(label,button('回到階段 1',()=>{select.value='1';stagePreviews();}));actions.append(pickerRow,node('p','workspace-note','可隨時選擇任一階段；兩週節奏僅供參考。今天及未來尚未開始、沒有動作紀錄的菜單會立即更新；已開始、已完成、症狀休息與歷史日期保留原菜單。'));
+    const pickerRow=node('div','stage-picker-row');pickerRow.append(label,button('回到階段 1',()=>{select.value='1';stagePreviews();}));actions.append(pickerRow,node('p','workspace-note','可隨時選擇任一階段；兩週節奏僅供參考。儲存後，今天及未來尚未開始、沒有動作紀錄的菜單會更新；已開始、已完成、症狀休息與歷史日期保留原菜單。'));
     select.onchange=stagePreviews;stagePreviews();
-    if(!config.startedOn)actions.append(button('開始訓練',()=>saveSettings(true)));
+    if(!config.startedOn)actions.append(button('開始訓練',()=>{settingsStart=true;settings.querySelector('#settings-error').textContent='開始日期已加入草稿，按儲存設定後生效。';}));
   }
-  let comparedWeek=null;
   const weekComparison=node('div','training-week-comparison');weekComparison.id='training-week-comparison';settings.querySelector('#training-week-settings').before(weekComparison);
-  function compareWeek() {comparedWeek=[...store.training().week];weekComparison.replaceChildren(node('p','workspace-note','一鍵套用只更新每週模板，尚未記錄日期使用 A／B 新安排。已儲存的單日安排、進行中與完成紀錄全部保留；可另行調整單日。'));for(let i=0;i<7;i++){const row=node('p','workspace-note');row.append(node('strong','',weekdays[i]+'：'),node('span','',TYPES[comparedWeek[i]]+' → '+TYPES[RECOMMENDED_WEEK[i]]));weekComparison.append(row);}}
-  header.querySelector('#training-settings').onclick=()=>{const config=store.training();settings.querySelector('#training-paused').checked=config.paused;settings.querySelector('#training-readiness').value=config.supportedStanding?'supported':'seated';settings.querySelector('#training-mode').value=config.trainingMode||'general';config.week.forEach((type,i)=>settings.querySelector('#training-weekday-'+i).value=type);settings.querySelector('#settings-error').textContent='';settingsStage();compareWeek();settings.showModal();};
-  const preset=button('套用建議週安排（A／B 與步行交錯）',()=>{try{store.applyRecommendedWeek(comparedWeek);RECOMMENDED_WEEK.forEach((type,i)=>settings.querySelector('#training-weekday-'+i).value=type);compareWeek();settings.querySelector('#settings-error').textContent='已套用週模板；所有已儲存日期保持原樣。';render();}catch(error){settings.querySelector('#settings-error').textContent=error.message;}});settings.querySelector('#training-week-settings').before(preset);
+  function compareWeek() {const comparedWeek=settingsBase.week;weekComparison.replaceChildren(node('p','workspace-note','套用只更新視窗草稿，按儲存設定後才生效；關閉或取消不會變更資料。尚未記錄日期使用 A／B 新安排。已儲存的單日安排、進行中與完成紀錄全部保留；可另行調整單日。'));for(let i=0;i<7;i++){const row=node('p','workspace-note');row.append(node('strong','',weekdays[i]+'：'),node('span','',TYPES[comparedWeek[i]]+' → '+TYPES[RECOMMENDED_WEEK[i]]));weekComparison.append(row);}}
+  header.querySelector('#training-settings').onclick=()=>{const config=store.training();settingsBase=config;settingsStart=false;settings.querySelector('#training-paused').checked=config.paused;settings.querySelector('#training-readiness').value=config.supportedStanding?'supported':'seated';settings.querySelector('#training-mode').value=config.trainingMode||'general';config.week.forEach((type,i)=>settings.querySelector('#training-weekday-'+i).value=type);settings.querySelector('#settings-error').textContent='';settingsStage();compareWeek();settings.showModal();};
+  const preset=button('套用建議週安排（A／B 與步行交錯）',()=>{RECOMMENDED_WEEK.forEach((type,i)=>settings.querySelector('#training-weekday-'+i).value=type);settings.querySelector('#settings-error').textContent='已套用到草稿，按儲存設定後生效；關閉不會變更。';});settings.querySelector('#training-week-settings').before(preset);
   settings.querySelector('form').onsubmit=event=>{event.preventDefault();saveSettings();};
-  const schedule=dialog('<form id="exercise-schedule-form"><div class="dialog-heading"><h2>安排訓練</h2><button type="button" data-close>關閉</button></div><label>訓練日期<input id="exercise-schedule-date" type="date" required></label><label>訓練類型<select id="exercise-schedule-type"></select></label><label>預計分鐘（選填）<input id="exercise-schedule-minutes" type="number" min="1" max="60" placeholder="使用階段建議時間"></label><p class="workspace-note">這是單日安排。改到其他日期會保留原日期的完成紀錄；若原日尚未開始，會改為未安排。請依耐受情況減量，休息日不用完成動作。</p><p id="exercise-schedule-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="workspace-button primary">儲存訓練安排</button></div></form>');
+  const schedule=dialog('<form id="exercise-schedule-form"><div class="dialog-heading"><h2>安排訓練</h2><button type="button" data-close>關閉</button></div><label>訓練日期<input id="exercise-schedule-date" type="date" required></label><label>訓練類型<select id="exercise-schedule-type"></select></label><label>預計分鐘（選填）<input id="exercise-schedule-minutes" type="number" min="1" max="60" placeholder="使用階段建議時間"></label><p class="workspace-note">這是單日安排。改到其他日期會保留原日期的完成紀錄；只有今天／未來且沒有開始或動作紀錄的草稿會移走，過去日期保留。請依耐受情況減量，休息日不用完成動作。</p><div id="exercise-schedule-preview"></div><label id="exercise-schedule-confirm-label" class="life-check" hidden><input id="exercise-schedule-confirm" type="checkbox"> 確認取代此日期安排：原菜單、勾選與結果保留，新安排從未完成開始。</label><p id="exercise-schedule-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="workspace-button primary">儲存訓練安排</button></div></form>');
   for(const [value,title] of Object.entries(TYPES)){const option=node('option','',title);option.value=value;schedule.querySelector('select').append(option);}
-  schedule.querySelector('select').onchange=()=>{const input=schedule.querySelector('#exercise-schedule-minutes');input.value='';input.max=schedule.querySelector('select').value==='walk'?'120':'60';};
-  let editingDay=null;
-  function openSchedule() {editingDay=selectedDay;const current=store.exercise(selectedDay);schedule.querySelector('#exercise-schedule-date').value=selectedDay;schedule.querySelector('select').value=current.type;schedule.querySelector('#exercise-schedule-minutes').value=current.timeSource==='stage'?'':current.minutes??'';schedule.querySelector('#exercise-schedule-minutes').max=current.type==='walk'?'120':'60';schedule.querySelector('#exercise-schedule-error').textContent='';schedule.showModal();}
-  schedule.querySelector('form').onsubmit=event=>{event.preventDefault();try{const target=schedule.querySelector('#exercise-schedule-date').value;const time=schedule.querySelector('#exercise-schedule-minutes').value;store.schedule(target,schedule.querySelector('select').value,time?Number(time):null);const previous=store.exercise(editingDay);if(target!==editingDay&&previous.status==='pending'&&!Object.values(previous.actions).some(Boolean))store.schedule(editingDay,'none');selectedDay=target;date.value=target;schedule.close();render();}catch(error){schedule.querySelector('#exercise-schedule-error').textContent=error.message;}};
+  let editingDay=null,editingSource=null,schedulePreview=null;
+  function updateSchedulePreview() {
+    const target=schedule.querySelector('#exercise-schedule-date').value,type=schedule.querySelector('select').value,raw=schedule.querySelector('#exercise-schedule-minutes').value;
+    const preview=schedule.querySelector('#exercise-schedule-preview');preview.replaceChildren();schedulePreview=null;schedule.querySelector('#exercise-schedule-confirm').checked=false;
+    try {
+      const current=store.exercise(target),next=store.previewSchedule(type,raw?Number(raw):null);
+      schedulePreview={target,type,time:raw?Number(raw):null,current,config:store.training(),protected:scheduleNeedsConfirmation(current,target,today())};
+      schedule.querySelector('#exercise-schedule-confirm-label').hidden=!schedulePreview.protected;
+      if(target!==editingDay)preview.append(node('p','workspace-note',editingDay+(editingDay>=today()&&untouchedExercise(editingSource)?'：尚未開始的安排將移走。':'：原菜單與結果保持不變，新日期另行安排。')));
+      preview.append(node('p','workspace-note',target+'：'+TYPES[current.type]+' · '+statusLabel(current)+' → '+TYPES[next.type]+(next.minutes?' · '+next.minutes+' 分鐘':'')+(schedulePreview.protected?'。確認後原紀錄可於「保留的原菜單與結果」查看。':'。尚未開始，可直接安排。')));
+      for(const [title,record] of [['原菜單',current],['新安排',next]]){const detail=node('details','stage-preview');detail.append(node('summary','',title));for(const move of menuFor(record))detail.append(node('p','workspace-note',(record.actions?.[move.id]?'✓ ':'')+move.name+' · '+doseText(move)));preview.append(detail);}
+    }catch(error){schedule.querySelector('#exercise-schedule-error').textContent=error.message;}
+  }
+  schedule.querySelector('select').onchange=()=>{const input=schedule.querySelector('#exercise-schedule-minutes');input.value='';input.max=schedule.querySelector('select').value==='walk'?'120':'60';updateSchedulePreview();};
+  schedule.querySelector('#exercise-schedule-date').onchange=updateSchedulePreview;schedule.querySelector('#exercise-schedule-minutes').oninput=updateSchedulePreview;
+  function openSchedule(requestedType) {editingDay=selectedDay;editingSource=store.exercise(selectedDay);const current=editingSource;schedule.querySelector('#exercise-schedule-date').value=selectedDay;schedule.querySelector('select').value=typeof requestedType==='string'?requestedType:current.type;schedule.querySelector('#exercise-schedule-minutes').value=typeof requestedType==='string'||current.timeSource==='stage'?'':current.minutes??'';schedule.querySelector('#exercise-schedule-minutes').max=current.type==='walk'?'120':'60';schedule.querySelector('#exercise-schedule-error').textContent='';updateSchedulePreview();schedule.showModal();}
+  schedule.querySelector('form').onsubmit=event=>{event.preventDefault();try{
+    if(!schedulePreview)throw new Error('請先查看有效的日期與安排。');
+    const confirmed=schedule.querySelector('#exercise-schedule-confirm').checked;
+    if(schedulePreview.protected&&!confirmed)throw new Error('請先確認取代安排；原菜單與結果會保留。');
+    store.moveSchedule(editingDay,schedulePreview.target,schedulePreview.type,schedulePreview.time,{confirmed,expected:schedulePreview.current,expectedSource:editingSource,expectedConfig:schedulePreview.config});
+    selectedDay=schedulePreview.target;date.value=selectedDay;schedule.close();render();
+  }catch(error){schedule.querySelector('#exercise-schedule-error').textContent=error.message;}};
   const stageApply=dialog('<form id="apply-stage-form"><div class="dialog-heading"><h2>套用目前階段</h2><button type="button" data-close>取消</button></div><p id="apply-stage-description" class="workspace-note"></p><div id="apply-stage-comparison" class="stage-comparison"></div><label class="life-check" id="apply-stage-confirm-label"><input id="apply-stage-confirm" type="checkbox"> 我確認重新安排；原菜單、勾選與結果將保存，新菜單從未完成開始。</label><p id="apply-stage-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="workspace-button primary">確認套用</button></div></form>');
   let applying=null;
   function openStageApply() {
@@ -157,7 +176,7 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
     if(focused)actions.querySelector('[data-exercise-action="'+CSS.escape(focused)+'"]')?.focus({preventScroll:true});
     const controls=workout.querySelector('#training-controls');controls.replaceChildren();
     const finish=button('完成今日訓練',()=>perform(()=>store.finish(selectedDay)),'workspace-button primary');finish.id='finish-training';finish.disabled=!canCheck||!menu.length||menu.some(action=>!current.actions[action.id]);if(canCheck&&untouchedExercise(current)){const start=button('開始本次訓練',()=>perform(()=>store.startExercise(selectedDay)));controls.append(start);}
-    controls.append(finish,button('設為恢復日',()=>perform(()=>store.schedule(selectedDay,'rest'))));
+    controls.append(finish,button('設為恢復日',()=>openSchedule('rest')));
   }
   // Old sport/rest checkboxes now call the same model; hide the punitive streak display.
   const streak=document.getElementById('streak-days')?.parentElement;
