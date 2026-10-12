@@ -1,3 +1,6 @@
+import {createStudySettings,normalizeSettings,STUDY_SETTINGS_PATH} from './adaptive-store.js';
+import {fixedClasses,interval,calendarConstraints} from './adaptive-core.js';
+import {createAdaptiveUI} from './adaptive-ui.js';
 import {createPlanner} from './daily-planner.js';
 import {createPlannerUI} from './planner-ui.js';
 import {createWeekPlanUI} from './week-plan-ui.js';
@@ -25,7 +28,27 @@ const save = () => localStorage.setItem(GAME_KEY, JSON.stringify(game));
 const db = window.learningDB;
 const states = () => window.readStudyStates();
 const timeTasks=createTimeTasks({db,localOnly:window.workspaceLocalOnly,day,onChange:()=>window.updateWorkspace?.()});
-const planner=createPlanner({db,localOnly:window.workspaceLocalOnly,onChange:()=>window.updateWorkspace?.()});
+let studySettings;
+function studyContext(){return {settings:studySettings?.config()||normalizeSettings(),events:window.readCalendarEvents()||{}};}
+async function readStudyContext(){
+  if(!db||window.workspaceLocalOnly)return studyContext();
+  await studySettings.retry();
+  if(studySettings.status().pending)throw {code:'SETTINGS_PENDING'};
+  const [config,events]=await Promise.all([db.ref(STUDY_SETTINGS_PATH).once('value'),db.ref('custom_events').once('value')]);
+  return {settings:normalizeSettings(config.val()||{}),events:events.val()||{}};
+}
+function validateStudyTask(task,{batch=false}={}){
+  const range=interval(task.planning?.start,task.planning?.end);if(!range||task.planning?.waiting||task.planning?.fixedId)return;
+  const busy=calendarConstraints(task.date,fixedClasses(data,studySettings?.config()||normalizeSettings()),window.readCalendarEvents()||{});
+  if(busy.items.some(e=>range[0]<e.range[1]&&e.range[0]<range[1]))throw new Error('任務時段與固定課程／定時行程衝突，請調整時段。');
+  if(!batch&&planner.all().some(other=>{if(other.id===task.id||other.deleted||other.planning?.waiting||other.date!==task.date)return false;const slot=interval(other.planning?.start,other.planning?.end);return slot&&range[0]<slot[1]&&slot[0]<range[1];}))throw new Error('任務時段與其他已安排任務衝突，請調整時段。');
+}
+const planner=createPlanner({db,localOnly:window.workspaceLocalOnly,onChange:()=>window.updateWorkspace?.(),batchContext:studyContext,readBatchContext:readStudyContext,validateTask:validateStudyTask});
+studySettings=createStudySettings({db,localOnly:window.workspaceLocalOnly,onChange:()=>{window.updateWorkspace?.();window.renderCalendar?.();window.renderBiochemUnits?.();if(studySettings&&!studySettings.status().pending)void planner.retry();}});
+window.fixedStudySchedule=()=>fixedClasses(data,studySettings.config());
+window.studyExamDate=()=>studySettings.config().examDate;
+window.studyDateKey=()=>dateKey();
+window.biochemScheduleLabel=id=>{const c=window.fixedStudySchedule().find(c=>c.course.id===String(id));return c?'🔒 固定課程 · '+c.date+' '+c.start+'–'+c.end+'（台灣時間）':null;};
 const life=createLifeStore({db,localOnly:window.workspaceLocalOnly,onChange:()=>window.updateWorkspace?.(),onHabits:(date,habits)=>window.applyLifeHabits?.(date,habits),mergeLegacy:(date,value)=>window.mergeLearningSnapshot('habits/'+date,value)});
 window.lifeHabits={set:life.setHabit};
 window.readLifeHabits=life.habits;
@@ -78,6 +101,8 @@ progression.innerHTML=`<section class="workspace-panel game-summary" aria-label=
 const plannerUI=createPlannerUI({data,planner,states});
 const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
+const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,events:()=>window.readCalendarEvents()||{}});
+window.renderBiochemUnits?.();window.renderCalendar?.();
 const legacyHistory=document.createElement('details');legacyHistory.className='planner-history';legacyHistory.innerHTML='<summary>舊時間目標紀錄</summary><div id="legacy-time-history"></div>';progression.append(legacyHistory);
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));
 const appearance=document.getElementById('appearance');
@@ -92,7 +117,7 @@ document.getElementById('mobile-menu').addEventListener('click',()=>{
   const open=document.getElementById('workspace-nav').classList.toggle('mobile-open');
   document.getElementById('mobile-menu').setAttribute('aria-expanded',String(open));
 });
-document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();});
+document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
 
 function setMeter(id, percent) {
   const meter = document.getElementById(id);
@@ -107,11 +132,13 @@ function renderPlanningSummary() {
   document.getElementById('current-week-description').textContent=week?week.title.split('＋')[0].trim():'目前不在 16 週計畫期間，依自己的需要安排複習。';
   document.getElementById('current-week-range').textContent=week?`${week.start.slice(5).replace('-','/')} – ${week.end.slice(5).replace('-','/')} · 沿用既有週計畫進度`:'';
   setMeter('week-meter',percent);
-  const events=[{date:'2026-10-15',text:'國考報名截止'},{date:'2027-01-16',text:'第一階醫師國考'}];
+  const events=[{date:'2026-10-15',text:'國考報名截止'},{date:studySettings.config().examDate,text:'第一階醫師國考'}];
+  for(const c of window.fixedStudySchedule())events.push({date:c.date,text:'🔒 固定課程 · '+c.start+'–'+c.end+' '+c.title});
   const known=new Set();
   for(const [date,entries] of Object.entries(window.readCalendarEvents() || {})) {
     if(date<day || !Array.isArray(entries)) continue;
     for(const event of entries) {
+      if(window.fixedStudySchedule().some(c=>event.fixedId===c.id||(c.date===date&&(event.text===c.title||/^鐸鐸生化(?:課|正式課|班)?$/.test(event.text||'')))))continue;
       const key=event.id || date+'__'+event.text;
       if(known.has(key))continue;known.add(key);events.push({date,text:event.text});
     }
@@ -128,7 +155,7 @@ function renderPlanningSummary() {
 function render() {
   const current=states();
   document.getElementById('today-label').textContent=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
-  plannerUI.render();weekUI.refresh();lifeUI.render();
+  plannerUI.render();weekUI.refresh();lifeUI.render();adaptiveUI.render();
   const legacy=document.getElementById('legacy-time-history');legacy.replaceChildren();
   const historical=timeTasks.history();
   for(const date of Object.keys(historical).filter(date=>Object.keys(historical[date]).length).sort().reverse()){const row=document.createElement('p');row.className='workspace-note';row.textContent=date+' · '+Object.entries(historical[date]).map(([id,task])=>({morning:'上午',afternoon:'下午',review:'複習'}[id]||id)+': '+(task.complete?'完成':'未完成')+(task.awarded?'（已領 XP）':'')).join(' · ');legacy.append(row);}
@@ -202,8 +229,8 @@ if (db && !window.workspaceLocalOnly) {
 // Refresh across midnight so legacy habits and the focus timer bind to the new date.
 function checkDay() { if(dateKey()!==day) location.reload(); }
 setInterval(checkDay,30000);
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) { checkDay(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry(); } });
-window.addEventListener('online',()=>{window.retryLearningSync(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();});
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) { checkDay(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry(); } });
+window.addEventListener('online',()=>{window.retryLearningSync(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
 render();
 void syncGame();
-void timeTasks.retry();void planner.retry();void life.retry();
+void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();

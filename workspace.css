@@ -394,3 +394,22 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 #apply-stage-error { color:var(--error); }
 @media(max-width:640px) { .stage-comparison { grid-template-columns:1fr; } }
 .training-toolbar .workspace-button[aria-pressed=true] { opacity:1; background:var(--tint); color:var(--accent); border-color:transparent; }
+
+/* Adaptive planning shares the existing workspace tokens and dialog scale. */
+.adaptive-panel { margin-bottom:24px; }
+.adaptive-toolbar,.adaptive-inline { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.adaptive-toolbar { margin:16px 0; }
+.adaptive-toolbar label { display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; align-items:center; white-space:nowrap; }
+.adaptive-toolbar label input { width:100%; min-width:0; }
+.adaptive-inline { justify-content:space-between; margin:8px 0; }
+.adaptive-fixed { padding:8px 0; color:var(--accent); }
+.adaptive-task,.adaptive-candidate { padding:16px 0; border-bottom:1px solid var(--line); }
+.adaptive-task strong,.adaptive-task small { display:block; overflow-wrap:anywhere; }
+.adaptive-task .adaptive-toolbar { margin:8px 0 0; }
+.adaptive-panel details { margin:16px 0; }
+.adaptive-panel h3,.adaptive-dialog h3 { margin-top:16px; font-size:15px; font-weight:600; }
+.adaptive-dialog details { margin:12px 0; }
+.adaptive-dialog p { overflow-wrap:anywhere; }
+.adaptive-dialog .planner-form-grid select,.adaptive-dialog .planner-form-grid input { min-width:0; width:100%; }
+.adaptive-baseline-title { margin:24px 0 16px; font-size:18px; font-weight:600; }
+@media(max-width:640px) { .adaptive-toolbar label { width:100%; } .adaptive-panel .panel-heading { align-items:flex-start; } .adaptive-inline { align-items:flex-start; } .adaptive-inline span { flex:1; min-width:0; overflow-wrap:anywhere; } }

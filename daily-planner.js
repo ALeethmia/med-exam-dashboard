@@ -1,24 +1,28 @@
 import {dateKey} from './study-core.js';
 export const PLANNER_PATH = 'gamification/v3/planner/tasks';
 export const PLANNER_KEY = 'med_exam_daily_planner_v3';
-const fields = ['title','date','minutes','links','complete','deleted','order','createdAt'];
+const fields = ['title','date','minutes','links','complete','deleted','order','createdAt','planning'];
 const clone = value => JSON.parse(JSON.stringify(value));
+export const planningLocked=task=>!!(task?.locked||task?.planning?.locked||task?.planning?.fixedId);
+const canonical=value=>{if(Array.isArray(value))return value.length?value.map(canonical):null;if(value&&typeof value==='object'){const pairs=Object.keys(value).sort().filter(k=>k!=='_versions'&&k!=='_version').map(k=>[k,canonical(value[k])]).filter(([,v])=>v!==null);return pairs.length?Object.fromEntries(pairs):null;}return value??null;};
+export const planningSnapshotSame=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
 const same = (a,b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 export function validDate(value) {
   const parsed=new Date(value+'T12:00:00Z');
   return /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0,10) === value;
 }
-export function createPlanner({db=null,localOnly=false,storage=localStorage,events=window,onChange=()=>{},newId=()=>crypto.randomUUID(),today=()=>dateKey(),now=()=>Date.now()}={}) {
+export function createPlanner({db=null,localOnly=false,storage=localStorage,events=window,onChange=()=>{},newId=()=>crypto.randomUUID(),today=()=>dateKey(),now=()=>Date.now(),batchContext=()=>null,readBatchContext=async()=>batchContext(),validateTask=()=>{}}={}) {
   const key=PLANNER_KEY+(localOnly?'_local':'');
-  let saved={tasks:{},pending:{}};
-  try {const value=JSON.parse(storage.getItem(key)||'{}');saved={tasks:value.tasks||{},pending:value.pending||{}};} catch {}
+  let saved={tasks:{},pending:{},batch:null};
+  try {const value=JSON.parse(storage.getItem(key)||'{}');saved={tasks:value.tasks||{},pending:value.pending||{},batch:value.batch||null};} catch {}
   const remote={}, conflicts={};
+  let batchCommitting=false;
   let syncing=false,dirty=false,error='';
   const persist=()=>storage.setItem(key,JSON.stringify(saved));
   const changed=()=>{persist();onChange();};
   function overlay(id,value) {
     const intent=saved.pending[id];
-    saved.tasks[id]={...value,...(intent?.patch||{})};
+    saved.tasks[id]={...value,...(intent?.patch||{}),...(saved.batch?.changes[id]||{})};
     if(intent?.awardDay && !saved.tasks[id].award) saved.tasks[id].award={xp:20,day:intent.awardDay};
   }
   function clean(patch) {
@@ -28,12 +32,21 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
     if('date' in result && !validDate(result.date))throw new Error('請選擇有效日期。');
     if('minutes' in result && result.minutes!==null && (!Number.isInteger(result.minutes)||result.minutes<1||result.minutes>1440))throw new Error('預計時間需為 1–1440 分鐘，或留空。');
     for(const flag of ['complete','deleted'])if(flag in result)result[flag]=!!result[flag];
+    if('planning' in result) {
+      const p=result.planning;
+      if(!p||p.version!==1||!['core','normal','flexible'].includes(p.priority||'normal')||('originalDate' in p&&!validDate(p.originalDate)))throw new Error('任務排程設定無效。');
+      for(const flag of ['locked','waiting'])if(flag in p&&typeof p[flag]!=='boolean')throw new Error('任務排程狀態無效。');
+      if(p.start||p.end){const minute=v=>/^([01]\d|2[0-3]):[0-5]\d$/.test(v||'')?Number(v.slice(0,2))*60+Number(v.slice(3)):null;const a=minute(p.start),b=minute(p.end);if(a===null||b===null||b<=a)throw new Error('任務時段需在同一天，結束須晚於開始。');}
+    }
     return result;
   }
   function update(id,patch) {
     if(!saved.tasks[id])throw new Error('找不到任務。');
+    if(saved.batch?.changes[id])throw new Error('此任務的整批排程待同步，請先完成或撤回排程。');
     patch=clean(patch);
     const task=saved.tasks[id];
+    if(planningLocked(task)&&(('date' in patch&&patch.date!==task.date)||patch.deleted||patch.planning?.waiting))throw new Error('鎖定任務不可延期、刪除或移入待安排區。');
+    validateTask({...task,...patch,id});
     const intent=saved.pending[id] ||= {patch:{},bases:{},tokens:{}};
     for(const [field,value] of Object.entries(patch)) {
       if(!Object.hasOwn(intent.patch,field))intent.bases[field]=task._versions?.[field] || null;
@@ -44,12 +57,33 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
     if(localOnly) {delete saved.pending[id];delete conflicts[id];}
     changed();void retry();
   }
-  function add({title,date=today(),minutes=null,links=[]}) {
+  function add({title,date=today(),minutes=null,links=[],planning}) {
     const id=newId();
     const order=Math.max(now(),...list(date).map(task=>(task.order||0)+1024));
-    const patch=clean({title,date,minutes,links,complete:false,deleted:false,order,createdAt:now()});
-    saved.tasks[id]={};update(id,patch);return id;
+    const patch=clean({title,date,minutes,links,complete:false,deleted:false,order,createdAt:now(),...(planning?{planning}:{})});
+    saved.tasks[id]={};try{update(id,patch);}catch(error){delete saved.tasks[id];throw error;}return id;
   }
+  function batch(changes,{expected=snapshot(),context=batchContext()}={}) {
+    if(saved.batch)throw new Error('請先完成或撤回上一批排程。');
+    if(!planningSnapshotSame(saved.tasks,expected)||!planningSnapshotSame(batchContext(),context))throw new Error('任務、容量或行程已更新，請重新預覽。');
+    const patches={};
+    for(const [id,input] of Object.entries(changes)) {
+      const task=saved.tasks[id];if(!task||task.complete||task.deleted||planningLocked(task))throw new Error('已完成、刪除或鎖定的任務不可重新排程。');
+      if(Object.keys(input).some(field=>!['date','planning','minutes'].includes(field)))throw new Error('整批排程只能修改日期、估時與排程 metadata。');
+      patches[id]=clean(input);validateTask({...task,...patches[id],id},{batch:true});
+    }
+    if(!Object.keys(patches).length)throw new Error('沒有可套用的任務變更。');
+    saved.batch={token:newId(),changes:patches,expected:clone(expected),context:clone(context),conflict:false};
+    for(const id of Object.keys(patches))overlay(id,saved.tasks[id]);
+    if(localOnly)saved.batch=null;changed();void retry();
+  }
+  function discardBatch() {
+    if(batchCommitting)throw new Error('正在提交整批排程，請等待結果。');
+    const intent=saved.batch;if(!intent)return;saved.batch=null;
+    for(const id of Object.keys(intent.changes)){const base=remote[id]||intent.expected[id];if(base)overlay(id,base);else delete saved.tasks[id];}
+    error='';changed();
+  }
+  function snapshot() {return clone(saved.tasks);}
   function conflictFields(current,intent) {
     return Object.keys(intent.patch).filter(field=>(current?._versions?.[field]||null)!==intent.bases[field] &&
       current?._versions?.[field]!==intent.tokens[field] && !same(current?.[field],intent.patch[field]));
@@ -88,9 +122,35 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
         }
         delete conflicts[id];overlay(id,value);persist();
       }
+      if(saved.batch&&!saved.batch.conflict&&!Object.keys(saved.pending).length) {
+        const intent=clone(saved.batch);
+        const context=await readBatchContext();
+        if(saved.batch?.token!==intent.token)return;
+        if(!planningSnapshotSame(context,intent.context)){saved.batch.conflict=true;changed();return;}
+        const reference=db.ref(PLANNER_PATH);if(reference.once)await reference.once('value');
+        if(saved.batch?.token!==intent.token)return;
+        batchCommitting=true;
+        const result=await reference.transaction(current=>{
+          if(saved.batch?.token!==intent.token)return;
+          const records=current||{};
+          if(Object.entries(intent.changes).every(([id,patch])=>Object.entries(patch).every(([field,value])=>records[id]?._versions?.[field]===intent.token&&planningSnapshotSame(records[id]?.[field],value))))return records;
+          // One root transaction guards all selected tasks AND the occupancy used by preview.
+          if(!planningSnapshotSame(records,intent.expected)||!planningSnapshotSame(batchContext(),intent.context))return;
+          const next=clone(records);
+          for(const [id,patch] of Object.entries(intent.changes)) {
+            if(!next[id]||next[id].complete||next[id].deleted||planningLocked(next[id]))return;
+            next[id]={...next[id],...patch,_versions:{...(next[id]._versions||{}),...Object.fromEntries(Object.keys(patch).map(field=>[field,intent.token]))}};
+          }
+          return next;
+        },undefined,false);
+        const records=result.snapshot.val()||{};
+        for(const [id,value] of Object.entries(records))remote[id]=value;
+        if(result.committed){saved.batch=null;for(const [id,value] of Object.entries(records))overlay(id,value);}
+        else saved.batch.conflict=true;
+      }
       error='';
     } catch (failure) {error=String(failure?.code || 'NETWORK_ERROR').replace(/[^a-zA-Z_-]/g,'').slice(0,60) || 'NETWORK_ERROR';}
-    finally {syncing=false;changed();if(dirty&&!error)void retry();}
+    finally {batchCommitting=false;syncing=false;changed();if(dirty&&!error)void retry();}
   }
   function resolve(id,keepLocal) {
     const intent=saved.pending[id];if(!intent||!conflicts[id])return;
@@ -102,7 +162,7 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
     delete conflicts[id];overlay(id,remote[id]||{});changed();void retry();
   }
   function list(date,includeDeleted=false) {
-    return Object.entries(saved.tasks).map(([id,value])=>({id,...value})).filter(task=>task.date===date && (includeDeleted||!task.deleted)).sort((a,b)=>(a.order||0)-(b.order||0)||(a.createdAt||0)-(b.createdAt||0)||a.id.localeCompare(b.id));
+    return Object.entries(saved.tasks).map(([id,value])=>({id,...value})).filter(task=>task.date===date && !task.planning?.waiting && (includeDeleted||!task.deleted)).sort((a,b)=>(a.order||0)-(b.order||0)||(a.createdAt||0)-(b.createdAt||0)||a.id.localeCompare(b.id));
   }
   function move(id,direction) {
     const tasks=list(saved.tasks[id]?.date),index=tasks.findIndex(task=>task.id===id),other=tasks[index+direction];if(!other)return;
@@ -125,6 +185,8 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
     try {
       const incoming=JSON.parse(event.newValue);
       saved.tasks={...saved.tasks,...incoming.tasks};
+      if(!saved.batch)saved.batch=incoming.batch||null;
+      for(const id of Object.keys(saved.batch?.changes||{}))overlay(id,saved.tasks[id]);
       // Keep unsent edits from either tab; reconcile against Firebase field versions.
       for(const [id,intent] of Object.entries(incoming.pending||{})) {
         const current=saved.pending[id];
@@ -133,11 +195,11 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
       onChange();void retry();
     } catch {}
   });
-  return {add,update,list,move,retry,resolve,awards,
+  return {add,update,list,move,retry,resolve,awards,batch,discardBatch,snapshot,all:()=>Object.entries(saved.tasks).map(([id,t])=>({id,...clone(t)})),
     copy:(id,date=today())=>{const task=saved.tasks[id];if(!task)throw new Error('找不到任務。');return add({title:task.title,date,minutes:task.minutes??null,links:task.links||[]});},
     remove:id=>update(id,{deleted:true}),
-    dates:()=>[...new Set(Object.values(saved.tasks).filter(task=>!task.deleted).map(task=>task.date))].sort().reverse(),
-    status:()=>({error,pending:Object.keys(saved.pending).length,syncing,conflicts:clone(conflicts)}),
+    dates:()=>[...new Set(Object.values(saved.tasks).filter(task=>!task.deleted&&!task.planning?.waiting).map(task=>task.date))].sort().reverse(),
+    status:()=>({error,pending:Object.keys(saved.pending).length+(saved.batch?1:0),syncing,conflicts:clone(conflicts),batch:saved.batch?{conflict:saved.batch.conflict,committing:batchCommitting,count:Object.keys(saved.batch.changes).length,ids:Object.keys(saved.batch.changes)}:null}),
     get:id=>saved.tasks[id]?{id,...clone(saved.tasks[id])}:null,
     cloud:id=>clone(remote[id]||{})};
 }

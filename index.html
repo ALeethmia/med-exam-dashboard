@@ -1085,6 +1085,7 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-2 gap-2 text-xs"><label>開始時間（選填）<input type="time" id="modal-start-time" class="workspace-input"></label><label>結束時間（選填）<input type="time" id="modal-end-time" class="workspace-input"></label></div><p id="calendar-time-error" class="workspace-note" role="alert"></p>
         <!-- 標記顏色選擇 -->
         <div class="flex items-center justify-between pt-1">
           <div class="flex items-center gap-2" id="color-picker-group">
@@ -1300,7 +1301,7 @@
     function updateClock() {
       const now = new Date();
       document.getElementById('current-clock').innerText = now.toTimeString().split(' ')[0];
-      const diffDays = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.ceil((new Date((window.studyExamDate?.()||'2027-01-16')+'T08:30:00+08:00') - now) / (1000 * 60 * 60 * 24));
       document.getElementById('countdown-days').innerText = diffDays > 0 ? diffDays : 0;
       updateCurrentSchedulePointer();
     }
@@ -1879,8 +1880,8 @@
       const container=document.getElementById('biochem-units-container');
       const query=(document.getElementById('biochem-search-input')?.value || '').trim().toLowerCase();
       const groups=biochemData.filter(item=>(currentBiochemFilter==='ALL' || item.weekKey===currentBiochemFilter) &&
-        `${item.id} ${item.date} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase().includes(query)).map(item=>({
-          id:item.id,title:item.title,week:item.weekKey,meta:`${item.tag} · ${item.targetWeek} · ${item.date}`,all:[item],
+        `${window.biochemScheduleLabel?.(item.id)||''} ${item.id} ${item.date} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase().includes(query)).map(item=>({
+          id:item.id,title:item.title,week:item.weekKey,meta:window.biochemScheduleLabel?.(item.id)||`${item.tag} · ${item.targetWeek} · ${item.date}`,all:[item],
           items:[{id:item.id,title:'完成課程',meta:item.duration,notes:[['核心考點',item.focus],['複習建議',item.reviewGuide]]}]
         }));
       SubjectUI.render({container,path:'biochem',groups,state:savedBiochemState,query,rowClass:'biochem-course-row',onChange:(id,complete)=>window.setStudyCompletion('biochem',id,complete)});
@@ -2529,7 +2530,7 @@
     function updateExamCountdownBadges() {
       const today = new Date();
       // Exam: 2027-01-16
-      const examDate = new Date(2027, 0, 16);
+      const examDate = new Date((window.studyExamDate?.()||'2027-01-16')+'T00:00:00+08:00');
       const regStartDate = new Date(2026, 9, 6);
       const regEndDate = new Date(2026, 9, 15, 23, 59, 59);
       const biochemDate = new Date(2026, 10, 6, 18, 0, 0);
@@ -2576,9 +2577,9 @@
       for (let d = 1; d <= totalDays; d++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         let classes = 'p-1.5 rounded text-[11px] transition relative cursor-pointer flex flex-col items-center justify-center ';
-        if (examDatesList.includes(dateStr)) classes += 'calendar-day-exam ';
+        if ((window.studyExamDate?[window.studyExamDate()]:examDatesList).includes(dateStr)) classes += 'calendar-day-exam ';
         else if (regDatesList.includes(dateStr)) classes += 'calendar-day-reg ';
-        else if (classDates.includes(dateStr)) classes += 'calendar-day-class ';
+        else if ((window.fixedStudySchedule?.().map(c=>c.date)||classDates).includes(dateStr)) classes += 'calendar-day-class ';
         else classes += 'text-slate-300 hover:bg-slate-700/60 ';
 
         if (dateStr === todayStr) classes += 'calendar-day-today ';
@@ -2612,6 +2613,8 @@
       selectedModalDate = dateStr;
       document.getElementById('modal-date-title').innerText = `${dateStr} 行程管理`;
       document.getElementById('modal-event-input').value = '';
+      for(const id of ['modal-start-time','modal-end-time'])document.getElementById(id).value='';
+      document.getElementById('calendar-time-error').textContent='';
       document.getElementById('modal-start-date').value = dateStr;
       document.getElementById('modal-end-date').value = dateStr;
       renderModalEventsList();
@@ -2626,12 +2629,15 @@
     const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
     function renderModalEventsList() {
       const container = document.getElementById('modal-events-list');
+      const fixed=(window.fixedStudySchedule?.()||[]).filter(c=>c.date===selectedModalDate);
+      const fixedHTML=fixed.map(c=>'<p class="workspace-note">🔒 固定課程 · '+escapeHTML(c.start+'–'+c.end+' '+c.title)+'</p>').join('');
       const events = customEvents[selectedModalDate] || [];
       if (events.length === 0) {
-        container.innerHTML = `<span class="text-xs text-slate-500 italic block py-1">尚無自訂行程</span>`;
+        container.innerHTML = fixedHTML+`<span class="text-xs text-slate-500 italic block py-1">尚無自訂行程</span>`;
         return;
       }
-      container.innerHTML = events.map((ev, idx) => {
+      container.innerHTML = fixedHTML+events.map((ev, idx) => {
+        if((window.fixedStudySchedule?.()||[]).some(c=>ev.fixedId===c.id)||fixed.some(c=>ev.text===c.title||/^鐸鐸生化(?:課|正式課|班)?$/.test(ev.text||'')))return '';
         const colorMap = {
           emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
           amber: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
@@ -2644,7 +2650,7 @@
 
         return `
           <div class="flex items-center justify-between p-2 rounded-lg border ${colorMap[ev.color] || colorMap.emerald} text-xs">
-            <span class="truncate">${escapeHTML(ev.text)} ${rangeText}</span>
+            <span class="truncate">${escapeHTML(ev.text)} ${ev.startTime?escapeHTML(ev.startTime+'–'+ev.endTime):''} ${rangeText}</span>
             <button data-event-id="${escapeHTML(ev.id || '')}" data-event-index="${idx}" class="text-slate-400 hover:text-rose-400 p-0.5 ml-2"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
           </div>
         `;
@@ -2664,6 +2670,9 @@
       const startDateStr = document.getElementById('modal-start-date').value || selectedModalDate;
       const endDateStr = document.getElementById('modal-end-date').value || startDateStr;
       const color = document.querySelector('input[name="event-color"]:checked')?.value || 'emerald';
+      const startTime=document.getElementById('modal-start-time').value,endTime=document.getElementById('modal-end-time').value;
+      if((startTime||endTime)&&(!startTime||!endTime||endTime<=startTime)){document.getElementById('calendar-time-error').textContent='請輸入同一天的完整起迄時段，結束須晚於開始。';return;}
+      document.getElementById('calendar-time-error').textContent='';
 
       let start = new Date(startDateStr);
       let end = new Date(endDateStr);
@@ -2678,7 +2687,7 @@
       const affectedDates = [];
 
       while (cur <= end) {
-        const curDateStr = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+        const curDateStr = `${cur.getUTCFullYear()}-${String(cur.getUTCMonth() + 1).padStart(2, '0')}-${String(cur.getUTCDate()).padStart(2, '0')}`;
         affectedDates.push(curDateStr);
         if (!customEvents[curDateStr]) customEvents[curDateStr] = [];
         customEvents[curDateStr].push({
@@ -2686,9 +2695,10 @@
           text: text,
           color: color,
           startDate: startDateStr,
-          endDate: endDateStr
+          endDate: endDateStr,
+          ...(startTime?{startTime,endTime}:{})
         });
-        cur.setDate(cur.getDate() + 1);
+        cur.setUTCDate(cur.getUTCDate() + 1);
       }
 
       localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
@@ -3163,9 +3173,9 @@
       while (cur <= endDate) {
         if (cur <= today) {
           elapsedDays++;
-          const y = cur.getFullYear();
-          const m = String(cur.getMonth() + 1).padStart(2, '0');
-          const d = String(cur.getDate()).padStart(2, '0');
+          const y = cur.getUTCFullYear();
+          const m = String(cur.getUTCMonth() + 1).padStart(2, '0');
+          const d = String(cur.getUTCDate()).padStart(2, '0');
           const dayKey = `${y}-${m}-${d}`;
           const dayHabits = window.readLifeHabits ? window.readLifeHabits(dayKey) : (dayKey === todayStr && typeof todayHabits !== 'undefined')
             ? todayHabits
@@ -3174,7 +3184,7 @@
           eligibleCount += eligible.length;
           habitDoneCount += eligible.filter(id => dayHabits[id]).length;
         }
-        cur.setDate(cur.getDate() + 1);
+        cur.setUTCDate(cur.getUTCDate() + 1);
       }
 
       if (elapsedDays === 0) return 0;
