@@ -1,12 +1,12 @@
 import {growthSnapshot} from './growth-core.js';
-import {dateKey} from './study-core.js';
+import {dateKey,COURSE_PROGRESS_NOTE} from './study-core.js';
 const node=(tag,cls='',text)=>{const e=document.createElement(tag);e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export function createGrowthUI({data,states,planner,life,awards,today=()=>dateKey()}) {
- const page=document.getElementById('tab-content-stats'),trend=document.getElementById('progress-trend-card');
+ const page=document.getElementById('tab-content-stats');
  const summary=node('section','workspace-panel');summary.id='growth-week';summary.innerHTML='<h3>本週學習摘要</h3><p id="growth-week-tasks" class="growth-main-number"></p><p id="growth-week-dates" class="workspace-note"></p><p class="workspace-note">依任務安排日期統計目前完成狀態，排除移除及待安排任務。尚無每次完成時間戳，不代表實際完成日或讀書時數；取消完成後即不列入。</p>';
- const courses=node('section','workspace-panel');courses.innerHTML='<h3>四科課程進度</h3><p id="growth-course-total"></p><div id="growth-subjects"></div><p class="workspace-note">整體按 115 個單元數計算；各科沿用原定義：生理、生化按單元數，解剖、藥理按影片時長加權。影片時長不是實際讀書時間。</p>';
+ const courses=node('section','workspace-panel');courses.innerHTML='<h3>四科課程進度</h3><p id="growth-course-total"></p><div id="growth-subjects"></div><p class="workspace-note" data-course-progress-basis>'+COURSE_PROGRESS_NOTE+'</p>';
  page.prepend(summary,courses);
- const trendNote=node('p','workspace-note','此圖按原 16 週的課程歸屬，呈現目前完成率與原習慣紀錄；不是過去各週的完成快照或真實讀書速度。週間差異不能視為時間上的增長。');trend.prepend(trendNote);
+
  const exercise=node('section','workspace-panel');exercise.innerHTML='<h3>運動與恢復</h3><p id="growth-exercise"></p><p id="growth-exercise-records" class="workspace-note"></p><p id="growth-training-paused" class="workspace-note"></p>';
  const history=node('details','workspace-panel growth-history');history.innerHTML='<summary>歷史首次完成獎勵</summary><p id="weekly-detail"></p><p id="growth-award-total"></p><p class="workspace-note">獎勵事件包含課程、Planner 與舊時間目標；取消、改期、移除或復原不新增獎勵。它不是目前任務完成數、學習量或讀書時數，也不是王國資源。</p>';page.append(exercise,history);
  function render(){const s=growthSnapshot({data,states:states(),tasks:planner.all(),awards:awards(),day:today(),getHabits:life.habits,training:life.training()});

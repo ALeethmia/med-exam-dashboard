@@ -9,7 +9,7 @@ import {createWeekPlanUI} from './week-plan-ui.js';
 import {createTimeTasks} from './time-tasks.js';
 import {createLifeStore} from './life-store.js';
 import {createLifeUI} from './life-ui.js';
-import {GAME_KEY, GAME_PATH, dateKey, awardKey, flattenSubjects, subjectStats, gameStats} from './study-core.js';
+import {GAME_KEY, GAME_PATH, COURSE_PROGRESS_NOTE, dateKey, awardKey, flattenSubjects, subjectStats, gameStats} from './study-core.js';
 
 const data = window.studyData;
 if (!data) throw new Error('課程資料未能載入');
@@ -91,10 +91,10 @@ content.innerHTML = `
     <div class="workspace-stack">
       <section class="workspace-panel" aria-labelledby="progress-title">
         <div class="panel-heading"><h2 id="progress-title">科目進度</h2><button class="workspace-link" data-go="subjects">所有科目 →</button></div>
-        <div class="overall-summary"><div><span class="overall-number" id="overall-percent"></span><span class="overall-label">已追蹤課程完成率</span></div><span id="overall-detail" class="workspace-note"></span></div>
+        <div class="overall-summary"><div><span class="overall-number" id="overall-percent"></span><span class="overall-label">整體完成率（按單元數）</span></div><span id="overall-detail" class="workspace-note"></span></div>
         <div class="workspace-meter"><span id="overall-meter"></span></div>
         <div id="subject-summary"></div>
-        <p class="workspace-note">整體依四科 115 個項目計算；生理與生化依項目數，解剖與藥理依影片時長。</p>
+        <p class="workspace-note" data-course-progress-basis>${COURSE_PROGRESS_NOTE}</p>
       </section>
       <section class="workspace-panel" aria-labelledby="upcoming-title">
         <div class="panel-heading"><h2 id="upcoming-title">近期日程</h2><button class="workspace-link" data-go="calendar">行事曆 →</button></div>

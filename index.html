@@ -152,7 +152,7 @@
     <!-- ========================================== -->
     <div id="tab-content-plan" class="space-y-6">
 
-      <!-- 📈 原週計畫完成率與習慣紀錄圖 (Recharts Powered) -->
+      <!-- 📈 週計畫參考：原週次完成率與習慣紀錄圖 (Recharts Powered) -->
       <div id="progress-trend-card" class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-xl space-y-4">
         <!-- 頂部標題與控制項 -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-700/60 pb-3">
@@ -166,10 +166,10 @@
               </span>
             </div>
             <h2 class="text-base md:text-lg font-bold text-white mt-1.5 flex items-center gap-2">
-              原週計畫完成率與習慣紀錄
+              週計畫參考：原週次完成率與習慣紀錄
             </h2>
             <p class="text-xs text-slate-400 mt-0.5">
-              原計畫週次的目前完成比例；不是按實際完成日期累積的歷史趨勢。
+              此圖按原 16 週的課程／週勾選歸屬，呈現目前完成率與原習慣紀錄；不是過去各週的完成快照或真實讀書速度，週次差異不能視為時間上的增長。
             </p>
           </div>
 
@@ -1122,7 +1122,7 @@
         for(let i=0;i<hops;i++) el = el.parentElement;
         document.getElementById('tab-content-' + page).append(el);
       };
-      moveCard('progress-trend-card','stats');
+      moveCard('progress-trend-card','plan');
       moveCard('calendar-grid','calendar',4);
       document.getElementById('calendar-grid').closest('.rounded-2xl').classList.add('calendar-card');
       const calendarPage=document.getElementById('tab-content-calendar');
@@ -1148,7 +1148,7 @@
       for(const id of ['physiology','anatomy','biochem','pharmacology','plan','calendar','schedule','exercise','focus','stats']) document.getElementById('tab-content-'+id).classList.add('legacy-page');
       window.SubjectUI.prepare();
       const plan=document.getElementById('tab-content-plan');
-      Array.from(plan.children).filter(el => !el.querySelector('#checklist-container')).forEach(el=>el.remove());
+      Array.from(plan.children).filter(el => !el.querySelector('#checklist-container') && el.id!=='progress-trend-card').forEach(el=>el.remove());
     })();
   </script>
   <script type="text/plain" id="learning-script">
@@ -1213,7 +1213,7 @@
       document.getElementById('workspace-nav').classList.remove('mobile-open'); document.getElementById('mobile-menu').setAttribute('aria-expanded','false');
       window.dispatchEvent(new CustomEvent('workspace-page-change',{detail:{tab:tabName,group}}));
       if(tabName==='kingdom'&&window.openChroniclesRequested)window.openKingdomChronicles?.();
-      if(tabName==='stats' && typeof window.updateProgressTrendChart==='function') setTimeout(()=>{window.dispatchEvent(new Event('resize'));window.updateProgressTrendChart();},50);
+      if(tabName==='plan' && typeof window.updateProgressTrendChart==='function') setTimeout(()=>{window.dispatchEvent(new Event('resize'));window.updateProgressTrendChart();},50);
     };
 
     renderMainTabsNav();
@@ -3010,7 +3010,7 @@
     });
 
     // ==========================================
-    // 📈 Recharts 原週計畫完成率與習慣紀錄圖
+    // 📈 Recharts 週計畫參考：原週次完成率與習慣紀錄圖
     // ==========================================
     let trendChartMode = 'sprint'; // 'sprint' | 'rolling'
     let rechartsReactRoot = null;
@@ -3349,7 +3349,7 @@
 
     window.updateProgressTrendChart = function() {
       window.updateWorkspace?.();
-      if (currentActiveTab !== 'stats') return;
+      if (currentActiveTab !== 'plan') return;
       const mountEl = document.getElementById('recharts-progress-trend-root');
       if (!mountEl) return;
 
@@ -3772,7 +3772,7 @@
     updatePomodoroStatsUI();
 
     window.addEventListener('resize', () => {
-      if (currentActiveTab === 'stats') {
+      if (currentActiveTab === 'plan') {
         window.updateWorkspace?.();
         window.updateProgressTrendChart();
       }

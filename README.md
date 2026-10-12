@@ -258,7 +258,7 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 - `npm run lint`：通過，包括章節、王國模組及 HTML inline scripts。
 - `npm test`：94 項通過（原有 82 項＋王國／編年史 7 項＋成長統計 5 項），四科與原始 16 週資料 hash 不變。
 - `npm run build`：通過。
-- `npm run test:browser`：94 項完整回歸通過（包含 15 項王國／編年史與 4 項成長統計／領主檔案測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
+- `npm run test:browser`：96 項完整回歸通過（包含 15 項王國／編年史與 6 項成長統計／領主檔案／圖表掛載測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
 
 截圖使用本機示例資料：`docs/screenshots/becoming-kingdom-desktop.png`、`docs/screenshots/becoming-kingdom-mobile.png`。
 
@@ -281,10 +281,18 @@ Vercel Preview 應先用 `?mode=local` 隔離本機模式查看。本人仍需�
 - 本週目前完成數來自 Planner 的有效任務（排除 deleted、waiting，依 task ID 去重），按安排日期所在週計數。取消完成、移除會減少目前完成數，復原／重新完成不會產生重複項目。現有 award.day 只是首次獎勵日期，不能代表每次完成時間，因此畫面明示「依安排日期」，沒有真實完成日或讀書時數的推測。
 - 整體課程百分比沿用首頁的單元數比率；四科百分比直接使用 subjectStats：生理／生化按單元數，解剖／藥理按影片時長。兩種基準明確標示，不把影片時長當成實際讀書時數。
 - 本週運動摘要只讀 habits 日期紀錄，截至今日區分正常完成、低強度替代、主動休息、症狀休息、明確未安排、已安排未完成；舊 daily-sport 打卡附來源說明。無紀錄日不依目前週課表推論狀態；暫停是目前設定，因沒有歷史暫停時間而不統計過去暫停天數。
-- 舊 XP 獲獎事件改放次要的「歷史首次完成獎勵」，不等於目前任務完成數或王國資源。原四週圖表保留，但明示其為原週次的目前課程完成率／舊習慣紀錄，不是過往完成快照或真實學習速度；週次差異不稱為時間增長。
+- 舊 XP 獲獎事件改放次要的「歷史首次完成獎勵」，不等於目前任務完成數或王國資源。原四週圖表只保留於週計畫頁，成長統計不掛載或注入圖表說明；圖表明示其為原週次的目前課程完成率／舊習慣紀錄，不是過往完成快照或真實學習速度；週次差異不稱為時間增長。
 
 王國頂部新增固定匿名「我的領主／學者領主／邊境開拓者」，本地原創 lord-emblem.svg 不代表特定性別或真實外貌，也不讀 Google 姓名、email、照片。已解鎖成就數沿用 gameStats，完成單元數沿用 subjectStats，章節／現實目標沿用 chapters.js 與 Planner 考試日期。
 
 編年史移到領地插畫下方，領主卡與編年史標題提供即時成就數摘要，只保留一份完整成就清單。「查看我的編年史」支援滑鼠與 Enter 鍵，展開後捲動並聚焦摘要，原 progression／書籤相容入口全部保留。歷史 XP／時間目標保持原樣，不新增角色能力或正式貨幣。
 
 截圖：becoming-kingdom-desktop.png、becoming-kingdom-mobile.png、becoming-growth-desktop.png、becoming-growth-mobile.png（均在 docs/screenshots，隔離示例資料）。人工驗收仍需在授權網域的兩裝置確認課程、任務、運動／休閒與成就摘要隨同步更新；沒有正式 Firebase 資料測試。
+
+### Phase 2A：週計畫圖表位置與說明一致性
+
+原有 progress-trend-card 由頁面啟動時移至 tab-content-plan，保留一張圖；清理舊週計畫卡片時明確保留此節點。進入週計畫、切換圖表模式與視窗 resize 才更新圖表。growth-ui.js 只建置成長統計摘要，不讀取或修改週計畫的圖表 DOM。圖表說明放在自身標題下，標明原週次的目前完成率／原習慣紀錄，並非實際完成日期的歷史趨勢。
+
+首頁、成長統計、王國共用 COURSE_PROGRESS_NOTE：整體按單元數；生理／生化按單元數，解剖／藥理按影片時長加權，影片時長不是實際讀書時間。只有文字與掛載位置調整，沒有修改進度、XP 或 Firebase 計算與資料。
+
+GitHub deployment 7012158711 已核對 SHA 02dfd1fe503114b69e6711af9b610a4d60493952，Preview 狀態 success；對應不可變網址為 https://med-exam-dashboard-6bhdvl4pp-peterlee0718-9156.vercel.app。這驗證前一版 02dfd1f 的部署，後續提交仍需各自核對 SHA 與部署結果。

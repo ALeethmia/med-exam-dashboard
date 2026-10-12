@@ -106,7 +106,7 @@ test('separate pages retain calendar, routines, exercise and focus timer',async(
   await navigate(page,'schedule');await expect(page.locator('#daily-sport')).toBeVisible();await page.locator('#daily-sport').check();
   await navigate(page,'exercise');await expect(page.locator('#training-stage')).toBeVisible();await expect(page.locator('#training-description')).toContainText('正常完成');
   await navigate(page,'plan');await expect(page.locator('#checklist-container input')).toHaveCount(16);await page.locator('[data-week="1"] > summary').click();await page.locator('#w-1').check();
-  await navigate(page,'stats');await expect(page.locator('#progress-trend-card')).toBeVisible();
+  await navigate(page,'plan');await expect(page.locator('#progress-trend-card')).toBeVisible();
   await expect(page.locator('.recharts-wrapper')).toBeVisible();
   await navigate(page,'focus');await page.locator('#pomo-toggle-btn').click();await expect(page.locator('#pomo-toggle-text')).toContainText('暫停');
 });
