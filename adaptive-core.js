@@ -111,3 +111,11 @@ export function progressSummary(data,states,tasks,courseAwards={},today=dateKey(
   const taskDates=tasks.filter(t=>!t.deleted&&t.complete).map(t=>t.award?.day).filter(day=>validDate(day)&&day<=today);
   return {subjects:[...new Set(units.map(u=>u.subject))].map(subject=>({subject,done:courses.filter(u=>u.subject===subject).length,remaining:units.filter(u=>u.subject===subject).length-courses.filter(u=>u.subject===subject).length})),weekCourses:courseDates.filter(d=>d>=week).length,weekTasks:taskDates.filter(d=>d>=week).length,recentCourses:courseDates.filter(d=>d>=recent).length,recentTasks:taskDates.filter(d=>d>=recent).length,undatedCourses:courses.length-courseDates.length};
 }
+
+export function studyWeekDisplayTitle(week,classes) {
+  if(!week.title.includes('鐸鐸生化'))return week.title;
+  return week.title.replace(/((?:鐸鐸生化)?第([1-8])堂(?:\[.*?\])?)\([^)]*\)/g,(text,label,id)=>{
+    const course=classes.find(c=>c.course.id===id);
+    return course?label+'（正式課：'+course.date+' '+course.start+'–'+course.end+'；週次為原計畫參考）':text;
+  });
+}

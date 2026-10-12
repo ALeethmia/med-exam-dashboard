@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {defaultStudySettings,fixedClasses,BIOCHEM_SLOTS,dailyCapacity,studyWeek,proposeSchedule,unionMinutes,taskPlanning,calendarConstraints,addDays,reviseSchedule,progressSummary} from '../adaptive-core.js';
+import {defaultStudySettings,fixedClasses,BIOCHEM_SLOTS,dailyCapacity,studyWeek,proposeSchedule,unionMinutes,taskPlanning,calendarConstraints,addDays,reviseSchedule,progressSummary,studyWeekDisplayTitle} from '../adaptive-core.js';
 import {createStudySettings,STUDY_SETTINGS_PATH,STUDY_SETTINGS_KEY} from '../adaptive-store.js';
 import {createPlanner,PLANNER_PATH,PLANNER_KEY,planningSnapshotSame} from '../daily-planner.js';
 import {dateKey} from '../study-core.js';
@@ -120,4 +120,15 @@ test('no-estimate batches reconnect across devices, preserve custom minutes and 
  const server=planningBackend(),[a,b]=clients(server);await settle(a.planner,b.planner);const x=a.planner.add({title:'no estimate'}),y=a.planner.add({title:'custom',minutes:173});await settle(a.planner,b.planner);
  a.connection.online=false;const r=suggest(a.planner.all());a.planner.batch(Object.fromEntries(r.moves.map(m=>[m.id,m.patch])),{expected:a.planner.snapshot()});await settle(a.planner);a.connection.online=true;await a.planner.retry();await settle(a.planner,b.planner);assert.equal(b.planner.get(x).date,'2026-10-12');assert.equal(b.planner.get(x).minutes,null);assert.equal(b.planner.get(y).date,'2026-10-13');assert.equal(b.planner.get(y).minutes,173);assert.deepEqual(a.planner.awards(),{});
  b.connection.online=false;const next=suggest(b.planner.all(),{mode:'date',target:'2026-10-15'});b.planner.batch(Object.fromEntries(next.moves.map(m=>[m.id,m.patch])),{expected:b.planner.snapshot()});await settle(b.planner);a.planner.update(x,{complete:true});await settle(a.planner);b.connection.online=true;await b.planner.retry();await settle(a.planner,b.planner);assert.ok(b.planner.status().batch.conflict);assert.equal(server.get(PLANNER_PATH+'/'+y).date,'2026-10-13');assert.equal(server.get(PLANNER_PATH+'/'+y).minutes,173);assert.equal(Object.keys(a.planner.awards()).length,1);
+});
+
+test('all eight formal class labels project onto the historical week titles without changing data',()=>{
+ const before=JSON.stringify(data),classes=fixedClasses(data),labels=data.weeks.map(w=>studyWeekDisplayTitle(w,classes)).join(' ');
+ for(const course of classes)assert.ok(labels.includes(course.date+' '+course.start+'–'+course.end));
+ assert.ok(!labels.includes('第7堂(12/23)'));assert.ok(!labels.includes('(12/28)'));assert.equal(JSON.stringify(data),before);
+ const edited=fixedClasses(data,cfg({fixedOverrides:{'biochem-class-8':{date:'2026-12-24',start:'17:00',end:'21:00'}}}));assert.ok(studyWeekDisplayTitle(data.weeks[12],edited).includes('2026-12-24 17:00–21:00'));
+});
+test('soft-deleted tasks remain retrievable after reload and cross-device restore retains the original award',async()=>{
+ const server=planningBackend(),[a,b]=clients(server);await settle(a.planner,b.planner);const id=a.planner.add({title:'restore',minutes:173});a.planner.update(id,{complete:true});await settle(a.planner,b.planner);const award=copy(a.planner.get(id).award);a.planner.remove(id);await settle(a.planner,b.planner);
+ const restored=createPlanner({...a,storage:a.storage,events:mockEvents()});await settle(restored);assert.equal(restored.all().find(t=>t.id===id).deleted,true);assert.deepEqual(restored.get(id).award,award);b.planner.update(id,{deleted:false});await settle(a.planner,b.planner,restored);assert.equal(restored.get(id).deleted,false);assert.equal(restored.get(id).complete,true);assert.equal(restored.get(id).minutes,173);assert.deepEqual(restored.get(id).award,award);assert.equal(Object.keys(restored.awards()).length,1);
 });

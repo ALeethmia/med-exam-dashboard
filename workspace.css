@@ -417,3 +417,8 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 .adaptive-dialog label.adaptive-inline { align-items:stretch; text-align:left; }
 
 .adaptive-task .adaptive-remove { margin-left:auto; color:var(--error); }
+
+#biochem-filter-chips { width:min(440px,calc(100vw - 64px)); }
+#biochem-filter-chips button { white-space:normal; overflow-wrap:anywhere; }
+#adaptive-removed-tasks .adaptive-inline span { flex:1; min-width:0; overflow-wrap:anywhere; }
+#adaptive-removed-tasks .adaptive-inline button { flex-shrink:0; }

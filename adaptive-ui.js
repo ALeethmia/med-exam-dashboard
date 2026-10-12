@@ -7,7 +7,7 @@ export function createAdaptiveUI({data,planner,settings,context,states,courseAwa
   let weekDay=today(),proposal=null,settingsBase=null,dateOverrides={},fixedBase=null,removedId=null;
   const page=document.getElementById('tab-content-plan'),baseline=document.getElementById('checklist-container');
   const panel=node('section','workspace-panel adaptive-panel');panel.id='adaptive-plan';
-  panel.innerHTML='<div class="panel-heading"><h2>滾動週計畫</h2><button id="study-capacity-settings" class="workspace-button" type="button">讀書容量</button></div><div class="adaptive-toolbar"><label>查看週次<input id="adaptive-week-date" class="workspace-input" type="date"></label><button id="adaptive-open" class="workspace-button primary" type="button">重新安排任務</button><button id="adaptive-baseline" class="workspace-link" type="button">查看原始 16 週計畫 ↓</button></div><p id="adaptive-week-summary" class="workspace-note"></p><p id="adaptive-backlog-summary" class="workspace-note"></p><p id="adaptive-exam" class="workspace-note"></p><p id="adaptive-progress" class="workspace-note"></p><div id="adaptive-fixed-reminder"></div><details><summary>每日容量與時段檢查</summary><div id="adaptive-capacity-days"></div></details><h3>本週任務、逾期與待安排</h3><div id="adaptive-tasks"></div><p id="adaptive-feedback" class="workspace-note" role="status"></p><div id="adaptive-remove-undo" role="status"></div><div id="adaptive-sync"></div>';
+  panel.innerHTML='<div class="panel-heading"><h2>滾動週計畫</h2><button id="study-capacity-settings" class="workspace-button" type="button">讀書容量</button></div><div class="adaptive-toolbar"><label>查看週次<input id="adaptive-week-date" class="workspace-input" type="date"></label><button id="adaptive-open" class="workspace-button primary" type="button">重新安排任務</button><button id="adaptive-baseline" class="workspace-link" type="button">查看原始 16 週計畫 ↓</button></div><p id="adaptive-week-summary" class="workspace-note"></p><p id="adaptive-backlog-summary" class="workspace-note"></p><p id="adaptive-exam" class="workspace-note"></p><p id="adaptive-progress" class="workspace-note"></p><div id="adaptive-fixed-reminder"></div><details><summary>每日容量與時段檢查</summary><div id="adaptive-capacity-days"></div></details><h3>本週任務、逾期與待安排</h3><div id="adaptive-tasks"></div><p id="adaptive-feedback" class="workspace-note" role="status"></p><div id="adaptive-remove-undo" role="status"></div><details id="adaptive-recently-removed"><summary>最近移除</summary><p class="workspace-note">保留原安排日期及完成紀錄；復原不會重新發放 XP。</p><div id="adaptive-removed-tasks"></div></details><div id="adaptive-sync"></div>';
   baseline.before(panel,node('h2','adaptive-baseline-title','原始 16 週計畫 · 參考里程碑'));
   const weekInput=panel.querySelector('#adaptive-week-date');weekInput.value=weekDay;weekInput.onchange=()=>{if(weekInput.value){weekDay=weekInput.value;render();}};
   panel.querySelector('#adaptive-baseline').onclick=()=>baseline.scrollIntoView({block:'start',behavior:'smooth'});
@@ -69,6 +69,14 @@ export function createAdaptiveUI({data,planner,settings,context,states,courseAwa
       }list.append(row);}
     const undo=panel.querySelector('#adaptive-remove-undo');undo.replaceChildren();
     if(removedId&&planner.get(removedId)?.deleted){undo.append(node('span','workspace-note','已移除任務。'),button('復原移除',()=>{try{planner.update(removedId,{deleted:false});removedId=null;render();}catch(error){panel.querySelector('#adaptive-feedback').textContent=error.message;}},'workspace-link'));}
+
+    const removed=tasks.filter(task=>task.deleted).sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
+    panel.querySelector('#adaptive-recently-removed summary').textContent='最近移除（'+removed.length+'）';
+    const removedList=panel.querySelector('#adaptive-removed-tasks');removedList.replaceChildren();
+    for(const task of removed){const row=node('div','adaptive-inline');row.dataset.removedId=task.id;row.append(node('span','workspace-note',task.title+' · 原安排 '+task.date+(task.complete?' · 已完成':'')));
+      const restore=button('復原',()=>{try{planner.update(task.id,{deleted:false});if(removedId===task.id)removedId=null;render();}catch(error){panel.querySelector('#adaptive-feedback').textContent=error.message;}},'workspace-link');restore.setAttribute('aria-label','復原任務：'+task.title);restore.disabled=!!planner.status().batch?.ids.includes(task.id);row.append(restore);removedList.append(row);
+    }
+    if(!removed.length)removedList.append(node('p','workspace-note','目前沒有移除的任務。'));
 
     if(!list.children.length)list.append(node('p','workspace-note','尚無本週或逾期任務；每日內容由你自行安排。'));
     const sync=panel.querySelector('#adaptive-sync');sync.replaceChildren();const ps=planner.status(),ss=settings.status();panel.querySelector('#adaptive-open').disabled=!!ps.batch;

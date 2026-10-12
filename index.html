@@ -771,7 +771,7 @@
                 全 8 堂課 · 16 講完整課程
               </span>
               <span class="px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-medium border border-sky-500/30">
-                開課期：第 6-13 週 (11/06-12/28)
+                正式開課期：2026-11-06–2026-12-23（18:00–22:00）
               </span>
               <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-medium border border-emerald-500/30 flex items-center gap-1">
                 <i data-lucide="clock" class="w-3.5 h-3.5"></i> 整體總時長：32:00:00 (約 32.0 小時 · 每堂 4 小時)
@@ -837,8 +837,8 @@
             <button onclick="filterBiochemWeek('W9')" data-week="W9" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W9 (第4堂 · 11/27)</button>
             <button onclick="filterBiochemWeek('W10')" data-week="W10" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W10 (第5堂 · 12/04)</button>
             <button onclick="filterBiochemWeek('W11')" data-week="W11" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W11 (第6堂 · 12/11)</button>
-            <button onclick="filterBiochemWeek('W12')" data-week="W12" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W12 (第7堂 · 12/23)</button>
-            <button onclick="filterBiochemWeek('W13')" data-week="W13" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W13 (第8堂 · 12/28 完課)</button>
+            <button onclick="filterBiochemWeek('W12')" data-week="W12" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W12 (第7堂 · 2026-12-18 18:00–22:00)</button>
+            <button onclick="filterBiochemWeek('W13')" data-week="W13" class="biochem-filter-btn px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap">W13 (第8堂 · 2026-12-23 18:00–22:00 完課)</button>
           </div>
         </div>
       </div>
@@ -1877,11 +1877,12 @@
     }
 
     function renderBiochemUnits() {
+      window.refreshBiochemScheduleDisplay?.();
       const container=document.getElementById('biochem-units-container');
       const query=(document.getElementById('biochem-search-input')?.value || '').trim().toLowerCase();
       const groups=biochemData.filter(item=>(currentBiochemFilter==='ALL' || item.weekKey===currentBiochemFilter) &&
-        `${window.biochemScheduleLabel?.(item.id)||''} ${item.id} ${item.date} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase().includes(query)).map(item=>({
-          id:item.id,title:item.title,week:item.weekKey,meta:window.biochemScheduleLabel?.(item.id)||`${item.tag} · ${item.targetWeek} · ${item.date}`,all:[item],
+        `${window.biochemScheduleLabel?.(item.id)||'正式課程日期載入中'} ${item.id} ${item.targetWeek} ${item.tag} ${item.title} ${item.focus} ${item.reviewGuide}`.toLowerCase().includes(query)).map(item=>({
+          id:item.id,title:item.title,week:item.weekKey,meta:window.biochemScheduleLabel?.(item.id)||'正式課程日期載入中',all:[item],
           items:[{id:item.id,title:'完成課程',meta:item.duration,notes:[['核心考點',item.focus],['複習建議',item.reviewGuide]]}]
         }));
       SubjectUI.render({container,path:'biochem',groups,state:savedBiochemState,query,rowClass:'biochem-course-row',onChange:(id,complete)=>window.setStudyCompletion('biochem',id,complete)});
@@ -2517,7 +2518,7 @@
     // ==========================================
     // 6. 備考月曆 ＆ 區間/單日臨時行程標註系統
     // ==========================================
-    const classDates = ['2026-11-06', '2026-11-13', '2026-11-18', '2026-11-27', '2026-12-04', '2026-12-11', '2026-12-23', '2026-12-28'];
+    const classDates = ['2026-11-06', '2026-11-13', '2026-11-18', '2026-11-27', '2026-12-04', '2026-12-11', '2026-12-18', '2026-12-23'];
     const examDatesList = ['2027-01-16', '2027-01-17', '2027-01-18'];
     const regDatesList = [
       '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10',
@@ -2955,7 +2956,7 @@
                 <span>第 ${item.w} 週</span>
                 <span class="font-mono text-[10px]">${item.date}</span>
               </div>
-              <div class="text-[11px] mt-0.5 leading-tight ${isChecked ? 'line-through text-slate-500' : 'text-slate-300'}">${item.title}</div>
+              <div class="week-plan-title text-[11px] mt-0.5 leading-tight ${isChecked ? 'line-through text-slate-500' : 'text-slate-300'}">${window.studyWeekLabel?.(item)||item.title}</div>
             </label>
           </div>
           ${jumpButtonsHtml}

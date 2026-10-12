@@ -1,5 +1,5 @@
 import {createStudySettings,normalizeSettings,STUDY_SETTINGS_PATH} from './adaptive-store.js';
-import {fixedClasses,interval,calendarConstraints} from './adaptive-core.js';
+import {fixedClasses,interval,calendarConstraints,studyWeekDisplayTitle} from './adaptive-core.js';
 import {createAdaptiveUI} from './adaptive-ui.js';
 import {createPlanner} from './daily-planner.js';
 import {createPlannerUI} from './planner-ui.js';
@@ -50,6 +50,16 @@ window.fixedStudySchedule=()=>fixedClasses(data,studySettings.config());
 window.studyExamDate=()=>studySettings.config().examDate;
 window.studyDateKey=()=>dateKey();
 window.biochemScheduleLabel=id=>{const c=window.fixedStudySchedule().find(c=>c.course.id===String(id));return c?'🔒 固定課程 · '+c.date+' '+c.start+'–'+c.end+'（台灣時間）':null;};
+window.studyWeekLabel=week=>studyWeekDisplayTitle(week,window.fixedStudySchedule());
+window.refreshBiochemScheduleDisplay=()=>{
+  const classes=window.fixedStudySchedule(),dates=classes.map(c=>c.date).sort();
+  const period=document.getElementById('biochem-course-period');if(period)period.textContent='正式課程：'+dates[0]+'–'+dates.at(-1)+' · 台灣時間（各堂時段見課程）';
+  for(const chip of document.querySelectorAll('.biochem-filter-btn')){
+    if(chip.dataset.week==='ALL')continue;
+    const courses=data.biochem.filter(c=>c.weekKey===chip.dataset.week).map(c=>classes.find(slot=>slot.course.id===String(c.id)));
+    chip.textContent='原計畫第 '+chip.dataset.week.slice(1)+' 週 · '+courses.map(c=>'第'+c.course.id+'堂 '+c.date+' '+c.start+'–'+c.end).join('／');
+  }
+};
 const life=createLifeStore({db,localOnly:window.workspaceLocalOnly,onChange:()=>window.updateWorkspace?.(),onHabits:(date,habits)=>window.applyLifeHabits?.(date,habits),mergeLegacy:(date,value)=>window.mergeLearningSnapshot('habits/'+date,value)});
 window.lifeHabits={set:life.setHabit};
 window.readLifeHabits=life.habits;
@@ -156,7 +166,7 @@ function renderPlanningSummary() {
 function render() {
   const current=states();
   document.getElementById('today-label').textContent=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
-  plannerUI.render();weekUI.refresh();lifeUI.render();adaptiveUI.render();
+  window.refreshBiochemScheduleDisplay();plannerUI.render();weekUI.refresh();lifeUI.render();adaptiveUI.render();
   const legacy=document.getElementById('legacy-time-history');legacy.replaceChildren();
   const historical=timeTasks.history();
   for(const date of Object.keys(historical).filter(date=>Object.keys(historical[date]).length).sort().reverse()){const row=document.createElement('p');row.className='workspace-note';row.textContent=date+' · '+Object.entries(historical[date]).map(([id,task])=>({morning:'上午',afternoon:'下午',review:'複習'}[id]||id)+': '+(task.complete?'完成':'未完成')+(task.awarded?'（已領 XP）':'')).join(' · ');legacy.append(row);}
