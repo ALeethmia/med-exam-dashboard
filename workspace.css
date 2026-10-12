@@ -429,3 +429,5 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 
 .growth-main-number { font-size:22px; margin:16px 0 8px; font-weight:600; }
 .growth-history summary { cursor:pointer; font-weight:600; }
+
+.growth-planner-summary { border-top:1px solid var(--line); padding-top:16px; margin-top:16px; }

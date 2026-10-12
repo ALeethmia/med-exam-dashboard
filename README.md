@@ -256,9 +256,9 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 ### 驗證與預覽
 
 - `npm run lint`：通過，包括章節、王國模組及 HTML inline scripts。
-- `npm test`：94 項通過（原有 82 項＋王國／編年史 7 項＋成長統計 5 項），四科與原始 16 週資料 hash 不變。
+- `npm test`：97 項通過（原有 82 項＋王國／編年史 7 項＋成長統計 8 項），四科與原始 16 週資料 hash 不變。
 - `npm run build`：通過。
-- `npm run test:browser`：96 項完整回歸通過（包含 15 項王國／編年史與 6 項成長統計／領主檔案／圖表掛載測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
+- `npm run test:browser`：99 項完整回歸通過（包含 15 項王國／編年史與 9 項成長統計／領主檔案／圖表掛載測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
 
 截圖使用本機示例資料：`docs/screenshots/becoming-kingdom-desktop.png`、`docs/screenshots/becoming-kingdom-mobile.png`。
 
@@ -296,3 +296,17 @@ Vercel Preview 應先用 `?mode=local` 隔離本機模式查看。本人仍需�
 首頁、成長統計、王國共用 COURSE_PROGRESS_NOTE：整體按單元數；生理／生化按單元數，解剖／藥理按影片時長加權，影片時長不是實際讀書時間。只有文字與掛載位置調整，沒有修改進度、XP 或 Firebase 計算與資料。
 
 GitHub deployment 7012158711 已核對 SHA 02dfd1fe503114b69e6711af9b610a4d60493952，Preview 狀態 success；對應不可變網址為 https://med-exam-dashboard-6bhdvl4pp-peterlee0718-9156.vercel.app。這驗證前一版 02dfd1f 的部署，後續提交仍需各自核對 SHA 與部署結果。
+
+### Phase 2A：課程成果優先的本週學習摘要
+
+摘要順序為：本週有日期的課程首次紀錄 → 目前累積課程完成數／百分比 → 次要 Planner 任務 → 四科詳細進度。沒有 Planner 任務時顯示「本週尚未安排 Planner 任務」，不顯示 0/0 或視為沒有學習；缺少課程日期時提示資料不足，累積課程仍即時反映勾選。
+
+實際完成資料來源：physiology/{sectionId}、videos/{lectureId}、biochem/{courseId}、pharmacology/{lectureId}，值為布林完成狀態；對應 localStorage 為 med_exam_physio_cloud、med_exam_videos_cloud、med_exam_biochem_cloud、med_exam_pharm_cloud。科目單項和批次完成經 persistProgress 寫入指定 ID；取消寫 false，重勾寫 true，不含完成時間。
+
+gamification/v1/awards 的舊課程鍵為 path__id，值為 {xp:20, day:YYYY-MM-DD}，day 是首次獎勵的台灣日期。既有 syncGame transaction 用 existing || award 保留原獎勵；取消完成不刪除獎勵，重勾不新增首次紀錄。Planner 的獎勵另存在 v3 任務內的 award，讀取時鍵為 planner__taskId；舊時間目標來自 v2/timeTasks，讀取時鍵為 time__date__id。歷史 XP 可繼續合併這些來源，但課程首次統計不使用合併 awards。
+
+**目前科目勾選不保證有首次日期**：sync.js 送出 study-completed 事件，但最新版沒有監聽者建立新的 v1 課程獎勵。舊課程也可能完成而無獎勵或日期。本次按要求保留現有發放／同步邏輯，不新增監聽、不回填、不新增 schema。新勾選可增加累積成果，但未必增加本週有日期首次數；不能將缺日期視為本週未學習。
+
+growthSnapshot 新增唯讀 firstCourses 計算，courseAwards 直接取舊 game.awards。依 flattenSubjects 的四科有效 ID 與 awardKey 建立去重映射，只接受 canonical path__id、xp:20、有效且不晚於今日的 day。以台灣週一至週日篩選；孤立、別名、Planner、時間目標、不合法或未來日期不納入。另顯示本週紀錄目前仍完成／未勾選的數量，以及目前完成但缺日期的單元數。首次歷史和現在完成狀態不同，不能宣稱等同全部本週實際讀完課程。
+
+運動、歷史 XP、王國／編年史與週計畫圖表的位置和資料來源保持原樣。沒有資料遷移、額外打卡、課程 ID／原始課表／XP 變更；正式 Firebase 未測試。新增測試涵蓋無 Planner 的科目完成、有日期／無日期、四科有效獎勵篩選、取消重勾、週日／週一、遠端重複快照和離線重連。

@@ -25,3 +25,16 @@ test('exercise uses only dated evidence and does not infer historical rest or pa
 test('future exercise records are excluded and reading growth is pure',()=>{
  const value={...input,tasks:[task('a')],awards:{a:{xp:20,day:'2026-10-12'}}},before=JSON.stringify(value);const result=growthSnapshot({...value,getHabits:day=>day==='2026-10-15'?{'daily-sport':true}:{}});assert.equal(result.exercise.complete,0);assert.equal(JSON.stringify(value),before);
 });
+
+test('only canonical valid course awards enter weekly first-completion records, independent of current check state',()=>{
+ const courseAwards={videos__1:{xp:20,day:'2026-10-12'},physiology__p:{xp:20,day:'2026-10-13'},biochem__1:{xp:20,day:'2026-10-11'},pharmacology__1:{xp:20,day:'2026-10-14'},videos__999:{xp:20,day:'2026-10-12'},alias:{xp:20,day:'2026-10-12',path:'videos',id:'1'},planner__a:{xp:20,day:'2026-10-12'},time__2026_10_12__morning:{xp:20,day:'2026-10-12'}};
+ const s=growthSnapshot({...input,courseAwards});assert.equal(s.firstCourses.weekly,3);assert.equal(s.firstCourses.weeklyCurrent,1);assert.equal(s.firstCourses.weeklyUnchecked,2);assert.equal(s.firstCourses.datedTotal,4);assert.equal(s.tasks.total,0);assert.equal(s.courses.done,1);
+ const repeated=growthSnapshot({...input,states:{videos:{1:true},physiology:{p:true}},courseAwards});assert.equal(repeated.firstCourses.weekly,3);assert.equal(repeated.firstCourses.weeklyCurrent,2);
+});
+test('legacy checked courses without valid dates stay in cumulative progress without being assigned to this week',()=>{
+ const s=growthSnapshot({...input,states:{videos:{1:true,2:true},biochem:{1:true},pharmacology:{1:true}},courseAwards:{videos__1:{xp:20},videos__2:{xp:20,day:'2026-02-30'},pharmacology__1:{xp:20,day:'2026-10-15'},biochem__1:{xp:99,day:'2026-10-12'}}});assert.equal(s.courses.done,4);assert.equal(s.firstCourses.weekly,0);assert.equal(s.firstCourses.undatedCurrent,4);assert.equal(s.firstCourses.datedTotal,0);
+});
+test('Sunday and Monday follow Taipei calendar week boundaries without changing earliest awards',()=>{
+ const courseAwards={videos__1:{xp:20,day:'2026-10-11'},physiology__p:{xp:20,day:'2026-10-12'}},before=JSON.stringify(courseAwards);
+ const sunday=growthSnapshot({...input,day:'2026-10-11',courseAwards}),monday=growthSnapshot({...input,day:'2026-10-12',courseAwards});assert.equal(sunday.start,'2026-10-05');assert.equal(sunday.firstCourses.weekly,1);assert.equal(monday.start,'2026-10-12');assert.equal(monday.firstCourses.weekly,1);assert.equal(JSON.stringify(courseAwards),before);
+});
