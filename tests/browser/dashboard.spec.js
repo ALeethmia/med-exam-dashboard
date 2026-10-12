@@ -37,9 +37,9 @@ test('planned tasks award XP once and never change course completion',async({pag
   expect(errors).toEqual([]);expect(await page.evaluate(()=>window.learningDB)).toBe(null);
 });
 
-test('Quest OS shell uses six destinations, equal columns and exact theme tokens',async({page})=>{
+test('Becoming shell uses seven destinations, equal columns and exact theme tokens',async({page})=>{
   await page.setViewportSize({width:1440,height:1000});await page.goto('/');
-  await expect(page.locator('#main-tabs-header-container button')).toHaveCount(6);
+  await expect(page.locator('#main-tabs-header-container button')).toHaveCount(7);
   await expect(page.locator('#tab-content-home #achievements')).toHaveCount(0);
   await expect(page.locator('#tab-content-home .focus-tool')).toHaveCount(0);
   const columns=await page.locator('.workspace-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').map(Number.parseFloat));

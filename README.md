@@ -1,6 +1,8 @@
-# 2027 一階醫師國考 · 學習工作台
+# Becoming — Chronicles of Becoming
 
-HTML / JavaScript / Express 學習儀表板，考試目標日為 2027 年 1 月 16 日。
+Your life. Your story. Your world. 每一步成長，都是人生的新篇章。
+
+Becoming 是現實生活目標管理平台；第一章「學者的試煉」以醫師第一階段國考為現實目標，奇幻世界 Aetheria（艾瑟利亞）提供唯讀的成長回饋。沿用 HTML / JavaScript / Express 學習工作台與原有課程、生活、同步功能；考試日期讀取現有 Adaptive Study Planner 設定，預設為 2027 年 1 月 16 日。
 
 ## 開發
 
@@ -18,7 +20,7 @@ Tailwind CSS、Lucide、React / Recharts 趨勢圖從鎖定的 npm 套件產生�
 
 ## 功能
 
-- Quest OS 共用版型：總覽、科目、週計畫、行事曆、統計、角色與成就六個主要導覽。作息、運動與專注計時收在行事曆次導覽。
+- Becoming 共用版型：總覽、科目、週計畫、行事曆、統計、角色與成就及我的王國七個主要導覽。作息、運動與專注計時收在行事曆次導覽。
 - 首頁以等寬雙欄呈現今日任務與四科進度，另提供本週進度及近期日程摘要；手機版改為單欄。
 - 淺色、深色、跟隨系統模式；選擇保存於 `med_exam_theme`。
 - 每日學習規劃器以 Asia/Taipei 日期管理自主安排的任務：跨科選擇章節／課程、自由任務、選填預計分鐘、編輯、完成／取消、上下排序、延後、複製與刪除復原。空白日期不會自動加入預設任務；日期選擇與歷史列表可查看過去或未來安排。
@@ -234,3 +236,34 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 生化課程頁、章節選單、讀書計畫篩選、行事曆、滾動週計畫及歷史週表中的正式課日期，均引用固定課 metadata。第 7 堂為 2026-12-18、第 8 堂為 2026-12-23，均 18:00–22:00；歷史週次與區間保持原樣，標明原計畫參考。原 biochemData 日期與 weeksData 課名只作原始資料保存，不再直接作正式上課日期顯示或搜尋依據；四科／16 週 hash 不變。手動固定課覆寫仍會投影至上述標籤。
 
 週計畫提供收合的「最近移除」入口，重新整理或雲端載入後直接從 Planner 的 deleted 任務清單復原。列出的日期是原安排日期（按原日期排序），不是移除時間；不新增資料路徑或欄位，不清理舊任務。右側紅色「移除」仍立即生效、沒有確認視窗。復原只修改 deleted:false，原 ID、minutes、links、planning、complete、award 及 XP 保留，等待同步與同欄位衝突處理仍沿用 Planner。若原時段目前已有衝突，提示錯誤並保留移除狀態。
+
+## Becoming Phase 2A：學者的試煉
+
+最新功能基於 main `b4ec603`（PR #6），以 `feature/becoming-phase2a` 增量開發。
+
+- 對外名稱為 Becoming（Chronicles of Becoming），更新瀏覽器標題、description／Open Graph metadata、側欄、麵包屑、首頁品牌文案與登入標題。舊 Quest OS 的技術路徑與歷史開發紀錄保留，Repository 名稱不變。
+- `chapters.js` 定義品牌、固定 Chapter I `scholars-trial`、learning／exam 目標與 Aetheria 世界；考試日期每次讀取 Adaptive Study Planner 的設定，沒有另存預設或跨裝置章節設定。
+- 「我的王國」沿用原主導覽與頁面切換，`kingdom-core.js` 提供純計算、`kingdom-ui.js` 唯讀呈現初始要塞／學院／兵營、課程摘要、今日 Planner 與生活狀態及里程碑。`kingdom.css` 的奇幻樣式限於王國頁；主 Dashboard 保持今日任務與科目進度雙核心。
+- `public/art/aetheria.svg` 是本專案製作的原創向量插畫，無第三方遊戲素材或外部圖片依賴；來源說明見 public/art/README.md。初始建築與未來功能是靜態介紹，沒有升級／購買／招募按鈕、資源餘額或交易。
+- 國考倒數、課程準備、章節里程碑、正式結果各自顯示。考試當日與日期經過只改日期提示，章節仍進行中，正式結果尚未記錄；不自動通關、清空王國或重置原成果。里程碑依現有課程完成狀態唯讀呈現，不另存第二套完成資料。
+
+### 資料相容性
+
+本階段 **沒有新增 Firebase 路徑、Storage key 或資料遷移**。章節與建築為程式內固定定義；沒有 `becoming/v1/profile`、資源帳本、重複王國或經濟數值。王國使用現有 subjectStats、Planner list 和 lifeSummary，與原頁面共用狀態，不建立額外打卡或 XP 任務。未安排、症狀休息、恢復日與暫停以中性狀態顯示。
+
+保留 `questOS/v1/training`、`questOS/v1/adaptiveStudy/settings`、`habits/YYYY-MM-DD/questOS_v1`、`gamification/v1`、`gamification/v3/planner/tasks` 及其既有 localStorage keys。Firebase 設定、OWNER_UID、同步模組與既有資料模型保持原樣；auth.js 僅改登入視窗標題。Repository 沒有 Security Rules 檔案，本階段沒有新增權限需求，也未讀寫正式資料庫或發布 Rules。
+
+### 驗證與預覽
+
+- `npm run lint`：通過，包括章節、王國模組及 HTML inline scripts。
+- `npm test`：88 項通過（原有 82 項＋王國 6 項），四科與原始 16 週資料 hash 不變。
+- `npm run build`：通過。
+- `npm run test:browser`：84 項通過（原有 75 項＋王國 9 項），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
+
+截圖使用本機示例資料：`docs/screenshots/becoming-kingdom-desktop.png`、`docs/screenshots/becoming-kingdom-mobile.png`。
+
+Vercel Preview 應先用 `?mode=local` 隔離本機模式查看。本人仍需在已授權的預覽網域登入，人工檢查兩裝置修改課程／任務／運動／休閒／考試日期後，王國摘要與原頁面一致；重新整理、離線與重連後，舊紀錄和 XP 保留。這是正式 Firebase 的人工驗證，未在測試中操作正式資料。
+
+### Phase 2B 建議
+
+只從現有課程、Planner、運動與休閒紀錄產生唯讀的每日委託／每週成果摘要，先定義活動來源、重複判斷與安全休息狀態。避免再次打卡；正式資源結算、餘額、交易及建築升級留到 Phase 3 設計安全且冪等的帳本後開放。

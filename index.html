@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2027 一階醫師國考 - 學習工作台</title>
-  <meta name="description" content="2027 一階醫師國考全方位戰鬥儀表板，整合備考月曆、日常作息表、First Choice 生理學 7 大篇章 (何宣對照)、趙俊彥解剖學 30 講、鐸鐸生化學 8 堂課、子翔藥理學 19 單元進度檢核與雲端即時同步。">
-  <meta property="og:title" content="2027 一階醫師國考 - 學習工作台">
-  <meta property="og:description" content="2027 一階醫師國考全方位戰鬥儀表板，整合備考月曆、日常作息表、First Choice 生理學 7 大篇章 (何宣對照)、趙俊彥解剖學 30 講、鐸鐸生化學 8 堂課、子翔藥理學 19 單元進度檢核與雲端即時同步。">
+  <title>Becoming — 學者的試煉 · 國考學習工作台</title>
+  <meta name="description" content="Becoming · Chronicles of Becoming。以自主讀書計畫、課程進度與生活目標準備醫師國考，在 Aetheria 展開學者的試煉。Your life. Your story. Your world.">
+  <meta property="og:title" content="Becoming — 學者的試煉 · 國考學習工作台">
+  <meta property="og:description" content="Becoming · Chronicles of Becoming。以自主讀書計畫、課程進度與生活目標準備醫師國考，在 Aetheria 展開學者的試煉。Your life. Your story. Your world.">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -70,6 +70,7 @@
     }
   </style>
   <link rel="stylesheet" href="/workspace.css">
+  <link rel="stylesheet" href="/kingdom.css">
 </head>
 <body class="p-4 md:p-6">
   <div class="max-w-6xl mx-auto space-y-6">
@@ -1109,11 +1110,11 @@
       main.className = 'workspace-main';
       const shell = document.createElement('div'); shell.className = 'workspace-shell';
       const sidebar = document.createElement('aside'); sidebar.className = 'workspace-sidebar';
-      sidebar.innerHTML = '<div class="workspace-brand"><span>◈ 國考<span class="brand-accent">準備</span></span><small>QUEST OS</small></div><nav aria-label="主要導覽" id="workspace-nav"></nav><div class="sidebar-foot"><span id="sidebar-level">學習者 · Lv. 1</span><small>一步一步，累積自己的進度。</small></div>';
+      sidebar.innerHTML = '<div class="workspace-brand"><span>◈ Becoming</span><small>每一步成長，都是人生的新篇章。</small></div><nav aria-label="主要導覽" id="workspace-nav"></nav><div class="sidebar-foot"><span id="sidebar-level">學習者 · Lv. 1</span><small>一步一步，累積自己的進度。</small></div>';
       main.before(shell); shell.append(sidebar, main);
       sidebar.querySelector('nav').append(document.getElementById('main-tabs-header-container'));
       const oldNav = main.querySelector('.overflow-x-auto.pb-1'); if (oldNav) oldNav.remove();
-      for (const id of ['home','stats','calendar','schedule','exercise','focus','progression']) {
+      for (const id of ['home','stats','calendar','schedule','exercise','focus','progression','kingdom']) {
         const page = document.createElement('section'); page.id = 'tab-content-' + id; page.className = 'page-stack hidden'; main.append(page);
       }
       const moveCard = (id, page, hops = 0) => {
@@ -1139,7 +1140,7 @@
       const sync = document.getElementById('sync-status');
       header.className='workspace-topbar';
       header.replaceChildren();
-      header.innerHTML='<div class="workspace-toolbar"><div class="breadcrumb">國考準備 <span>/</span> <span id="workspace-crumb">總覽</span></div><div class="workspace-controls"><div class="appearance-control" role="group" aria-label="外觀模式"><button data-appearance="light" type="button">淺色</button><button data-appearance="dark" type="button">深色</button><button data-appearance="system" type="button">系統</button></div><label class="visually-hidden" for="appearance">外觀</label><select id="appearance" class="visually-hidden" tabindex="-1"><option value="system">跟隨系統</option><option value="light">淺色</option><option value="dark">深色</option></select><button id="retry-sync" type="button" aria-label="重試同步">重試同步</button><button class="mobile-menu-button" id="mobile-menu" type="button" aria-expanded="false" aria-controls="workspace-nav">導覽</button></div></div><div class="workspace-heading"><div><p id="today-label" class="workspace-eyebrow"></p><h1 id="page-title">今天的任務，從這裡開始。</h1><p id="page-description">用自己的節奏，為國考累積每一步。</p></div><div class="exam-countdown">距離國考 <strong id="countdown-days">—</strong> 天<span id="current-clock" class="hidden"></span></div></div>';
+      header.innerHTML='<div class="workspace-toolbar"><div class="breadcrumb">Becoming <span>/</span> <span id="workspace-crumb">總覽</span></div><div class="workspace-controls"><div class="appearance-control" role="group" aria-label="外觀模式"><button data-appearance="light" type="button">淺色</button><button data-appearance="dark" type="button">深色</button><button data-appearance="system" type="button">系統</button></div><label class="visually-hidden" for="appearance">外觀</label><select id="appearance" class="visually-hidden" tabindex="-1"><option value="system">跟隨系統</option><option value="light">淺色</option><option value="dark">深色</option></select><button id="retry-sync" type="button" aria-label="重試同步">重試同步</button><button class="mobile-menu-button" id="mobile-menu" type="button" aria-expanded="false" aria-controls="workspace-nav">導覽</button></div></div><div class="workspace-heading"><div><p id="today-label" class="workspace-eyebrow"></p><h1 id="page-title">今天的任務，從這裡開始。</h1><p id="page-description">用自己的節奏，為國考累積每一步。</p></div><div class="exam-countdown">距離國考 <strong id="countdown-days">—</strong> 天<span id="current-clock" class="hidden"></span></div></div>';
       header.querySelector('.workspace-controls').prepend(sync);
       for (const [id,label] of [['subject-tabs','科目'],['calendar-tabs','行事曆與作息']]) {
         const nav=document.createElement('nav'); nav.id=id; nav.className='workspace-subnav hidden'; nav.setAttribute('aria-label',label); header.after(nav);
@@ -1163,6 +1164,7 @@
       {id:'calendar', title:'行事曆', icon:'calendar-days'},
       {id:'stats', title:'統計', icon:'chart-no-axes-combined'},
       {id:'progression', title:'角色與成就', icon:'sparkles'},
+      {id:'kingdom', title:'我的王國', icon:'castle'},
       {id:'physiology', title:'生理學', group:'subjects'},
       {id:'anatomy', title:'解剖學', group:'subjects'},
       {id:'biochem', title:'生化學', group:'subjects'},
@@ -1204,7 +1206,7 @@
         const selected=button.id==='tab-btn-'+tabName || (button.id==='calendar-overview' && tabName==='calendar'); button.classList.toggle('active',selected); button.setAttribute('aria-current',selected?'page':'false');
       }
       document.getElementById('subject-tabs').classList.toggle('hidden',group!=='subjects'); document.getElementById('calendar-tabs').classList.toggle('hidden',group!=='calendar');
-      const titles={home:['今天的任務，從這裡開始。','用自己的節奏，為國考累積每一步。'],plan:['週計畫','掌握當週目標，循序完成 16 週讀書計畫。'],calendar:['行事曆','讓課程、重要日程與休息各有位置。'],stats:['學習統計','從真實進度，看見下一步的方向。'],progression:['角色與成就','每一次學習，都值得被記錄。'],physiology:['First Choice 生理學','7 大篇章 · 39 小節'],anatomy:['趙俊彥解剖學','15 節課 · 30 講'],biochem:['鐸鐸生化學','8 堂課 · 循序完成與複習'],pharmacology:['子翔藥理學','19 單元 · 38 講'],schedule:['作息與習慣','留出學習、生活與休息的時間。'],exercise:['運動計畫','照顧身體，也照顧讀書的節奏。'],focus:['專注計時','一次只專注眼前這件事。']};
+      const titles={home:['今天的任務，從這裡開始。','用自己的節奏，為國考累積每一步。'],plan:['週計畫','掌握當週目標，循序完成 16 週讀書計畫。'],calendar:['行事曆','讓課程、重要日程與休息各有位置。'],stats:['學習統計','從真實進度，看見下一步的方向。'],progression:['角色與成就','每一次學習，都值得被記錄。'],kingdom:['我的王國','Aetheria · 現實的成長，點亮另一個世界。'],physiology:['First Choice 生理學','7 大篇章 · 39 小節'],anatomy:['趙俊彥解剖學','15 節課 · 30 講'],biochem:['鐸鐸生化學','8 堂課 · 循序完成與複習'],pharmacology:['子翔藥理學','19 單元 · 38 講'],schedule:['作息與習慣','留出學習、生活與休息的時間。'],exercise:['運動計畫','照顧身體，也照顧讀書的節奏。'],focus:['專注計時','一次只專注眼前這件事。']};
       const [title,description]=titles[tabName] || titles.home; document.getElementById('page-title').textContent=title; document.getElementById('page-description').textContent=description; document.getElementById('workspace-crumb').textContent=meta.group ? defaultTabs.find(t=>t.id===meta.group).title+' / '+meta.title : meta.title;
       document.getElementById('workspace-nav').classList.remove('mobile-open'); document.getElementById('mobile-menu').setAttribute('aria-expanded','false');
       window.dispatchEvent(new CustomEvent('workspace-page-change',{detail:{tab:tabName,group}}));

@@ -65,7 +65,7 @@ function addAccount(auth, user) {
 if (window.workspaceLocalOnly) {
   await startLearning();
 } else {
-  const login = dialog('<h2>登入國考準備</h2><p>使用 Google 帳號，安全同步你的學習進度。</p><button type="button" id="google-sign-in" disabled>使用 Google 登入</button><p id="auth-status" role="status">正在連線至登入服務…</p><div id="owner-setup" hidden><label for="setup-uid">你的 Firebase UID</label><input id="setup-uid" readonly><p>請將此 UID 提供給網站維護者，完成個人帳號限制設定。</p></div>');
+  const login = dialog('<h2>登入 Becoming</h2><p>使用 Google 帳號，安全同步你的學習進度。</p><button type="button" id="google-sign-in" disabled>使用 Google 登入</button><p id="auth-status" role="status">正在連線至登入服務…</p><div id="owner-setup" hidden><label for="setup-uid">你的 Firebase UID</label><input id="setup-uid" readonly><p>請將此 UID 提供給網站維護者，完成個人帳號限制設定。</p></div>');
   login.addEventListener('cancel', event => event.preventDefault());
   login.showModal();
   const status = login.querySelector('#auth-status');
