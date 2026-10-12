@@ -21,12 +21,12 @@ for(const width of [390,1440])test('territory stages and keyboard details explai
  }
  const summary=page.locator('#building-academy > summary');await summary.focus();await summary.press('Enter');await expect(page.locator('#building-academy')).toHaveAttribute('open','');
  await expect(page.locator('#building-academy .building-progress-label')).toHaveText('再完成 17 堂課程即可升級');await expect(page.locator('#building-academy .building-source')).not.toBeVisible();
- await page.locator('#building-barracks > summary').click();await expect(page.locator('#building-barracks')).toHaveAttribute('open','');await expect(page.locator('#building-academy')).not.toHaveAttribute('open','');
+ await page.locator('#building-barracks > summary').click();await expect(page.locator('#building-barracks')).toHaveAttribute('open','');await expect(page.locator('#building-academy')).toHaveAttribute('open','');
  await openBasis(page,'barracks');await expect(page.locator('#building-barracks .building-source')).toContainText('包含 1 次舊');await expect(page.locator('#building-barracks .building-progress-label')).toHaveText('再完成 5 次訓練即可升級');
  await page.locator('#building-keep > summary').click();await expect(page.locator('#building-keep .building-progress-label')).toHaveText('再完成 5 個活動日即可升級');
  await page.locator('#realm-activity > summary').click();await expect(page.locator('#realm-activity')).toContainText('2026-10-10');await expect(page.locator('#realm-activity')).toContainText('日期未記錄');await expect(page.locator('#realm-activity')).not.toContainText('2026-10-13');
  const events=await page.locator('#realm-activity [data-event-id]').evaluateAll(es=>es.map(e=>e.dataset.eventId));expect(new Set(events).size).toBe(events.length);expect(await stored(page)).toEqual(before);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- const order=await page.locator('#tab-content-kingdom > *').evaluateAll(es=>es.map(e=>e.id||e.className));expect(order.indexOf('realm-activity')).toBeLessThan(order.indexOf('kingdom-chronicles'));expect(order.indexOf('kingdom-chronicles')).toBeLessThan(order.findIndex(v=>v.includes('kingdom-reality')));
+ const order=await page.locator('#tab-content-kingdom > *').evaluateAll(es=>es.map(e=>e.id||e.className));expect(order.findIndex(v=>v.includes('character-story'))).toBe(0);expect(order.findIndex(v=>v.includes('kingdom-territory'))).toBeLessThan(order.indexOf('realm-activity'));expect(order.indexOf('realm-activity')).toBeLessThan(order.findIndex(v=>v.includes('kingdom-reality')));
 });
 test('empty territory does not infer past exercise from the configured future plan',async({page})=>{
  await page.addInitScript(()=>localStorage.setItem('med_exam_life_v1_local',JSON.stringify({days:{},training:{startedOn:'2026-01-01',stage:4,week:Array(7).fill('strength_a')},pending:{}})));await page.goto('/');await go(page);

@@ -2,10 +2,6 @@
 .kingdom-page { --kingdom-rune:#5967a3; --kingdom-stone:#eef1ed; gap:24px; }
 :root[data-theme=dark] .kingdom-page { --kingdom-rune:#a8b2ec; --kingdom-stone:#252e2d; }
 .kingdom-eyebrow { color:var(--kingdom-rune); text-transform:uppercase; letter-spacing:.12em; font-size:12px; margin:0 0 8px; }
-.kingdom-intro { padding:8px 0; max-width:840px; }
-.kingdom-intro h2 { font-size:18px; font-weight:500; color:var(--muted); margin:0 0 16px; }
-.kingdom-intro h2 span { display:block; font-size:32px; color:var(--ink); margin-top:4px; font-weight:650; letter-spacing:-.5px; }
-.kingdom-intro > p:not(.kingdom-eyebrow) { line-height:1.85; color:var(--muted); }
 .kingdom-chapter-meta { display:flex; flex-wrap:wrap; gap:8px 24px; font-size:13px; color:var(--muted); margin-top:16px; }
 .kingdom-territory { background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
 .kingdom-territory > .panel-heading { padding:24px 24px 0; margin-bottom:16px; }
@@ -28,7 +24,6 @@
 .kingdom-outlook ul { padding:0; margin:0 0 12px; list-style:none; }
 .kingdom-footer { text-align:center; font-size:13px; color:var(--muted); line-height:1.8; margin:8px 0; }
 @media(max-width:700px) {
- .kingdom-intro h2 span { font-size:28px; }
  .kingdom-buildings,.kingdom-life,.kingdom-outlook { grid-template-columns:1fr; gap:24px; }
  .kingdom-buildings { padding:16px; }
  .kingdom-territory > .panel-heading { padding:16px 16px 0; align-items:flex-start; }
@@ -42,13 +37,104 @@
 .kingdom-chronicles[open] > summary { margin-bottom:16px; }
 .kingdom-chronicles .achievement-list { margin:16px 0; }
 
-.lord-profile { display:flex; gap:24px; align-items:center; }
-.lord-emblem { flex-shrink:0; width:128px; height:128px; border-radius:24px; }
+/* Guild pass: identity and summaries, never account details or invented player stats. */
+.lord-profile { display:grid; grid-template-columns:88px minmax(0,1fr) auto; gap:20px; align-items:center; width:100%; max-width:900px; padding:20px 24px; position:relative; overflow:hidden; border-left:4px solid var(--kingdom-rune); background:linear-gradient(125deg,var(--kingdom-stone),var(--surface) 55%); }
+.lord-profile::after { content:"✧"; position:absolute; right:12px; top:8px; font-size:70px; color:var(--kingdom-rune); opacity:.055; pointer-events:none; }
+.lord-emblem { width:88px; height:88px; border-radius:20px; }
 .lord-identity { min-width:0; }
-.lord-identity h2 { font-size:26px; margin:0 0 8px; }
-.lord-identity p { margin:0 0 8px; }
-.lord-summary { display:flex; flex-wrap:wrap; gap:8px 24px; font-size:14px; margin:16px 0; }
-#lord-open-chronicles { color:var(--accent); display:inline-block; padding:8px 0; }
+.lord-identity h2 { font-size:22px; margin:0 0 4px; }
+.lord-identity p { margin:0 0 4px; line-height:1.6; }
+.lord-identity .kingdom-eyebrow { font-size:10px; letter-spacing:.08em; }
+.lord-title { font-size:13px; }
+.lord-chapter { font-size:12px; color:var(--kingdom-rune); margin-top:8px!important; }
+.lord-card-progress { border-left:1px solid var(--line); padding-left:20px; position:relative; }
+.lord-summary { display:flex; flex-direction:column; gap:8px; font-size:13px; font-variant-numeric:tabular-nums; }
+#lord-open-chronicles { color:var(--kingdom-rune); display:inline-block; padding:12px 0 0; font-size:12px; }
 .kingdom-chronicles > summary { display:flex; flex-wrap:wrap; gap:8px 24px; align-items:center; }
 :root[data-theme=dark] .lord-emblem { filter:brightness(.85); }
-@media(max-width:700px) { .lord-profile { align-items:flex-start; gap:16px; flex-wrap:wrap; } .lord-emblem { width:88px; height:88px; } .lord-summary { flex-direction:column; gap:8px; } }
+.chronicle-tabs { display:flex; gap:4px; padding:4px; border:1px solid var(--line); border-radius:12px; background:var(--surface-alt,var(--kingdom-stone)); width:fit-content; max-width:100%; margin:20px 0; }
+.chronicle-tabs button { background:none; border:0; border-radius:8px; padding:10px 16px; font-size:13px; color:var(--muted); cursor:pointer; }
+.chronicle-tabs button[aria-selected=true] { background:var(--surface); color:var(--kingdom-rune); box-shadow:0 2px 8px #00000009; font-weight:600; }
+.chronicle-tabs button:focus-visible,.chronicle-panel:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.chronicle-panel[hidden] { display:none; }
+.chronicle-panel { max-width:820px; min-width:0; padding:4px 0 20px; }
+.chronicle-panel h3 { font-size:18px; margin:8px 0 16px; }
+.chronicle-story { padding:24px; border:1px solid var(--line); border-radius:12px; background:linear-gradient(125deg,var(--kingdom-stone),var(--surface) 65%); }
+.chronicle-story > p { font-size:14px; line-height:1.85; }
+.chronicle-story .workspace-note { font-size:12px; }
+.chronicle-state { color:var(--kingdom-rune); font-weight:500; }
+.chronicle-milestones { list-style:none; padding:0; margin:0 0 24px; }
+.chronicle-milestone { border-left:2px solid var(--line); padding:8px 20px 16px; margin-bottom:8px; }
+.chronicle-milestone h4 { font-size:14px; margin:6px 0; }
+.chronicle-milestone p { font-size:13px; color:var(--muted); line-height:1.8; margin:0; overflow-wrap:anywhere; }
+.chronicle-milestone small { font-size:12px; }
+.kingdom-chronicles .achievement-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.kingdom-chronicles .achievement { border:1px solid var(--line); border-radius:12px; padding:20px 16px; color:var(--muted); background:var(--surface); line-height:1.8; }
+.kingdom-chronicles .achievement::before { content:"◇"; display:block; font-size:28px; margin-bottom:12px; color:var(--muted); }
+.kingdom-chronicles .achievement.unlocked { border-color:var(--kingdom-rune); color:var(--kingdom-rune); background:linear-gradient(135deg,var(--kingdom-stone),var(--surface) 65%); }
+.kingdom-chronicles .achievement.unlocked::before { content:"✧"; color:var(--kingdom-rune); }
+.kingdom-chronicles .achievement strong { font-weight:600; }
+.kingdom-chronicles .achievement .achievement-status { color:inherit; font-size:11px; margin-top:4px; }
+.chronicle-detailed-history { margin-top:20px; border-top:1px solid var(--line); padding-top:16px; }
+.chronicle-detailed-history > summary { cursor:pointer; font-size:13px; color:var(--muted); }
+/* Three distinct houses, preserving the same growth data and interactions. */
+.kingdom-page [data-building=academy] { --kingdom-rune:#6353a4; --kingdom-stone:#f0edf8; }
+.kingdom-page [data-building=barracks] { --kingdom-rune:#93543e; --kingdom-stone:#f4eeea; }
+.kingdom-page [data-building=keep] { --kingdom-rune:#7b6838; --kingdom-stone:#f2f0e8; }
+:root[data-theme=dark] .kingdom-page [data-building=academy] { --kingdom-rune:#b9a9ef; --kingdom-stone:#302c40; }
+:root[data-theme=dark] .kingdom-page [data-building=barracks] { --kingdom-rune:#e0a68a; --kingdom-stone:#3a2e2b; }
+:root[data-theme=dark] .kingdom-page [data-building=keep] { --kingdom-rune:#cfbd83; --kingdom-stone:#35342b; }
+.kingdom-page .kingdom-building { border-top:3px solid var(--kingdom-rune); background:linear-gradient(135deg,var(--kingdom-stone),var(--surface) 35%); }
+.building-sigil svg { width:24px; height:24px; }
+@media(max-width:700px) {
+ .lord-profile { grid-template-columns:64px minmax(0,1fr); gap:12px; padding:16px; }
+ .lord-emblem { width:64px; height:64px; border-radius:14px; }
+ .lord-identity h2 { font-size:20px; }
+ .lord-card-progress { grid-column:1/-1; border-left:0; border-top:1px solid var(--line); padding:12px 0 0; }
+ .lord-summary { flex-direction:row; flex-wrap:wrap; gap:4px 16px; font-size:12px; }
+ #lord-open-chronicles { padding-top:8px; }
+ .chronicle-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; gap:2px; }
+ .chronicle-tabs button { padding:10px 4px; font-size:12px; }
+ .chronicle-story { padding:16px; }
+ .kingdom-chronicles .achievement-list { grid-template-columns:1fr; }
+ .kingdom-chronicles .achievement { padding:16px; }
+ .kingdom-chronicles .achievement::before { display:inline-block; vertical-align:middle; margin:0 12px 0 0; }
+}
+
+/* One character/story region; content grows without stretching the adjacent pass. */
+.character-story { display:grid; grid-template-columns:minmax(380px,1fr) minmax(380px,1.1fr); gap:24px; align-items:start; }
+.character-story > * { min-width:0; margin:0; min-height:250px; }
+.character-story .lord-profile { grid-template-columns:72px minmax(0,1fr); gap:16px; padding:24px; }
+.character-story .lord-emblem { width:72px; height:72px; }
+.character-story .lord-card-progress { grid-column:1/-1; border-left:0; border-top:1px solid var(--line); padding:12px 0 0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.character-story .lord-summary { flex-direction:row; flex-wrap:wrap; gap:4px 16px; font-size:12px; }
+.character-story #lord-open-chronicles { padding:8px 0; }
+.chronicle-card { padding:24px; }
+.chronicle-card-heading { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.chronicle-card-heading h2 { font-size:18px; font-weight:600; margin:0; }
+.chronicle-card-heading .workspace-note { font-size:12px; }
+.chronicle-card .chronicle-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; margin:16px 0; }
+.chronicle-card .chronicle-tabs button { padding:8px 4px; font-size:12px; }
+.chronicle-card .kingdom-chronicles > summary { display:block; cursor:pointer; list-style:none; }
+.chronicle-card .kingdom-chronicles > summary::-webkit-details-marker { display:none; }
+.chronicle-card .kingdom-chronicles > summary:focus-visible { outline:2px solid var(--accent); outline-offset:4px; border-radius:8px; }
+.chronicle-card #chronicle-chapter { font-size:15px; margin:0 0 8px; color:var(--kingdom-rune); }
+.chronicle-card #kingdom-story { font-size:13px; line-height:1.8; color:var(--muted); margin:0 0 8px; }
+.chronicle-card .chronicle-expand-hint { color:var(--kingdom-rune); font-size:11px; }
+.chronicle-card .kingdom-chronicles[open]:not([data-view=story])[data-view] #kingdom-story { display:none; }
+.chronicle-card .chronicle-story { border:0; background:none; padding:0; }
+.chronicle-card .chronicle-panel { padding-bottom:4px; }
+.chronicle-card .achievement-list { grid-template-columns:1fr; }
+.chronicle-card .achievement { padding:12px 16px; }
+.chronicle-card .achievement::before { display:inline-block; vertical-align:middle; margin:0 12px 0 0; }
+.kingdom-chapter-meta { margin-top:0; line-height:1.7; }
+@media(max-width:1100px) {
+ .character-story { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .character-story > * { min-height:0; }
+}
+@media(max-width:700px) {
+ .character-story .lord-profile { grid-template-columns:64px minmax(0,1fr); padding:16px; gap:12px; }
+ .character-story .lord-emblem { width:64px; height:64px; }
+ .chronicle-card { padding:16px; }
+}
+.chronicle-card .kingdom-chronicles:not([open]) #kingdom-story { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }

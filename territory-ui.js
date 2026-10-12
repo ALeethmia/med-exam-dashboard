@@ -2,6 +2,11 @@ import {BUILDINGS} from './kingdom-core.js';
 import {buildingProgressSnapshot,realmActivityGroups,ACADEMY_STAGES,BARRACKS_STAGES,KEEP_STAGES,COURSE_THRESHOLDS,TRAINING_THRESHOLDS} from './territory-core.js';
 const node=(tag,cls='',text)=>{const el=document.createElement(tag);el.className=cls;if(text!==undefined)el.textContent=text;return el;};
 const names={academy:ACADEMY_STAGES,barracks:BARRACKS_STAGES,keep:KEEP_STAGES};
+const insignia={
+ academy:'<path d="M4 6h6l2 2 2-2h6v13h-6l-2 2-2-2H4zM12 8v13M6 10h3M6 13h3M16 10l1-2 1 2 2 1-2 1-1 2-1-2-2-1z"/>',
+ barracks:'<path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6zM9 7l7 10M8 13l4-3M15 7l-7 10M12 10l4 3"/>',
+ keep:'<path d="M4 21V9h4v3h3V6h3v6h3V9h3v12zM10 21v-5h4v5M12 6V2h6l-2 2 2 2z"/>'
+};
 const growth={academy:'每完成一堂課程，都為學院添上一頁知識。',barracks:'每一次有效訓練，都讓守護領地的力量更穩固。',keep:'學習、運動與休閒，都能為領地帶來成長。'};
 // Presentation only: targets come from the existing stage thresholds and route requirements.
 function targetView(id,b,e){
@@ -52,7 +57,7 @@ export function createTerritoryUI(page){
   const card=node('article','kingdom-building');card.dataset.building=id;
   const details=node('details','building-details');details.id='building-'+id;
   const summary=node('summary');
-  const heading=node('div','building-heading');heading.append(node('span','building-sigil',id==='academy'?'✦':id==='barracks'?'⚔':'♜'),node('h4','',title));heading.firstChild.setAttribute('aria-hidden','true');
+  const heading=node('div','building-heading'),sigil=node('span','building-sigil');sigil.setAttribute('aria-hidden','true');sigil.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+insignia[id]+'</svg>';heading.append(sigil,node('h4','',title));
   summary.append(heading,node('small','building-stage-label workspace-note','目前階段'),node('p','building-stage'),node('p','building-next-target'),node('p','building-number'),node('small','building-unit workspace-note'),progressMeter(title+'下一階段進度'));
   if(id==='keep')summary.append(node('small','building-fastest-label workspace-note','最快達成的建設條件'),node('p','building-progress-label'),node('div','keep-route-overview'));
   else summary.append(node('p','building-progress-label'));
@@ -62,7 +67,6 @@ export function createTerritoryUI(page){
   const basis=node('details','building-basis');basis.append(node('summary','','資料來源與計算說明'),node('p','building-source workspace-note'),node('p','workspace-note','成果依已記錄日期由新到舊排列；沒有日期的成果排在後面，標示「日期未記錄」。紀錄所屬日期不代表實際完成時刻，也不推測缺少的歷史日期。'),node('p','workspace-note','目前階段依現有紀錄判定；更正課程或活動會重新計算。休息與未登入不扣分。'),node('h5','','詳細升級門檻'));
   if(id==='keep')basis.append(node('h6','','目前階段'),node('ul','keep-current-paths'));
   basis.append(node('ul','building-next'));body.append(basis);details.append(summary,body);card.append(details);container.append(card);
-  details.addEventListener('toggle',()=>{if(details.open)container.querySelectorAll('.building-details').forEach(other=>{if(other!==details)other.open=false;});});
  }
  const activity=node('details','workspace-panel realm-activity');activity.id='realm-activity';activity.append(node('summary','','領地紀事'),node('p','workspace-note','每一步都留下足跡。先看有日期的成果，再回顧未記日期的成果。'),node('ul','realm-events'));
  const note=node('details','realm-history-note');note.append(node('summary','workspace-note','關於紀事日期'),node('p','workspace-note','只使用已記錄的完成日期；未記日期的成果無法判定何時發生。紀事不把目前建築階段當作新事件，也不推測缺少的歷史紀錄。'));activity.append(note);
