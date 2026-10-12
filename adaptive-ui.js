@@ -64,7 +64,7 @@ export function createAdaptiveUI({data,planner,settings,context,states,courseAwa
       if(!taskLocked(task)){
         const tools=node('div','adaptive-toolbar');
         if(!task.complete)tools.append(button('改期／分散',()=>openSchedule({ids:[task.id]}),'workspace-link'),button('待安排',()=>openSchedule({ids:[task.id],mode:'waiting'}),'workspace-link'));
-        const remove=button('移除',()=>{if(!window.confirm('移除「'+task.title+'」這項學習任務？課程完成進度與已獲得的 XP 會保留，可復原移除。'))return;try{planner.remove(task.id);removedId=task.id;render();}catch(error){panel.querySelector('#adaptive-feedback').textContent=error.message;}},'workspace-link');
+        const remove=button('移除',()=>{try{planner.remove(task.id);removedId=task.id;render();}catch(error){panel.querySelector('#adaptive-feedback').textContent=error.message;}},'workspace-link adaptive-remove');
         remove.setAttribute('aria-label','移除任務：'+task.title);remove.disabled=!!planner.status().batch?.ids.includes(task.id);if(remove.disabled)remove.title='整批排程待同步，請先同步或撤回後再移除';tools.append(remove);row.append(tools);
       }list.append(row);}
     const undo=panel.querySelector('#adaptive-remove-undo');undo.replaceChildren();
