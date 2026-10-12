@@ -441,35 +441,56 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 
 .app-version { margin-top:24px; padding-top:16px; text-align:right; font-size:12px; }
 
-.building-details > summary { cursor:pointer; list-style:none; }
+/* Territory: a glanceable goal, recent results, then optional calculation notes. */
+.kingdom-buildings { align-items:start; gap:16px; }
+.kingdom-building { border:1px solid var(--line); border-radius:16px; background:var(--surface); box-shadow:0 4px 20px #5967a308; }
+.building-details > summary { cursor:pointer; list-style:none; padding:24px; }
 .building-details > summary::-webkit-details-marker { display:none; }
-.building-details > summary:focus-visible { outline:2px solid var(--accent); outline-offset:8px; border-radius:8px; }
-.building-stage { color:var(--ink); font-weight:600; margin:8px 0; }
-.building-metric { min-height:40px; }
-.building-details .workspace-meter { margin:12px 0; }
-.building-detail-body { padding-top:16px; }
+.building-details > summary:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:16px; }
+.building-heading { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+.building-heading h4 { margin:0; font-size:17px; }
+.building-sigil { display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; border:1px solid var(--line); border-radius:10px; color:var(--kingdom-rune); background:var(--kingdom-stone); font-size:22px; }
+.building-stage-label { font-size:12px; }
+.building-stage { color:var(--ink); font-size:21px; font-weight:650; margin:2px 0 4px; }
+.building-next-target { color:var(--muted); font-size:13px; margin:0 0 22px; }
+.building-number { font-size:34px; line-height:1.2; font-weight:650; font-variant-numeric:tabular-nums; color:var(--kingdom-rune); margin:0; letter-spacing:-1px; }
+.building-details .workspace-meter { height:6px; margin:12px 0 16px; }
+.building-details .workspace-meter > span { background:var(--kingdom-rune); }
+.building-progress-label { color:var(--ink); font-size:14px; line-height:1.7; margin:0; font-weight:500; }
+.building-fastest-label { font-size:12px; margin-bottom:2px; }
+.building-metric { margin-top:12px; font-size:12px; }
+.building-metric:empty { display:none; }
+.building-open-hint { color:var(--kingdom-rune); margin-top:24px; font-size:12px; }
+.building-details[open] .building-open-hint { margin-top:16px; }
+.building-detail-body { border-top:1px solid var(--line); padding:20px 24px 24px; }
+.building-growth { font-size:13px; line-height:1.8; color:var(--muted); margin:0 0 20px; }
 .building-detail-body h5 { font-weight:600; margin:16px 0 8px; font-size:14px; }
-.building-next { padding-left:16px; font-size:13px; }
-.building-next li + li { margin-top:8px; }
-.realm-events,.building-events { list-style:none; padding:0; }
-.realm-event { padding:16px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.building-navigation { display:inline-block; font-size:13px; padding:8px 0; color:var(--kingdom-rune); }
+.building-basis { border-top:1px solid var(--line); margin-top:16px; padding-top:16px; }
+.building-basis > summary,.realm-history-note > summary { font-size:12px; color:var(--muted); cursor:pointer; }
+.building-basis p,.building-basis li { font-size:12px; line-height:1.8; }
+.building-next { padding-left:16px; }
+.realm-events,.building-events { list-style:none; padding:0; margin:0 0 8px; }
+.realm-event { padding:12px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
 .realm-event:last-child { border-bottom:0; }
 .realm-event strong,.realm-event small { display:block; }
-.realm-event strong { margin:8px 0; font-weight:500; }
-.realm-event p { font-size:13px; margin:8px 0; }
-@media(max-width:760px) { .building-metric { min-height:0; } }
-
-.kingdom-buildings { align-items:start; }
-
-.realm-event-source summary { cursor:pointer; font-size:12px; }
-.realm-event-source p { font-size:12px; color:var(--muted); }
-
-.territory-source-note { margin:16px 24px 0; }
-@media(max-width:700px) { .territory-source-note { margin:16px 16px 0; } }
-
+.realm-event small { font-size:12px; }
+.realm-event strong { margin:4px 0 0; font-weight:500; font-size:13px; line-height:1.65; }
+.realm-event p { font-size:12px; margin:4px 0; }
+.realm-activity > summary { font-size:16px; font-weight:600; cursor:pointer; }
+.realm-activity[open] > summary { margin-bottom:16px; }
+.keep-route-overview { margin-top:16px; padding-top:12px; border-top:1px solid var(--line); }
+.keep-route-overview p { font-size:12px; line-height:1.6; margin:0 0 6px; }
 .keep-current-paths,.building-next:has(.keep-path) { list-style:none; padding:0; }
-.keep-path { padding:12px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
-.keep-path h6,.building-event-group h6 { font-size:13px; font-weight:600; margin:8px 0; }
-.keep-requirement { font-size:13px; margin:8px 0; }
-.realm-event-group + .realm-event-group { border-top:1px solid var(--line); padding-top:16px; margin-top:16px; }
-.building-event-group .building-events { margin-top:8px; }
+.keep-path { padding:8px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.keep-path h6,.building-basis h6 { font-size:12px; font-weight:600; margin:8px 0; }
+.keep-requirement { margin:4px 0; }
+@media(max-width:700px) {
+ .kingdom-buildings { gap:16px; }
+ .kingdom-building + .kingdom-building { padding-top:0; }
+ .building-details > summary { padding:20px; }
+ .building-heading { margin-bottom:16px; }
+ .building-next-target { margin-bottom:16px; }
+ .building-open-hint { margin-top:16px; }
+ .building-detail-body { padding:16px 20px 20px; }
+}

@@ -1,41 +1,93 @@
 import {BUILDINGS} from './kingdom-core.js';
-import {buildingProgressSnapshot,realmActivityGroups} from './territory-core.js';
+import {buildingProgressSnapshot,realmActivityGroups,ACADEMY_STAGES,BARRACKS_STAGES,KEEP_STAGES,COURSE_THRESHOLDS,TRAINING_THRESHOLDS} from './territory-core.js';
 const node=(tag,cls='',text)=>{const el=document.createElement(tag);el.className=cls;if(text!==undefined)el.textContent=text;return el;};
-const titles={academy:'奧術學院',barracks:'皇家兵營',keep:'王國要塞'};
-function eventNode(event){const li=node('li','realm-event');li.dataset.eventId=event.id;const when=event.date||(event.id.startsWith('milestone:')?'目前狀態 · 無歷史解鎖日期':'日期未記錄');li.append(node('small','workspace-note',when+' · '+titles[event.category]),node('strong','',event.title),node('p','',event.original));const source=node('details','realm-event-source');source.append(node('summary','workspace-note','來源與記錄狀態'),node('p','workspace-note',event.source+' · '+event.detail));li.append(source);return li;}
-function progressMeter(label,progress){const meter=node('div','workspace-meter');meter.setAttribute('role','progressbar');meter.setAttribute('aria-label',label);meter.setAttribute('aria-valuemin','0');meter.setAttribute('aria-valuemax','100');meter.setAttribute('aria-valuenow',String(Math.floor(progress)));const fill=node('span','');fill.style.width=progress+'%';meter.append(fill);return meter;}
-function pathNode(path){const li=node('li','keep-path');li.dataset.path=path.id;const status=path.met?'已達標':path.requirements.some(r=>!r.available)?'課程資料不足，無法判定此路徑':'尚未達標';li.append(node('h6','',path.label+' · '+status),node('p','workspace-note',path.roman+' · '+path.name+'：符合下列全部條件'),progressMeter(path.label+' '+path.roman+' 階段進度',path.progress),node('p','keep-path-progress workspace-note','此路徑門檻進度 '+Math.floor(path.progress)+'%'));for(const r of path.requirements)li.append(node('p','keep-requirement',r.available?`${r.label}：目前 ${r.actual} / ${r.required} ${r.unit}，尚差 ${r.gap} ${r.unit}`:`${r.label}：尚無課程資料，無法判定門檻與差距`));return li;}
-const groupInfo=[['dated','有日期的近期成果','依紀錄日期由新到舊列出最近 6 筆；紀錄日期不代表實際完成時刻。','尚無可驗證的有日期成果。'],['undated','未記日期的累積成果','列出最多 6 筆目前已完成但缺少有效日期的成果，不能判定何時完成，不列入近期成果。','目前沒有未記日期的累積成果。'],['milestones','目前建築階段','依目前證據顯示達標狀態，沒有歷史解鎖日期，不代表近期升級或永久解鎖。','目前尚未達到建築升級門檻。']];
+const names={academy:ACADEMY_STAGES,barracks:BARRACKS_STAGES,keep:KEEP_STAGES};
+const growth={academy:'每完成一堂課程，都為學院添上一頁知識。',barracks:'每一次有效訓練，都讓守護領地的力量更穩固。',keep:'學習、運動與休閒，都能為領地帶來成長。'};
+// Presentation only: targets come from the existing stage thresholds and route requirements.
+function targetView(id,b,e){
+ if(b.stage===5)return {next:'已達最高階段',number:id==='academy'?String(e.courses.done):id==='barracks'?String(e.training):String(e.activityDays),unit:id==='academy'?'已完成課程':id==='barracks'?'累積有效訓練':'累積活動日',remaining:'最高階段已達成，繼續累積你的成果。',progress:100};
+ if(id==='academy'){
+  if(!e.courses.total)return {next:names[id][b.stage],number:'—',unit:'尚無課程資料',remaining:'完成第一堂課程，為學院點亮燈火。',progress:0};
+  const required=Math.ceil(e.courses.total*COURSE_THRESHOLDS[b.stage]/100);
+  return {next:names[id][b.stage],number:e.courses.done+' / '+required,unit:'課程單元',remaining:'再完成 '+Math.max(0,required-e.courses.done)+' 堂課程即可升級',progress:b.progress};
+ }
+ if(id==='barracks'){
+  const required=TRAINING_THRESHOLDS[b.stage];
+  return {next:names[id][b.stage],number:e.training+' / '+required,unit:'有效訓練',remaining:'再完成 '+Math.max(0,required-e.training)+' 次訓練即可升級',progress:b.progress};
+ }
+ const available=b.nextPaths.filter(p=>p.requirements.every(r=>r.available));
+ const closest=[...available].sort((a,c)=>a.requirements.reduce((n,r)=>n+r.gap,0)-c.requirements.reduce((n,r)=>n+r.gap,0))[0];
+ if(!closest)return {next:names[id][b.stage],number:'—',unit:'尚無可用紀錄',remaining:'開始學習或記錄活動，讓領地逐步成長。',progress:0};
+ const gaps=closest.requirements.filter(r=>r.gap>0).map(r=>r.kind==='courses'?r.gap+' 堂課程':r.gap+' 個活動日');
+ const limiting=[...closest.requirements].sort((a,c)=>a.progress-c.progress)[0];
+ return {next:names[id][b.stage],number:limiting.actual+' / '+limiting.required,unit:limiting.kind==='courses'?'課程單元':'活動日',remaining:'再完成 '+gaps.join('與 ')+'即可升級',progress:closest.progress};
+}
+function progressMeter(label){const meter=node('div','workspace-meter');meter.setAttribute('role','progressbar');meter.setAttribute('aria-label',label);meter.setAttribute('aria-valuemin','0');meter.setAttribute('aria-valuemax','100');meter.setAttribute('aria-valuenow','0');meter.append(node('span'));return meter;}
+function eventNode(event){
+ const li=node('li','realm-event');li.dataset.eventId=event.id;
+ li.append(node('small','workspace-note',event.date||'日期未記錄'),node('strong','',event.original));
+ if(event.detail==='目前未勾選完成；保留首次日期紀錄')li.append(node('p','workspace-note','曾完成，目前已取消勾選'));
+ return li;
+}
+function recentEvents(groups,id,limit){
+ const unique=new Map();
+ for(const event of [...groups.dated,...groups.undated])if((id==='keep'||event.category===id)&&!unique.has(event.id))unique.set(event.id,event);
+ return [...unique.values()].slice(0,limit);
+}
+function pathText(path){return path.requirements.map(r=>r.available?(r.kind==='courses'?'課程 ':'活動日 ')+r.actual+' / '+r.required+(r.kind==='courses'?' 單元':' 天'):'課程資料尚未載入').join(' · ');}
+function pathNode(path){
+ const li=node('li','keep-path');li.dataset.path=path.id;
+ li.append(node('h6','',(path.id==='study'?'學習路線':'跨領域路線')+' · '+(path.met?'已達標':'尚未達標')));
+ for(const r of path.requirements)li.append(node('p','keep-requirement',r.available?(r.kind==='courses'?'課程':'活動日')+'：目前 '+r.actual+' / '+r.required+' '+r.unit+'，尚差 '+r.gap+' '+r.unit:'課程資料尚未載入'));
+ return li;
+}
+function sourceText(id,e){
+ if(id==='academy')return '依各科目前勾選完成的課程計算，單元門檻向上取整，不以四捨五入的百分比判定。學習時數、任務與 XP 不計入課程進度。';
+ if(id==='barracks')return '依已載入的運動完成紀錄計算；正常與低強度替代訓練，每日最多計一次。包含 '+e.legacyTraining+' 次舊運動打卡。休息、未安排與待完成不計；另有 '+e.ambiguousTraining+' 筆互相矛盾的紀錄未計入。這是可確認的累積次數，歷史資料可能不完整。';
+ return '依目前課程完成數與運動、休閒的完成日期計算；同一天兩種活動只算一個活動日。學習路線或跨領域路線任一達標即可升級，不要求連續登入或每天完成所有活動。歷史資料可能不完整。';
+}
 export function createTerritoryUI(page){
  const container=page.querySelector('#kingdom-buildings');
- const note=node('p','workspace-note territory-source-note','階段表示目前資料達標，並非永久解鎖。取消課程或修正紀錄會重新計算；休息、未登入不扣分。地圖沿用既有插畫，尚無分階段外觀變化。');container.before(note);
- for(const {id,title} of BUILDINGS){const card=node('article','kingdom-building');card.dataset.building=id;
-  const details=node('details','building-details');details.id='building-'+id;const summary=node('summary','');summary.append(node('h4','',title),node('p','building-stage'),node('p','building-metric workspace-note'));
-  if(id!=='keep')summary.append(progressMeter(title+'下一階段進度',0));summary.append(node('small','building-progress-label workspace-note'),node('small','workspace-link','查看條件與成果'));
-  const body=node('div','building-detail-body');body.append(node('h5','','為什麼目前達標'),node('p','building-reason'));
-  if(id==='keep')body.append(node('h5','','本階段達標路徑'),node('ul','keep-current-paths'));
-  body.append(node('h5','','下一階段（符合任一路徑）'),node('ul','building-next'),node('h5','','資料來源與限制'),node('p','building-source workspace-note'),node('h5','','相關成果'));
-  for(const [key,title] of groupInfo){const section=node('section','building-event-group');section.dataset.eventGroup=key;section.append(node('h6','',title),node('ul','building-events'));body.append(section);}
-  details.append(summary,body);card.append(details);container.append(card);
+ for(const {id,title} of BUILDINGS){
+  const card=node('article','kingdom-building');card.dataset.building=id;
+  const details=node('details','building-details');details.id='building-'+id;
+  const summary=node('summary');
+  const heading=node('div','building-heading');heading.append(node('span','building-sigil',id==='academy'?'✦':id==='barracks'?'⚔':'♜'),node('h4','',title));heading.firstChild.setAttribute('aria-hidden','true');
+  summary.append(heading,node('small','building-stage-label workspace-note','目前階段'),node('p','building-stage'),node('p','building-next-target'),node('p','building-number'),node('small','building-unit workspace-note'),progressMeter(title+'下一階段進度'));
+  if(id==='keep')summary.append(node('small','building-fastest-label workspace-note','最快達成的建設條件'),node('p','building-progress-label'),node('div','keep-route-overview'));
+  else summary.append(node('p','building-progress-label'));
+  summary.append(node('small','building-metric workspace-note'),node('small','building-open-hint','最近成果與成長故事 ›'));
+  const body=node('div','building-detail-body');body.append(node('p','building-growth',growth[id]),node('h5','','最近成果'),node('ul','building-events'));
+  const navigation=node('a','building-navigation',id==='academy'?'前往課程 →':id==='barracks'?'前往運動紀錄 →':'前往今日活動 →');navigation.href='#';navigation.onclick=event=>{event.preventDefault();window.switchTab(id==='academy'?'subjects':id==='barracks'?'exercise':'home');};body.append(navigation);
+  const basis=node('details','building-basis');basis.append(node('summary','','資料來源與計算說明'),node('p','building-source workspace-note'),node('p','workspace-note','成果依已記錄日期由新到舊排列；沒有日期的成果排在後面，標示「日期未記錄」。紀錄所屬日期不代表實際完成時刻，也不推測缺少的歷史日期。'),node('p','workspace-note','目前階段依現有紀錄判定；更正課程或活動會重新計算。休息與未登入不扣分。'),node('h5','','詳細升級門檻'));
+  if(id==='keep')basis.append(node('h6','','目前階段'),node('ul','keep-current-paths'));
+  basis.append(node('ul','building-next'));body.append(basis);details.append(summary,body);card.append(details);container.append(card);
   details.addEventListener('toggle',()=>{if(details.open)container.querySelectorAll('.building-details').forEach(other=>{if(other!==details)other.open=false;});});
  }
- const activity=node('section','workspace-panel realm-activity');activity.id='realm-activity';activity.append(node('h3','','領地紀事與目前成果'),node('p','workspace-note','XP 日期與 Planner 排定日不當作完成日期。近期紀事、未記日期成果與目前階段分開呈現。'));
- for(const [key,title,note] of groupInfo){const section=node('section','realm-event-group');section.id='realm-'+key;section.append(node('h4','',title),node('p','workspace-note',note),node('ul','realm-events'));activity.append(section);}
+ const activity=node('details','workspace-panel realm-activity');activity.id='realm-activity';activity.append(node('summary','','領地紀事'),node('p','workspace-note','每一步都留下足跡。先看有日期的成果，再回顧未記日期的成果。'),node('ul','realm-events'));
+ const note=node('details','realm-history-note');note.append(node('summary','workspace-note','關於紀事日期'),node('p','workspace-note','只使用已記錄的完成日期；未記日期的成果無法判定何時發生。紀事不把目前建築階段當作新事件，也不推測缺少的歷史紀錄。'));activity.append(note);
  page.querySelector('.kingdom-territory').after(activity);
- function render(input){const buildings=buildingProgressSnapshot(input),groups=realmActivityGroups(buildings),e=buildings.evidence;
-  for(const building of BUILDINGS){const b=buildings[building.id],details=container.querySelector('#building-'+building.id);
-   details.querySelector('.building-stage').textContent=b.roman+' · '+b.name;
-   details.querySelector('.building-metric').textContent=b.metric;
-   if(building.id!=='keep'){const meter=details.querySelector('summary [role=progressbar]');meter.setAttribute('aria-valuenow',String(Math.floor(b.progress)));meter.firstChild.style.width=b.progress+'%';}
-   details.querySelector('.building-progress-label').textContent=building.id==='keep'?(b.nextPaths.length?'下一階段：'+b.nextPaths.map(path=>path.label+' '+Math.floor(path.progress)+'%').join(' · '):'已達最高階段；各路徑達標狀態見下方'):b.stage===5?'最高門檻已達成':'下一階段門檻進度 '+Math.floor(b.progress)+'%';
-   details.querySelector('.building-reason').textContent=b.reason;
+ function render(input){
+  const buildings=buildingProgressSnapshot(input),groups=realmActivityGroups(buildings),e=buildings.evidence;
+  for(const {id,title} of BUILDINGS){
+   const b=buildings[id],details=container.querySelector('#building-'+id),view=targetView(id,b,e);
+   details.querySelector('.building-stage').textContent=b.name;
+   details.querySelector('.building-next-target').textContent=b.stage===5?view.next:'下一階段 · '+view.next;
+   details.querySelector('.building-number').textContent=view.number;
+   details.querySelector('.building-unit').textContent=view.unit;
+   details.querySelector('.building-progress-label').textContent=view.remaining;
+   const meter=details.querySelector('summary [role=progressbar]');meter.setAttribute('aria-valuenow',String(Math.floor(view.progress)));meter.setAttribute('aria-valuetext',view.number+' '+view.unit+'；'+view.remaining);meter.firstChild.style.width=view.progress+'%';
+   details.querySelector('.building-metric').textContent=id==='academy'?'總進度 '+e.courses.done+' / '+e.courses.total+' 單元':id==='barracks'?'累積有效訓練 '+e.training+' 次':'';
+   const events=recentEvents(groups,id,3);details.querySelector('.building-events').replaceChildren(...(events.length?events.map(eventNode):[node('li','workspace-note','尚無成果，從下一次現實中的行動開始。')]));
+   details.querySelector('.building-source').textContent=sourceText(id,e);
    const next=details.querySelector('.building-next');next.replaceChildren();
-   if(building.id==='keep'){const current=details.querySelector('.keep-current-paths');current.replaceChildren(...b.currentPaths.map(pathNode));if(!b.currentPaths.length)current.append(node('li','','初始階段，尚無升級路徑達標。'));next.append(...b.nextPaths.map(pathNode));if(!b.nextPaths.length)next.append(node('li','','已達最高階段；本階段兩條路徑仍分別依目前資料判定。'));}
-   else if(!b.next.length)next.append(node('li','','已達本階段最高門檻；仍依目前資料判定。'));else for(const condition of b.next)next.append(node('li','',condition));
-   details.querySelector('.building-source').textContent=building.id==='academy'?'四科目前完成勾選與 subjectStats 總單元數。門檻按實際單元數向上取整，不以四捨五入百分比、XP、任務或讀書時數升級。':building.id==='barracks'?`只讀已載入 habits 日期紀錄／本機舊打卡；正常與替代完成每日期最多一次，含 ${e.legacyTraining} 次舊 daily-sport=true 證據。可驗證下限，不代表完整歷史；另 ${e.ambiguousTraining} 筆類型為休息／未安排但標完成的矛盾紀錄保守不計。休息、症狀休息、未安排、待完成不計。未來日期、目前課表與取代菜單不回推完成。`:`四科目前課程完成＋已有運動／休閒完成日期，跨類別同日只計一次（運動 ${e.training} 次、休閒 ${e.leisure} 日，共 ${e.activityDays} 有效日）。跨領域路徑進度取各必要條件中最低比例；任一路徑達標即可升級，不合併為單一百分比。歷史可能不完整；不推測連續天數、不計活動時間，不要求每日三種類別完成。`;
-   for(const [key,, ,empty] of groupInfo){const related=details.querySelector(`[data-event-group="${key}"] .building-events`),chosen=groups[key].filter(event=>building.id==='keep'||event.category===building.id).slice(0,3);related.replaceChildren(...chosen.map(eventNode));if(!chosen.length)related.append(node('li','workspace-note',empty));}
+   if(id==='keep'){
+    const overview=details.querySelector('.keep-route-overview');overview.replaceChildren(...b.nextPaths.map(path=>{const line=node('p','workspace-note',(path.id==='study'?'學習路線 · ':'跨領域路線 · ')+pathText(path));line.dataset.path=path.id;return line;}));
+    const current=details.querySelector('.keep-current-paths');current.replaceChildren(...(b.currentPaths.length?b.currentPaths.map(pathNode):[node('li','workspace-note','從邊境營地開始累積成果。')]));
+    next.append(...(b.nextPaths.length?b.nextPaths.map(pathNode):[node('li','workspace-note','已達最高階段。')]));
+   }else next.append(node('li','workspace-note',b.stage===5?'已達最高階段。':title+' → '+view.next+'：'+(id==='academy'?(e.courses.total?'完成 '+Math.ceil(e.courses.total*COURSE_THRESHOLDS[b.stage]/100)+' 單元（總課程的 '+COURSE_THRESHOLDS[b.stage]+'%）':'等待課程資料載入'):'完成 '+TRAINING_THRESHOLDS[b.stage]+' 次有效訓練')));
   }
-  for(const [key,,,empty] of groupInfo){const list=activity.querySelector('#realm-'+key+' .realm-events'),events=groups[key].slice(0,key==='milestones'?3:6);list.replaceChildren(...events.map(eventNode));if(!events.length)list.append(node('li','workspace-note',empty));}
+  const history=recentEvents(groups,'keep',12);activity.querySelector('.realm-events').replaceChildren(...(history.length?history.map(eventNode):[node('li','workspace-note','尚無成果，從下一次現實中的行動開始。')]));
  }
  return {render};
 }
