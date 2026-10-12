@@ -116,7 +116,7 @@ const plannerUI=createPlannerUI({data,planner,states});
 const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
 const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,courseAwards:()=>game.awards,events:()=>window.readCalendarEvents()||{}});
-const kingdomUI=createKingdomUI({data,states,planner,settings:studySettings,life,awards:readAwards});
+const kingdomUI=createKingdomUI({data,states,planner,settings:studySettings,life,awards:readAwards,courseDates:()=>courseDates.records()});
 const growthUI=createGrowthUI({data,states,planner,life,awards:readAwards,courseAwards:()=>game.awards,courseDates:()=>courseDates.records()});
 window.renderBiochemUnits?.();window.renderCalendar?.();
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));

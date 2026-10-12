@@ -221,7 +221,15 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
       onHabits(today(),habits(today()));onChange();void retry();
     }catch{}
   });
-  return {habits,training,start,advance,lower,setStage,setTraining,exercise,setExercise,previewSchedule,schedule,moveSchedule,toggleAction,startExercise,applyStage,changeMode,setWalkGoal,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
+  // Read only existing date records; never call exerciseForDay to synthesize history.
+  function recordedHabits() {
+    const dates=new Set(Object.keys(saved.days));
+    if(typeof storage.length==='number'&&typeof storage.key==='function')for(let i=0;i<storage.length;i++){
+      const key=storage.key(i);if(key?.startsWith('med_exam_habits_'))dates.add(key.slice('med_exam_habits_'.length));
+    }
+    return Object.fromEntries([...dates].filter(validDate).map(day=>[day,habits(day)]));
+  }
+  return {recordedHabits,habits,training,start,advance,lower,setStage,setTraining,exercise,setExercise,previewSchedule,schedule,moveSchedule,toggleAction,startExercise,applyStage,changeMode,setWalkGoal,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
     status:()=>({syncing,error,pending:Object.keys(saved.pending).length,conflicts:clone(conflicts)}),
     choices:id=>({local:clone(saved.pending[id]?.value??null),cloud:clone(saved.pending[id]?value(remote[id],saved.pending[id])??null:null)})};
 }
