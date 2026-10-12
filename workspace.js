@@ -1,3 +1,4 @@
+import {createGrowthUI} from './growth-ui.js';
 import {createKingdomUI} from './kingdom-ui.js';
 import {createStudySettings,normalizeSettings,STUDY_SETTINGS_PATH} from './adaptive-store.js';
 import {fixedClasses,interval,calendarConstraints,studyWeekDisplayTitle} from './adaptive-core.js';
@@ -103,12 +104,13 @@ content.innerHTML = `
   </div>`;
 home.prepend(content);
 const brandNote=document.createElement('p');brandNote.className='workspace-note becoming-home-brand';brandNote.textContent='Becoming · Your life. Your story. Your world.';home.append(brandNote);
-const weeklyRecords=document.createElement('section');weeklyRecords.className='workspace-panel';weeklyRecords.innerHTML='<h3>本週學習成果</h3><p id="weekly-detail"></p><p class="workspace-note">依首次完成的學習紀錄計算，取消或重新勾選不會增加次數。</p>';document.getElementById('tab-content-stats').append(weeklyRecords);
+const readAwards=()=>({...game.awards,...timeTasks.awards(),...planner.awards()});
 const plannerUI=createPlannerUI({data,planner,states});
 const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
 const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,courseAwards:()=>game.awards,events:()=>window.readCalendarEvents()||{}});
-const kingdomUI=createKingdomUI({data,states,planner,settings:studySettings,life});
+const kingdomUI=createKingdomUI({data,states,planner,settings:studySettings,life,awards:readAwards});
+const growthUI=createGrowthUI({data,states,planner,life,awards:readAwards});
 window.renderBiochemUnits?.();window.renderCalendar?.();
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));
 const appearance=document.getElementById('appearance');
@@ -161,7 +163,7 @@ function renderPlanningSummary() {
 function render() {
   const current=states();
   document.getElementById('today-label').textContent=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
-  window.refreshBiochemScheduleDisplay();plannerUI.render();weekUI.refresh();lifeUI.render();adaptiveUI.render();kingdomUI.render();
+  window.refreshBiochemScheduleDisplay();plannerUI.render();weekUI.refresh();lifeUI.render();adaptiveUI.render();kingdomUI.render();growthUI.render();
   const legacy=document.getElementById('legacy-time-history');legacy.replaceChildren();
   const historical=timeTasks.history();
   for(const date of Object.keys(historical).filter(date=>Object.keys(historical[date]).length).sort().reverse()){const row=document.createElement('p');row.className='workspace-note';row.textContent=date+' · '+Object.entries(historical[date]).map(([id,task])=>({morning:'上午',afternoon:'下午',review:'複習'}[id]||id)+': '+(task.complete?'完成':'未完成')+(task.awarded?'（已領 XP）':'')).join(' · ');legacy.append(row);}
@@ -182,9 +184,8 @@ function render() {
     summary.append(button);
   }
   renderPlanningSummary();
-  const stats=gameStats({...game.awards,...timeTasks.awards(),...planner.awards()},day);
+  const stats=gameStats(readAwards(),day);
   document.getElementById('xp-detail').textContent=`${stats.xp} XP`;
-  document.getElementById('weekly-detail').textContent=`本週首次完成 ${stats.weekly} 筆學習紀錄 · 課程、任務與舊時間目標`;
   document.getElementById('game-sync-status').textContent=(gameFailed||timeTasks.failed()||planner.status().error)?'成就雲端同步失敗，本機紀錄已保留；可使用重試同步。':db?'成就獨立同步，不影響原有學習紀錄。':'XP 與成就保存在此瀏覽器。';
   const achievements=document.getElementById('achievements'); achievements.replaceChildren();
   for(const a of stats.achievements) {

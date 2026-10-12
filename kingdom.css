@@ -41,3 +41,14 @@
 .kingdom-chronicles > summary { font-size:16px; font-weight:600; cursor:pointer; }
 .kingdom-chronicles[open] > summary { margin-bottom:16px; }
 .kingdom-chronicles .achievement-list { margin:16px 0; }
+
+.lord-profile { display:flex; gap:24px; align-items:center; }
+.lord-emblem { flex-shrink:0; width:128px; height:128px; border-radius:24px; }
+.lord-identity { min-width:0; }
+.lord-identity h2 { font-size:26px; margin:0 0 8px; }
+.lord-identity p { margin:0 0 8px; }
+.lord-summary { display:flex; flex-wrap:wrap; gap:8px 24px; font-size:14px; margin:16px 0; }
+#lord-open-chronicles { color:var(--accent); display:inline-block; padding:8px 0; }
+.kingdom-chronicles > summary { display:flex; flex-wrap:wrap; gap:8px 24px; align-items:center; }
+:root[data-theme=dark] .lord-emblem { filter:brightness(.85); }
+@media(max-width:700px) { .lord-profile { align-items:flex-start; gap:16px; flex-wrap:wrap; } .lord-emblem { width:88px; height:88px; } .lord-summary { flex-direction:column; gap:8px; } }
