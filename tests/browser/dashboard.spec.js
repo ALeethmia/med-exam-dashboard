@@ -132,6 +132,7 @@ test('midnight in Taipei refreshes daily tasks and habit date bindings',async({p
 });
 
 test('mock Firebase keeps unrelated records and confines XP to its namespace',async({page})=>{
+  await page.clock.setFixedTime(new Date('2026-10-12T04:00:00Z'));
   await page.route('**/owner-config.js', route => route.fulfill({contentType:'application/javascript',body:"export const OWNER_UID = 'test-owner';"}));
   await page.addInitScript(()=>{
     Object.defineProperty(window,'workspaceLocalOnly',{get:()=>false,set:()=>{}});

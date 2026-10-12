@@ -31,7 +31,7 @@ test('reading the kingdom with actual Planner and legacy habits never mutates ta
  const result=kingdomSnapshot({...input,training,goals:lifeSummary(planner,input.day,training,habits)});assert.equal(result.study.total,1);assert.equal(result.study.done,1);assert.equal(result.exercise.label,'已完成（舊紀錄）');assert.equal(result.leisure.label,'已完成');assert.equal(planner.get(b).planning.waiting,true);assert.equal(JSON.stringify({tasks:planner.snapshot(),awards:planner.awards(),habits}),before);
 });
 test('kingdom modules cannot initialize Firebase, storage, XP awards or resource transactions',()=>{
- for(const file of ['chapters.js','kingdom-core.js','kingdom-ui.js']){const source=readFileSync(new URL('../'+file,import.meta.url),'utf8');assert.ok(!/localStorage|sessionStorage|firebase|\.transaction\(|\.setItem\(|planner\.update\(|planner\.add\(/.test(source),file);}
+ for(const file of ['chapters.js','kingdom-core.js','kingdom-ui.js','territory-core.js','territory-ui.js']){const source=readFileSync(new URL('../'+file,import.meta.url),'utf8');assert.ok(!/localStorage|sessionStorage|firebase|\.transaction\(|\.setItem\(|planner\.update\(|planner\.add\(/.test(source),file);}
 });
 
 test('chronicles use original immutable XP and achievement calculations, never kingdom currencies',async()=>{
