@@ -393,3 +393,4 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 #training-revisions[hidden] { display:none!important; }
 #apply-stage-error { color:var(--error); }
 @media(max-width:640px) { .stage-comparison { grid-template-columns:1fr; } }
+.training-toolbar .workspace-button[aria-pressed=true] { opacity:1; background:var(--tint); color:var(--accent); border-color:transparent; }

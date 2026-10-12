@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 async function go(page,tab) {
+ await page.waitForFunction(()=>typeof window.updateWorkspace==='function');
  const group=['exercise','schedule'].includes(tab)?'calendar':tab;
  if(!await page.locator('#tab-btn-'+group).isVisible())await page.locator('#mobile-menu').click();
  await page.locator('#tab-btn-'+group).click();if(group!==tab)await page.locator('#tab-btn-'+tab).click();
@@ -37,7 +38,7 @@ test('specific seated menu saves each action and final result, alternative and s
  await expect(page.locator('#finish-training')).toBeDisabled();await menu.locator('input').first().check();await page.reload();await expect(menu.locator('input').first()).toBeChecked();
  await completeMenu(page);await expect(page.locator('#training-description')).toContainText('正常完成');await expect(page.locator('#daily-sport')).toBeChecked();
  await go(page,'schedule');await page.locator('#daily-sport').uncheck();await go(page,'exercise');await expect(page.locator('#training-description')).toContainText('尚未完成');
- await page.getByRole('button',{name:'改用低強度替代'}).click();await completeMenu(page);await expect(page.locator('#training-description')).toContainText('低強度替代完成');await expect(page.locator('#daily-sport')).toBeChecked();
+ await page.getByRole('button',{name:'改用低強度替代'}).click();await page.locator('#adjustment-confirm').check();await page.locator('#training-adjustment-form button[type=submit]').click();await completeMenu(page);await expect(page.locator('#training-description')).toContainText('低強度替代完成');await expect(page.locator('#daily-sport')).toBeChecked();
  await page.getByRole('button',{name:'症狀休息',exact:true}).click();await expect(page.locator('#training-description')).toContainText('症狀休息');await expect(page.locator('#training-actions')).toContainText('不需要完成訓練');await expect(page.locator('#daily-sport')).not.toBeChecked();await expect(page.locator('#finish-training')).toBeDisabled();
  await go(page,'home');await expect(page.locator('#life-exercise')).toContainText('症狀休息');await expect(page.locator('#xp-detail')).toContainText('0 XP');await page.reload();await expect(page.locator('#life-exercise')).toContainText('症狀休息');
 });
@@ -46,7 +47,7 @@ test('stage picker allows immediate jumps and corrections while preserving saved
  await arrange(page,'seated');await page.locator('#training-actions input').first().check();
  await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('4');await page.locator('#training-settings-form button[type=submit]').click();await expect(page.locator('#training-stage')).toHaveText('階段 4 · 維持與鞏固');
  await expect(page.locator('#training-actions')).toContainText('1 組 × 10 下');await expect(page.locator('#training-actions input').first()).toBeChecked();
- await page.locator('#training-date').fill('2026-10-14');await expect(page.locator('#training-actions')).toContainText('2 組 × 12 下');
+ await page.locator('#training-date').fill('2026-10-15');await expect(page.locator('#training-actions')).toContainText('2 組 × 12 下');
  await page.locator('#training-settings').click();await page.getByRole('button',{name:'回到階段 1'}).click();await page.locator('#training-settings-form button[type=submit]').click();await expect(page.locator('#training-stage')).toHaveText('階段 1 · 適應與穩定');await expect(page.locator('#training-actions')).toContainText('1 組 × 10 下');
  await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('3');await page.locator('#training-settings-form [data-close]').click();await expect(page.locator('#training-stage')).toHaveText('階段 1 · 適應與穩定');
  await page.clock.setSystemTime(new Date('2026-10-26T04:00:00Z'));await page.reload();await expect(page.locator('#training-stage')).toHaveText('階段 1 · 適應與穩定');
@@ -112,10 +113,10 @@ test('mock Firebase persists training offline through reload and reconnect witho
 test('empty saved menu follows selected phase and all four phase previews show concrete progression',async({page})=>{
  await page.goto('/');await go(page,'exercise');await arrange(page,'seated');
  await page.locator('#training-settings').click();const previews=page.locator('#training-stage-previews');await expect(previews.locator('details')).toHaveCount(4);
- await expect(previews).toContainText('步行 5 分鐘');await expect(previews).toContainText('步行 8 分鐘');await expect(previews).toContainText('步行 10 分鐘');await expect(previews).toContainText('步行 12 分鐘');
- await page.locator('#training-stage-select').selectOption('2');await expect(previews.locator('[data-stage="2"]')).toHaveAttribute('open','');await expect(previews.locator('[data-stage="2"]')).toContainText('坐姿抬膝');await expect(previews.locator('[data-stage="2"]')).toContainText('1 組 × 12 下');
+ await expect(previews).toContainText('步行 5–10 分鐘');await expect(previews).toContainText('步行 10–15 分鐘');await expect(previews).toContainText('步行 15–20 分鐘');await expect(previews).toContainText('步行 20–30 分鐘');
+ await page.locator('#training-stage-select').selectOption('2');await expect(previews.locator('[data-stage="2"]')).toHaveAttribute('open','');await expect(previews.locator('[data-stage="2"]')).toContainText('坐姿划船');await expect(previews.locator('[data-stage="2"]')).toContainText('目前採用：坐姿提踵');await expect(previews.locator('[data-stage="2"]')).toContainText('目前採用：坐姿膝伸直');await expect(previews.locator('[data-stage="2"]')).toContainText('1 組 × 8 下');
  await page.locator('#training-stage-select').selectOption('4');await expect(previews.locator('[data-stage="4"]')).toContainText('2 組 × 12 下');await page.locator('#training-settings-form button[type=submit]').click();
- await expect(page.locator('#training-description')).toContainText('階段 4 菜單');await expect(page.locator('#training-actions input')).toHaveCount(5);await expect(page.locator('#training-actions')).toContainText('坐姿抬膝');await expect(page.locator('#training-actions')).toContainText('2 組 × 12 下');await expect(page.locator('#training-stage-mismatch')).toBeEmpty();
+ await expect(page.locator('#training-description')).toContainText('階段 4 菜單');await expect(page.locator('#training-actions input')).toHaveCount(5);await expect(page.locator('#training-actions')).toContainText('坐姿划船');await expect(page.locator('#training-actions')).toContainText('2 組 × 12 下');await expect(page.locator('#training-stage-mismatch')).toBeEmpty();
  await page.reload();await expect(page.locator('#training-description')).toContainText('階段 4 菜單');
 });
 test('retained phase has a clear explanation and explicit replacement preserves original checks and doses',async({page})=>{
@@ -134,4 +135,24 @@ test('explicit start without action checks locks the menu; cancelling applicatio
 test('mobile phase preview and replacement confirmation fit without overflow',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.goto('/');await go(page,'exercise');await arrange(page);await page.locator('#training-actions input').first().check();await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('4');
  const settings=page.locator('#training-settings-form');expect(await settings.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);await settings.locator('button[type=submit]').click();await page.getByRole('button',{name:'套用目前階段',exact:true}).click();const dialog=page.locator('#apply-stage-form');expect(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);await page.locator('#apply-stage-confirm').check();await dialog.locator('button[type=submit]').click();await expect(page.locator('#training-description')).toContainText('階段 4 菜單');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('general programme has alternating A/B days, walking ranges and condition-based full-body exercises',async({page})=>{
+ await page.goto('/');await go(page,'exercise');await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('4');await page.locator('#training-readiness').selectOption('supported');await expect(page.locator('#training-stage-previews [data-stage="4"]')).not.toContainText('目前採用：');await page.getByRole('button',{name:'套用建議週安排（A／B 與步行交錯）'}).click();await page.getByRole('button',{name:'開始訓練',exact:true}).click();
+ await expect(page.locator('#training-week button').nth(0)).toContainText('全身肌力 A');await expect(page.locator('#training-week button').nth(3)).toContainText('全身肌力 B');await expect(page.locator('#training-week button').nth(2)).toContainText('休息與恢復');
+ await expect(page.locator('#training-actions')).toContainText('椅子坐站');await expect(page.locator('#training-actions')).toContainText('扶椅提踵');await expect(page.locator('#training-actions')).toContainText('靠牆伏地挺身');await expect(page.locator('#training-actions')).toContainText('坐姿划船');await expect(page.locator('#training-actions')).toContainText('核心');
+ await page.locator('#training-week button').nth(3).click();await expect(page.locator('#training-actions')).toContainText('坐姿髖折疊');await expect(page.locator('#training-actions')).toContainText('靠牆核心支撐');await expect(page.locator('#training-actions')).toContainText('2 組 × 20 秒');
+ await page.locator('#training-week button').nth(1).click();await expect(page.locator('#training-description')).toContainText('建議 20–30 分鐘');await expect(page.locator('#training-actions')).toContainText('能輕鬆交談');await expect(page.locator('#training-toolbar')).toContainText('症狀休息');
+});
+test('daily walking targets persist across phases and completed targets can only be replaced with archived confirmation',async({page})=>{
+ await page.goto('/');await go(page,'exercise');await arrange(page,'walk');await page.getByRole('button',{name:'調整步行目標'}).click();await page.locator('#walk-goal-minutes').fill('23');await page.locator('#training-adjustment-form button[type=submit]').click();await expect(page.locator('#training-description')).toContainText('當日目標 23 分鐘');
+ await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('4');await page.locator('#training-settings-form button[type=submit]').click();await expect(page.locator('#training-description')).toContainText('當日目標 23 分鐘');await expect(page.locator('#training-description')).toContainText('建議 20–30 分鐘');
+ await completeMenu(page);await page.getByRole('button',{name:'調整步行目標'}).click();await page.locator('#walk-goal-minutes').fill('12');await page.locator('#training-adjustment-form button[type=submit]').click();await expect(page.locator('#adjustment-error')).toContainText('請先確認');await expect(page.locator('#training-actions input')).toBeChecked();
+ await page.locator('#adjustment-confirm').check();await page.locator('#training-adjustment-form button[type=submit]').click();await expect(page.locator('#training-description')).toContainText('當日目標 12 分鐘');await page.locator('#training-revisions > summary').click();await page.locator('#training-revisions details > summary').click();await expect(page.locator('#training-revisions')).toContainText('23 分鐘');await expect(page.locator('#training-revisions')).toContainText('正常完成');await page.reload();await expect(page.locator('#training-description')).toContainText('12 分鐘');await expect(page.locator('#xp-detail')).toContainText('0 XP');
+});
+test('low-intensity and general date modes preserve walking goals and remain usable on mobile',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/');await go(page,'exercise');await arrange(page,'walk');await page.getByRole('button',{name:'調整步行目標'}).click();await page.locator('#walk-goal-minutes').fill('18');await page.locator('#training-adjustment-form button[type=submit]').click();
+ await page.getByRole('button',{name:'改用低強度替代'}).click();await expect(page.locator('#adjustment-menu')).toContainText('坐姿踝關節活動');await page.locator('#training-adjustment-form button[type=submit]').click();await expect(page.locator('#training-actions input')).toHaveCount(4);await expect(page.locator('#training-description')).toContainText('低強度替代');await expect(page.locator('#training-actions')).toContainText('1 組 × 5 下');
+ await page.getByRole('button',{name:'一般體能重建',exact:true}).click();await page.locator('#training-adjustment-form button[type=submit]').click();await expect(page.locator('#training-description')).toContainText('當日目標 18 分鐘');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.getByRole('button',{name:'症狀休息',exact:true}).click();await expect(page.locator('#training-description')).toContainText('症狀休息');await expect(page.locator('#finish-training')).toBeDisabled();
 });

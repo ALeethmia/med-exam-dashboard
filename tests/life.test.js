@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createLifeStore,LIFE_KEY,TRAINING_PATH} from '../life-store.js';
 import {createPlanner} from '../daily-planner.js';
 import {dateKey,gameStats} from '../study-core.js';
-import {defaultTraining,exerciseForDay,exerciseMenu,lifeSummary,trainingWeek} from '../life-core.js';
+import {defaultTraining,exerciseForDay,exerciseMenu,lifeSummary,trainingWeek,STAGES,RECOMMENDED_WEEK,menuConfig} from '../life-core.js';
 const copy=value=>JSON.parse(JSON.stringify(value));
 const storage=()=>{const values=new Map();return {getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value),values};};
 const events=()=>({addEventListener(){}});
@@ -44,7 +44,7 @@ test('conservative menus specify names, sets, reps, instructions and avoid unsup
   assert.ok(actions.every(a=>a.en&&a.instruction&&a.caution));assert.equal(actions[1].perSide,true);
   assert.equal(exerciseMenu({type:'walk',stage:1})[0].minutes,5);
   assert.equal(exerciseMenu({type:'seated',stage:3}).length,5);
-  assert.equal(exerciseMenu({type:'seated',stage:3,supportedStanding:true}).length,7);
+  assert.equal(exerciseMenu({type:'seated',stage:3,supportedStanding:true}).length,5);
   assert.equal(exerciseMenu({type:'walk',stage:4,alternative:true,supportedStanding:true}).length,4);
   assert.equal(exerciseMenu({type:'rest'}).length,0);
 });
@@ -54,7 +54,7 @@ test('actions and final result persist; cancellation, substitution and symptom r
   h.store.finish(day);assert.equal(h.store.habits(day)['daily-sport'],true);
   const restored=createLifeStore(h.options);assert.equal(restored.exercise(day).status,'complete');assert.equal(restored.exercise(day).actions.knee,true);
   restored.toggleAction(day,'knee',false);assert.equal(restored.habits(day)['daily-sport'],false);
-  restored.alternative(day);for(const action of exerciseMenu({...restored.exercise(day),alternative:true}))restored.toggleAction(day,action.id,true);
+  restored.alternative(day,{confirmed:true});for(const action of exerciseMenu({...restored.exercise(day),alternative:true}))restored.toggleAction(day,action.id,true);
   restored.finish(day);assert.equal(restored.exercise(day).status,'alternative');assert.equal(restored.habits(day)['daily-sport'],true);
   restored.symptomRest(day);assert.equal(restored.exercise(day).status,'symptom_rest');assert.equal(restored.habits(day)['daily-sport'],false);
   const weekly=trainingWeek(restored.training(),day,restored.habits);assert.equal(weekly.planned,0);assert.equal(weekly.completed,0);assert.equal(weekly.rest,1);
@@ -89,7 +89,7 @@ test('Taipei midnight separates study, exercise and leisure dates',()=>{
 test('two devices merge separate activities and atomically mirror exercise/leisure booleans',async()=>{
   const server=backend({habits:{'2026-10-12':{'daily-exam':true,unknown:42}},physiology:{original:true},gamification:{v1:{awards:{keep:{xp:20}}}}});const a=server.client('a'),b=server.client('b');await settle(a.store,b.store);
   a.store.schedule('2026-10-12','seated');await settle(a.store,b.store);b.connection.online=false;b.store.setLeisure('2026-10-12',{title:'閱讀',status:'complete'});await settle(b.store);
-  a.store.alternative('2026-10-12');for(const action of exerciseMenu({...a.store.exercise(),alternative:true}))a.store.toggleAction('2026-10-12',action.id,true);await settle(a.store);a.store.finish('2026-10-12');await settle(a.store);
+  a.store.alternative('2026-10-12',{confirmed:true});for(const action of exerciseMenu({...a.store.exercise(),alternative:true}))a.store.toggleAction('2026-10-12',action.id,true);await settle(a.store);a.store.finish('2026-10-12');await settle(a.store);
   b.connection.online=true;await b.store.retry();await settle(a.store,b.store);
   const day=server.get('habits/2026-10-12');assert.equal(day['daily-sport'],true);assert.equal(day['daily-game'],true);assert.equal(day.questOS_v1.exercise.status,'alternative');assert.equal(day.questOS_v1.leisure.title,'閱讀');assert.equal(day.unknown,42);assert.equal(day['daily-exam'],true);
   assert.deepEqual(a.store.habits('2026-10-12'),b.store.habits('2026-10-12'));assert.equal(server.get('physiology/original'),true);assert.equal(server.get('gamification/v1/awards/keep/xp'),20);assert.ok(server.writes.every(p=>p.startsWith('habits/')));
@@ -125,9 +125,9 @@ test('paused training retains stored actions but cannot be completed until expli
 test('stored but untouched schedules follow current stage immediately while custom time stays explicit',()=>{
   const h=local(),day='2026-10-12';h.store.schedule(day,'seated');h.store.schedule('2026-10-14','walk');h.store.schedule('2026-10-15','walk',7);
   h.store.setStage(4);
-  assert.equal(h.store.exercise(day).stage,4);assert.equal(h.store.exercise(day).minutes,15);assert.equal(exerciseMenu(h.store.exercise(day))[0].sets,2);
-  assert.equal(h.store.exercise('2026-10-14').minutes,12);assert.equal(h.store.exercise('2026-10-15').minutes,7);
-  h.store.toggleAction(day,'ankle',true);assert.equal(h.store.habits(day).questOS_v1.exercise.stage,4);assert.equal(h.store.habits(day).questOS_v1.exercise.menuVersion,2);
+  assert.equal(h.store.exercise(day).stage,4);assert.equal(h.store.exercise(day).minutes,25);assert.equal(exerciseMenu(h.store.exercise(day))[0].sets,2);
+  assert.equal(h.store.exercise('2026-10-14').minutes,5);assert.equal(h.store.exercise('2026-10-15').minutes,7);
+  h.store.toggleAction(day,'knee',true);assert.equal(h.store.habits(day).questOS_v1.exercise.stage,4);assert.equal(h.store.habits(day).questOS_v1.exercise.menuVersion,3);
   h.store.setStage(1);assert.equal(h.store.exercise(day).stage,4);assert.equal(h.store.exercise('2026-10-14').stage,1);
 });
 test('started, unchecked-after-start, completed and symptom-rest records never follow a new stage automatically',()=>{
@@ -148,7 +148,7 @@ test('confirmed replacement archives the original menu and result; stale preview
   const h=local(),day='2026-10-12';h.store.schedule(day,'seated');h.store.toggleAction(day,'ankle',true);h.store.setStage(4);
   const before=h.store.exercise(day);assert.throws(()=>h.store.applyStage(day));
   const oldPreview=copy(before);h.store.toggleAction(day,'knee',true);assert.throws(()=>h.store.applyStage(day,{confirmed:true,expected:oldPreview}));assert.equal(h.store.exercise(day).actions.knee,true);
-  h.store.applyStage(day,{confirmed:true,expected:h.store.exercise(day)});const current=h.store.exercise(day),previous=Object.values(current.revisions)[0];assert.equal(current.stage,4);assert.equal(current.status,'pending');assert.deepEqual(current.actions,{});assert.equal(previous.stage,1);assert.equal(previous.actions.ankle,true);assert.equal(previous.actions.knee,true);assert.equal(previous.menuVersion,2);
+  h.store.applyStage(day,{confirmed:true,expected:h.store.exercise(day)});const current=h.store.exercise(day),previous=Object.values(current.revisions)[0];assert.equal(current.stage,4);assert.equal(current.status,'pending');assert.deepEqual(current.actions,{});assert.equal(previous.stage,1);assert.equal(previous.actions.ankle,true);assert.equal(previous.actions.knee,true);assert.equal(previous.menuVersion,3);
   const restored=createLifeStore(h.options);assert.deepEqual(restored.exercise(day).revisions,current.revisions);
 });
 test('stage defaults sync across devices while started records retain their menu and exercise conflicts remain explicit',async()=>{
@@ -163,8 +163,8 @@ test('stage defaults sync across devices while started records retain their menu
 });
 test('phase menus progress clearly without mandatory unsupported standing or intense movements',()=>{
   const menus=[1,2,3,4].map(stage=>exerciseMenu({type:'seated',stage}));
-  assert.deepEqual(menus.map(menu=>menu.length),[4,5,5,5]);assert.deepEqual(menus.map(menu=>[menu[0].sets,menu[0].reps]),[[1,10],[1,12],[2,10],[2,12]]);
-  assert.deepEqual([1,2,3,4].map(stage=>exerciseMenu({type:'walk',stage})[0].minutes),[5,8,10,12]);
+  assert.deepEqual(menus.map(menu=>menu.length),[4,5,5,5]);assert.deepEqual(menus.map(menu=>[menu[0].sets,menu[0].reps]),[[1,10],[1,8],[2,8],[2,12]]);
+  assert.deepEqual([1,2,3,4].map(stage=>exerciseMenu({type:'walk',stage})[0].minutes),[5,10,15,20]);
   assert.ok(menus.every(menu=>menu.every(move=>!['wall','chair','run','jump','hiit'].includes(move.id))));
 });
 
@@ -187,4 +187,42 @@ test('Firebase snapshots omitting empty action maps still render an untouched me
  const pending=exerciseForDay(config,'2026-10-12',{questOS_v1:{exercise:{type:'seated',stage:1,status:'pending',minutes:8}}},'2026-10-12');
  assert.equal(pending.stage,4);assert.deepEqual(pending.actions,{});assert.equal(exerciseMenu(pending).length,5);
  const completed=exerciseForDay(config,'2026-10-12',{questOS_v1:{exercise:{type:'seated',stage:1,status:'complete',minutes:8}}},'2026-10-12');assert.equal(completed.stage,1);assert.deepEqual(completed.actions,{});
+});
+
+test('walking ranges match the four stages and saved daily goals survive phase changes',()=>{
+ const h=local(),day='2026-10-12';assert.deepEqual(STAGES.map(stage=>stage.walkRange),[[5,10],[10,15],[15,20],[20,30]]);
+ h.store.schedule(day,'walk',9);h.store.setStage(4);assert.equal(h.store.exercise(day).minutes,9);assert.equal(exerciseMenu(h.store.exercise(day))[0].range,'20–30 分鐘');
+ h.store.setWalkGoal(day,24,{expected:h.store.exercise(day)});h.store.setStage(2);assert.equal(h.store.exercise(day).minutes,24);
+ h.store.toggleAction(day,'walk',true);h.store.finish(day);const before=copy(h.store.habits(day));h.store.setStage(4);assert.deepEqual(h.store.habits(day),before);assert.equal(h.store.exercise(day).stage,2);
+ assert.throws(()=>h.store.setWalkGoal(day,12));h.store.setWalkGoal(day,12,{confirmed:true,expected:h.store.exercise(day)});assert.ok(Object.values(h.store.exercise(day).revisions).some(record=>record.minutes===24&&record.status==='complete'));
+});
+test('new general A/B days cover full body patterns with conditional seated replacements and progressive dosage',()=>{
+ const a=exerciseMenu({type:'strength_a',stage:4,supportedStanding:true}),b=exerciseMenu({type:'strength_b',stage:4,supportedStanding:true});
+ assert.deepEqual(a.map(move=>move.id),['chair','calf','wall','row','brace']);assert.deepEqual(b.map(move=>move.id),['hinge','chair','row','wall','wall-core']);assert.equal(b.at(-1).seconds,20);
+ assert.ok(a.every(move=>move.name&&move.en&&move.instruction&&move.caution));assert.equal(a[0].sets,2);assert.equal(a[0].reps,10);assert.equal(a[3].reps,12);
+ const seated=exerciseMenu({type:'strength_a',stage:4,supportedStanding:false});assert.deepEqual(seated.map(move=>move.id),['knee','seated-calf','palm','row','brace']);
+ assert.ok(!exerciseMenu({type:'strength_a',stage:1,supportedStanding:true}).some(move=>['chair','wall','calf'].includes(move.id)));
+ assert.equal(exerciseMenu({type:'strength_a',stage:2,supportedStanding:true})[0].sets,1);assert.equal(exerciseMenu({type:'strength_a',stage:3,supportedStanding:true})[0].sets,2);
+ assert.deepEqual(defaultTraining().week,RECOMMENDED_WEEK);assert.equal(RECOMMENDED_WEEK[0],'strength_a');assert.equal(RECOMMENDED_WEEK[3],'strength_b');assert.equal(RECOMMENDED_WEEK[2],'rest');
+});
+test('versions 1 and 2 retain their exact original doses after introduction of full-body version 3',()=>{
+ const h=local(),day='2026-10-11';const old={questOS_v1:{exercise:{type:'seated',menuVersion:2,stage:4,minutes:15,supportedStanding:true,status:'complete',actions:{ankle:true,march:true}}},'daily-sport':true};h.saved.setItem('med_exam_habits_'+day,JSON.stringify(old));
+ h.store.setStage(4);h.store.setTraining({supportedStanding:true});const record=h.store.exercise(day),moves=exerciseMenu(record);
+ assert.equal(record.menuVersion,2);assert.deepEqual(moves.map(move=>move.id),['ankle','knee','scapula','elbow','march','wall','chair']);assert.deepEqual(moves.slice(0,4).map(move=>[move.sets,move.reps]),[[2,12],[2,10],[2,10],[2,12]]);assert.equal(exerciseMenu({type:'walk',stage:4,menuVersion:2})[0].minutes,12);assert.equal(exerciseMenu({type:'walk',stage:4,menuVersion:1})[0].minutes,15);
+ assert.equal(h.saved.getItem('med_exam_habits_'+day),JSON.stringify(old));
+});
+test('date modes override the global default and restore the original walking target without losing results',()=>{
+ const h=local(),day='2026-10-12';h.store.schedule(day,'walk',23);h.store.changeMode(day,'alternative');assert.equal(h.store.exercise(day).minutes,5);assert.equal(h.store.exercise(day).type,'walk');assert.equal(exerciseMenu(h.store.exercise(day)).length,4);
+ for(const move of exerciseMenu(h.store.exercise(day)))h.store.toggleAction(day,move.id,true);h.store.finish(day);assert.throws(()=>h.store.changeMode(day,'general'));h.store.changeMode(day,'general',{confirmed:true});assert.equal(h.store.exercise(day).minutes,23);
+ h.store.setTraining({trainingMode:'alternative'});assert.notEqual(h.store.exercise(day).mode,'alternative');assert.ok(Object.values(h.store.exercise(day).revisions).some(record=>record.status==='alternative'&&record.mode==='alternative'));
+ const fresh='2026-10-13';h.store.schedule(fresh,'strength_a');assert.equal(h.store.exercise(fresh).mode,'alternative');h.store.setTraining({trainingMode:'general'});assert.notEqual(h.store.exercise(fresh).mode,'alternative');
+});
+test('menu-affecting condition changes invalidate an open confirmation',()=>{
+ const h=local(),day='2026-10-12';h.store.schedule(day,'strength_a');h.store.toggleAction(day,'ankle',true);const current=h.store.exercise(day),config=menuConfig(h.store.training());h.store.setTraining({supportedStanding:true});
+ assert.throws(()=>h.store.changeMode(day,'alternative',{confirmed:true,expected:current,expectedConfig:config}));assert.equal(h.store.exercise(day).actions.ankle,true);
+});
+test('offline walking targets and date modes reconnect consistently across devices with old menus preserved',async()=>{
+ const server=backend(),a=server.client('a'),b=server.client('b');await settle(a.store,b.store);a.store.schedule('2026-10-12','walk',11);await settle(a.store,b.store);
+ b.connection.online=false;b.store.setWalkGoal('2026-10-12',22);await settle(b.store);a.store.setStage(4);await settle(a.store);b.connection.online=true;await b.store.retry();await settle(a.store,b.store);assert.equal(a.store.exercise().minutes,22);assert.equal(b.store.exercise().minutes,22);
+ a.store.changeMode('2026-10-12','alternative');await settle(a.store,b.store);assert.equal(b.store.exercise().mode,'alternative');a.store.changeMode('2026-10-12','general');await settle(a.store,b.store);assert.equal(b.store.exercise().minutes,22);
 });
