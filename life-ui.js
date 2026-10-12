@@ -35,8 +35,8 @@ export function createLifeUI({store,planner,today=()=>dateKey()}) {
     const config=store.training();settings.querySelector('#settings-stage').textContent=`目前階段 ${config.stage} · ${STAGES[config.stage-1].title}${config.startedOn?' · 本階段自 '+config.stageSince+' 起':' · 尚未開始'}`;
     const actions=settings.querySelector('#stage-actions');actions.replaceChildren();
     const label=node('label','','訓練階段');const select=node('select','');select.id='training-stage-select';
-    for(const stage of STAGES){const option=node('option','',`階段 ${stage.id} · ${stage.title}`);option.value=String(stage.id);select.append(option);}select.value=String(config.stage);label.append(select);actions.append(label);
-    actions.append(button('回到階段 1',()=>{select.value='1';}),node('p','workspace-note','可隨時選擇任一階段；兩週節奏僅供參考。儲存後套用到尚未記錄的日期，已有菜單與結果不會被更改。'));
+    for(const stage of STAGES){const option=node('option','',`階段 ${stage.id} · ${stage.title}`);option.value=String(stage.id);select.append(option);}select.value=String(config.stage);label.append(select);
+    const pickerRow=node('div','stage-picker-row');pickerRow.append(label,button('回到階段 1',()=>{select.value='1';}));actions.append(pickerRow,node('p','workspace-note','可隨時選擇任一階段；兩週節奏僅供參考。儲存後套用到尚未記錄的日期，已有菜單與結果不會被更改。'));
     if(!config.startedOn)actions.append(button('開始訓練',()=>saveSettings(true)));
   }
   header.querySelector('#training-settings').onclick=()=>{const config=store.training();settings.querySelector('#training-paused').checked=config.paused;settings.querySelector('#training-standing').checked=config.supportedStanding;config.week.forEach((type,i)=>settings.querySelector('#training-weekday-'+i).value=type);settings.querySelector('#settings-error').textContent='';settingsStage();settings.showModal();};

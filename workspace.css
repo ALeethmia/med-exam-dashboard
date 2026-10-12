@@ -376,3 +376,7 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
  .training-settings-grid { grid-template-columns:1fr; }
 }
 .life-goals .life-check { display:inline-flex!important; vertical-align:middle; margin-left:8px; }
+.stage-picker-row { display:flex; align-items:flex-end; gap:8px; flex-basis:100%; min-width:0; }
+.workspace-dialog .stage-picker-row > label { flex:1; min-width:0; margin-bottom:0; }
+.stage-picker-row select { height:44px; }
+.stage-picker-row .workspace-button { flex:0 0 auto; height:44px; min-height:44px; padding:8px 12px; font-size:13px; white-space:nowrap; }
