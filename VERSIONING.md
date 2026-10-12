@@ -2,6 +2,10 @@
 
 使用 `MAJOR.MINOR.PATCH` 與 `MAJOR.MINOR.PATCH-beta.N`。目前處於 0.x，版本發布由使用者明確決定，不自動升至 1.0。
 
+## 目前發布狀態
+
+目前穩定版本候選為 **v0.2.0（待發布）**。v0.2.0-beta.1 已由使用者完成正式網站六項驗收，並回報課程日期寫入、跨裝置同步與離線寫入後恢復同步實測通過。Release PR 尚待審查；Tag／GitHub Release 應於合併後指向 main Commit，現在不建立。
+
 ## 唯一來源與顯示
 
 `package.json` 的 version 是唯一人工維護的產品版號。package-lock.json 根層版本是 npm 的同步副本，不是另一套產品版號。修改版號可執行 `npm version <版本> --no-git-tag-version --ignore-scripts`，再執行 `npm run build`；不要每個普通 Commit 都升版。
@@ -15,7 +19,7 @@ build 從 package.json 產生 `public/app-version.json`（已追蹤的靜態產�
 - Major：重大不相容變更或人工決定發布成熟的 1.0。資料格式變更仍須另外檢查相容性、備份與遷移策略，提高 Major 不能代替它們。
 - Beta：未完成正式驗收，例如 `0.2.0-beta.1 → 0.2.0-beta.2`；普通 Commit 可以保持同版號，以部署 SHA 區分。
 
-方向：`0.2.0-beta.1` 為 Phase 2A 預發布；驗收後可選 `0.2.0`；未來 `0.3.0`（Phase 2B）、`0.4.0`（王國經濟／建築）、`0.5.0`（軍隊／遠征）僅是規劃，不預建 Tag，不強制功能與版號綁定。
+方向：`0.2.0-beta.1` 為已完成使用者驗收的 Phase 2A 預發布；`0.2.0` 為待發布穩定版本；未來 `0.3.0`（Phase 2B）、`0.4.0`（王國經濟／建築）、`0.5.0`（軍隊／遠征）僅是規劃，不預建 Tag，不強制功能與版號綁定。
 
 ## 人工發布流程
 
@@ -31,10 +35,16 @@ build 從 package.json 產生 `public/app-version.json`（已追蹤的靜態產�
 
 產品 v0.2.0 不代表資料路徑升至 v0.2.0。保留 `questOS/v1/...`、`gamification/v1/...`、`gamification/v3/...` 等原路徑，不為更名或升版刪除／搬移資料。新日期路徑 `questOS/v1/courseFirstCompletion` 已記錄於 CHANGELOG。
 
-## 正式發布前人工驗收（目前未完成）
+## 正式 Firebase 人工驗收狀態
 
-- Firebase Rules 允許 OWNER_UID 存取新日期路徑，未授權帳號無法讀寫私人資料；不要把前端 UID 檢查當成資料庫授權。
-- 原課程完成、XP／成就、Planner、生活目標及運動歷史均保留。
-- 在已授權網域的兩裝置確認首次日期同步、移除、重新設定及離線重連／同 ID 衝突。
+已完成（依使用者實測回報）：
 
-這些須使用本人登入的真實 Firebase 驗證。單元與瀏覽器 Mock 測試只能證明程式行為，不能宣稱正式環境已驗收。
+- v0.2.0-beta.1 正式網站六項驗收。
+- 課程首次日期寫入、實際跨裝置同步，以及離線寫入後恢復同步。
+
+仍未人工驗證：
+
+- 未授權帳號是否被 Firebase Security Rules 拒絕讀寫私人資料；前端 OWNER_UID 檢查不能取代資料庫授權。
+- 同一課程的雙裝置同時修改日期衝突。
+
+原課程完成、XP／成就、Planner、生活目標及運動歷史在本次發布中功能凍結、不遷移。上述已完成項目來自使用者在正式網站與真實 Firebase 的驗收，不是本次自動測試推論；未完成項目不能由 Mock 測試代替。本次不修改 Rules，不對正式 Firebase 執行測試。
