@@ -1,3 +1,7 @@
+import {showVersion} from './version-ui.js';
+import {createCourseDates} from './course-dates.js';
+import {createGrowthUI} from './growth-ui.js';
+import {createKingdomUI} from './kingdom-ui.js';
 import {createStudySettings,normalizeSettings,STUDY_SETTINGS_PATH} from './adaptive-store.js';
 import {fixedClasses,interval,calendarConstraints,studyWeekDisplayTitle} from './adaptive-core.js';
 import {createAdaptiveUI} from './adaptive-ui.js';
@@ -7,7 +11,7 @@ import {createWeekPlanUI} from './week-plan-ui.js';
 import {createTimeTasks} from './time-tasks.js';
 import {createLifeStore} from './life-store.js';
 import {createLifeUI} from './life-ui.js';
-import {GAME_KEY, GAME_PATH, dateKey, awardKey, flattenSubjects, subjectStats, gameStats} from './study-core.js';
+import {GAME_KEY, GAME_PATH, COURSE_PROGRESS_NOTE, dateKey, awardKey, flattenSubjects, subjectStats, gameStats} from './study-core.js';
 
 const data = window.studyData;
 if (!data) throw new Error('課程資料未能載入');
@@ -22,11 +26,14 @@ let day = dateKey();
 let gameSyncing = false;
 let gameDirty = false;
 let gameFailed = false;
-let lastLevel=null;
-let levelNoticeTimer;
 const save = () => localStorage.setItem(GAME_KEY, JSON.stringify(game));
 const db = window.learningDB;
 const states = () => window.readStudyStates();
+const courseDates=createCourseDates({keys:new Set(validItems.keys()),db,localOnly:window.workspaceLocalOnly,onChange:()=>{window.SubjectUI?.refreshDates?.();window.updateWorkspace?.();}});
+window.courseDates={...courseDates,today:()=>dateKey(),day:key=>Object.hasOwn(courseDates.records(),key)?courseDates.records()[key]?.day||null:game.awards[key]?.day||null};
+const initiallyCompleted=new Set(allItems.filter(item=>states()[item.path]?.[item.id]).map(awardKey));
+window.addEventListener('study-completed',event=>{const {path,id,complete}=event.detail,key=path+'__'+id;if(complete&&validItems.has(key)&&!initiallyCompleted.has(key)&&!game.awards[key])courseDates.set(key,dateKey(),{firstOnly:true});});
+
 const timeTasks=createTimeTasks({db,localOnly:window.workspaceLocalOnly,day,onChange:()=>window.updateWorkspace?.()});
 let studySettings;
 function studyContext(){return {settings:studySettings?.config()||normalizeSettings(),events:window.readCalendarEvents()||{}};}
@@ -71,7 +78,7 @@ window.eligibleLifeHabits=(date,habits)=>{
 const home = document.getElementById('tab-content-home');
 const content = document.createElement('div');
 content.innerHTML = `
-  <div class="growth-strip"><span><strong id="growth-level">Lv. 1</strong> <span id="growth-xp">0 XP</span> · 每一次學習，都是累積 <span id="level-notice" role="status"></span></span><button class="workspace-link" data-go="progression">角色與成就 →</button></div>
+
   <div class="workspace-grid">
     <div class="workspace-stack">
       <section class="workspace-panel" aria-labelledby="tasks-title">
@@ -91,10 +98,10 @@ content.innerHTML = `
     <div class="workspace-stack">
       <section class="workspace-panel" aria-labelledby="progress-title">
         <div class="panel-heading"><h2 id="progress-title">科目進度</h2><button class="workspace-link" data-go="subjects">所有科目 →</button></div>
-        <div class="overall-summary"><div><span class="overall-number" id="overall-percent"></span><span class="overall-label">已追蹤課程完成率</span></div><span id="overall-detail" class="workspace-note"></span></div>
+        <div class="overall-summary"><div><span class="overall-number" id="overall-percent"></span><span class="overall-label">整體完成率（按單元數）</span></div><span id="overall-detail" class="workspace-note"></span></div>
         <div class="workspace-meter"><span id="overall-meter"></span></div>
         <div id="subject-summary"></div>
-        <p class="workspace-note">整體依四科 115 個項目計算；生理與生化依項目數，解剖與藥理依影片時長。</p>
+        <p class="workspace-note" data-course-progress-basis>${COURSE_PROGRESS_NOTE}</p>
       </section>
       <section class="workspace-panel" aria-labelledby="upcoming-title">
         <div class="panel-heading"><h2 id="upcoming-title">近期日程</h2><button class="workspace-link" data-go="calendar">行事曆 →</button></div>
@@ -103,18 +110,15 @@ content.innerHTML = `
     </div>
   </div>`;
 home.prepend(content);
-const progression=document.getElementById('tab-content-progression');
-progression.innerHTML=`<section class="workspace-panel game-summary" aria-label="學習成就">
-  <div><h3 id="level-title"></h3><p id="xp-detail"></p><div class="workspace-meter"><span id="xp-meter"></span></div><p id="game-sync-status" role="status"></p></div>
-  <div><h3>每週挑戰</h3><p id="weekly-detail"></p><div class="workspace-meter success"><span id="weekly-meter"></span></div></div>
-  <div style="grid-column:1/-1"><h3>學習里程碑</h3><div class="achievement-list" id="achievements"></div></div>
-</section><p class="workspace-note">XP 記錄學習行動，不代表醫學知識熟練度。休息不會扣除已累積的成長。</p>`;
+const brandNote=document.createElement('p');brandNote.className='workspace-note becoming-home-brand';brandNote.textContent='Becoming · Your life. Your story. Your world.';home.append(brandNote);
+const readAwards=()=>({...game.awards,...timeTasks.awards(),...planner.awards()});
 const plannerUI=createPlannerUI({data,planner,states});
 const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
 const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,courseAwards:()=>game.awards,events:()=>window.readCalendarEvents()||{}});
+const kingdomUI=createKingdomUI({data,states,planner,settings:studySettings,life,awards:readAwards});
+const growthUI=createGrowthUI({data,states,planner,life,awards:readAwards,courseAwards:()=>game.awards,courseDates:()=>courseDates.records()});
 window.renderBiochemUnits?.();window.renderCalendar?.();
-const legacyHistory=document.createElement('details');legacyHistory.className='planner-history';legacyHistory.innerHTML='<summary>舊時間目標紀錄</summary><div id="legacy-time-history"></div>';progression.append(legacyHistory);
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));
 const appearance=document.getElementById('appearance');
 function updateAppearanceControls() {
@@ -128,7 +132,7 @@ document.getElementById('mobile-menu').addEventListener('click',()=>{
   const open=document.getElementById('workspace-nav').classList.toggle('mobile-open');
   document.getElementById('mobile-menu').setAttribute('aria-expanded',String(open));
 });
-document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
+document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void courseDates.retry();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
 
 function setMeter(id, percent) {
   const meter = document.getElementById(id);
@@ -164,9 +168,10 @@ function renderPlanningSummary() {
 }
 
 function render() {
+  window.SubjectUI?.refreshDates?.();
   const current=states();
   document.getElementById('today-label').textContent=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
-  window.refreshBiochemScheduleDisplay();plannerUI.render();weekUI.refresh();lifeUI.render();adaptiveUI.render();
+  window.refreshBiochemScheduleDisplay();plannerUI.render();weekUI.refresh();lifeUI.render();adaptiveUI.render();kingdomUI.render();growthUI.render();
   const legacy=document.getElementById('legacy-time-history');legacy.replaceChildren();
   const historical=timeTasks.history();
   for(const date of Object.keys(historical).filter(date=>Object.keys(historical[date]).length).sort().reverse()){const row=document.createElement('p');row.className='workspace-note';row.textContent=date+' · '+Object.entries(historical[date]).map(([id,task])=>({morning:'上午',afternoon:'下午',review:'複習'}[id]||id)+': '+(task.complete?'完成':'未完成')+(task.awarded?'（已領 XP）':'')).join(' · ');legacy.append(row);}
@@ -187,17 +192,8 @@ function render() {
     summary.append(button);
   }
   renderPlanningSummary();
-  const stats=gameStats({...game.awards,...timeTasks.awards(),...planner.awards()},day);
-  if(lastLevel!==null && stats.level>lastLevel){const notice=document.getElementById('level-notice');notice.textContent='升到 Lv. '+stats.level;clearTimeout(levelNoticeTimer);levelNoticeTimer=setTimeout(()=>{notice.textContent='';},8000);}
-  lastLevel=stats.level;
-  document.getElementById('growth-level').textContent=`Lv. ${stats.level} · 學習者`;
-  document.getElementById('growth-xp').textContent=`${stats.xp} XP`;
-  document.getElementById('sidebar-level').textContent=`學習者 · Lv. ${stats.level}`;
-  document.getElementById('level-title').textContent=`Lv. ${stats.level} · 學習者`;
-  document.getElementById('xp-detail').textContent=`${stats.xp} XP · 距下一級 ${stats.next} XP`;
-  document.getElementById('xp-meter').style.width=stats.xp%100+'%';
-  document.getElementById('weekly-detail').textContent=`本週完成 ${stats.weekly} / 10 個任務 · 週一重新計算`;
-  document.getElementById('weekly-meter').style.width=Math.min(100,stats.weekly/10*100)+'%';
+  const stats=gameStats(readAwards(),day);
+  document.getElementById('xp-detail').textContent=`${stats.xp} XP`;
   document.getElementById('game-sync-status').textContent=(gameFailed||timeTasks.failed()||planner.status().error)?'成就雲端同步失敗，本機紀錄已保留；可使用重試同步。':db?'成就獨立同步，不影響原有學習紀錄。':'XP 與成就保存在此瀏覽器。';
   const achievements=document.getElementById('achievements'); achievements.replaceChildren();
   for(const a of stats.achievements) {
@@ -241,7 +237,9 @@ if (db && !window.workspaceLocalOnly) {
 function checkDay() { if(dateKey()!==day) location.reload(); }
 setInterval(checkDay,30000);
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) { checkDay(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry(); } });
-window.addEventListener('online',()=>{window.retryLearningSync(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
+window.addEventListener('online',()=>{window.retryLearningSync();void courseDates.retry(); void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
 render();
 void syncGame();
 void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();
+
+void showVersion();

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+<title id="title">學者領主徽章</title><desc id="desc">兜帽、書本與奧術符文組成的匿名徽章，不描繪特定性別或真實人物。</desc>
+<!-- Original artwork for Becoming; no third-party assets or external dependencies. -->
+<rect x="8" y="8" width="144" height="144" rx="38" fill="#d9e2df"/>
+<path d="M80 19l47 20v45q0 36-47 58-47-22-47-58V39z" fill="#526c69" stroke="#9caaa6" stroke-width="3"/>
+<path d="M48 91q1-51 32-56 31 5 32 56l-22-5H70z" fill="#7b87a5"/>
+<path d="M63 78q2-26 17-31 15 5 17 31l-17 15z" fill="#344950"/>
+<path d="M48 100q17-5 32 2 15-7 32-2v21q-17-4-32 2-15-6-32-2z" fill="#dedcc8" stroke="#a3afa5" stroke-width="2"/>
+<path d="M80 103v19M55 106l17 2M88 108l17-2M56 113l15 2M89 115l15-2" stroke="#87969a" stroke-width="2"/>
+<path d="M80 25l6 8-6 8-6-8zM42 54l4 6-4 6-4-6zM118 54l4 6-4 6-4-6z" fill="none" stroke="#c4c4e5" stroke-width="2"/>
+</svg>

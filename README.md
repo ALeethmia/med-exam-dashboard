@@ -1,6 +1,12 @@
-# 2027 一階醫師國考 · 學習工作台
+# Becoming — Chronicles of Becoming
 
-HTML / JavaScript / Express 學習儀表板，考試目標日為 2027 年 1 月 16 日。
+Your life. Your story. Your world. 每一步成長，都是人生的新篇章。
+
+Becoming 是現實生活目標管理平台；第一章「學者的試煉」以醫師第一階段國考為現實目標，奇幻世界 Aetheria（艾瑟利亞）提供唯讀的成長回饋。沿用 HTML / JavaScript / Express 學習工作台與原有課程、生活、同步功能；考試日期讀取現有 Adaptive Study Planner 設定，預設為 2027 年 1 月 16 日。
+
+## 版本管理
+
+產品版號以 package.json 為唯一來源，build 產生頁尾版本資訊；詳見 [VERSIONING.md](VERSIONING.md) 與 [CHANGELOG.md](CHANGELOG.md)。Phase 2A 仍為待驗收 Beta，不代表已正式發布。產品版本與 Firebase Schema 版本分離。
 
 ## 開發
 
@@ -18,11 +24,11 @@ Tailwind CSS、Lucide、React / Recharts 趨勢圖從鎖定的 npm 套件產生�
 
 ## 功能
 
-- Quest OS 共用版型：總覽、科目、週計畫、行事曆、統計、角色與成就六個主要導覽。作息、運動與專注計時收在行事曆次導覽。
+- Becoming 共用版型：總覽、科目、週計畫、行事曆、成長統計及我的王國六個主要導覽。作息、運動與專注計時收在行事曆次導覽。
 - 首頁以等寬雙欄呈現今日任務與四科進度，另提供本週進度及近期日程摘要；手機版改為單欄。
 - 淺色、深色、跟隨系統模式；選擇保存於 `med_exam_theme`。
 - 每日學習規劃器以 Asia/Taipei 日期管理自主安排的任務：跨科選擇章節／課程、自由任務、選填預計分鐘、編輯、完成／取消、上下排序、延後、複製與刪除復原。空白日期不會自動加入預設任務；日期選擇與歷史列表可查看過去或未來安排。
-- 每個新任務首次完成獲得 20 XP；改名、排序、延後、取消／重新勾選或刪除／復原均沿用相同 ID，不能再次領取。每 100 XP 升一級，每週挑戰為 10 個獲獎任務，週一重新計算。舊課程與時間目標 XP 繼續合併計算；角色頁可查看舊時間目標歷史。
+- 每個新任務首次完成獲得 20 XP；改名、排序、延後、取消／重新勾選或刪除／復原均沿用相同 ID，不能再次領取。舊 XP、等級計算及冪等邏輯保持背景相容；介面不再展示獨立角色等級。王國的「我的編年史」保留成就、歷史 XP 與舊時間目標紀錄；本週首次完成數在統計頁顯示，週一重新計算。
 - 初次啟用不回填歷史 XP；既有完成紀錄不會被清除或重置。
 - 三個基本成就：首次任務、單日三個任務、累積十個任務。無大型 RPG 系統。
 
@@ -234,3 +240,87 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 生化課程頁、章節選單、讀書計畫篩選、行事曆、滾動週計畫及歷史週表中的正式課日期，均引用固定課 metadata。第 7 堂為 2026-12-18、第 8 堂為 2026-12-23，均 18:00–22:00；歷史週次與區間保持原樣，標明原計畫參考。原 biochemData 日期與 weeksData 課名只作原始資料保存，不再直接作正式上課日期顯示或搜尋依據；四科／16 週 hash 不變。手動固定課覆寫仍會投影至上述標籤。
 
 週計畫提供收合的「最近移除」入口，重新整理或雲端載入後直接從 Planner 的 deleted 任務清單復原。列出的日期是原安排日期（按原日期排序），不是移除時間；不新增資料路徑或欄位，不清理舊任務。右側紅色「移除」仍立即生效、沒有確認視窗。復原只修改 deleted:false，原 ID、minutes、links、planning、complete、award 及 XP 保留，等待同步與同欄位衝突處理仍沿用 Planner。若原時段目前已有衝突，提示錯誤並保留移除狀態。
+
+## Becoming Phase 2A：學者的試煉
+
+最新功能基於 main `b4ec603`（PR #6），以 `feature/becoming-phase2a` 增量開發。
+
+- 對外名稱為 Becoming（Chronicles of Becoming），更新瀏覽器標題、description／Open Graph metadata、側欄、麵包屑、首頁品牌文案與登入標題。舊 Quest OS 的技術路徑與歷史開發紀錄保留，Repository 名稱不變。
+- `chapters.js` 定義品牌、固定 Chapter I `scholars-trial`、learning／exam 目標與 Aetheria 世界；考試日期每次讀取 Adaptive Study Planner 的設定，沒有另存預設或跨裝置章節設定。
+- 「我的王國」沿用原主導覽與頁面切換，`kingdom-core.js` 提供純計算、`kingdom-ui.js` 唯讀呈現初始要塞／學院／兵營、課程摘要、今日 Planner 與生活狀態及里程碑。`kingdom.css` 的奇幻樣式限於王國頁；主 Dashboard 保持今日任務與科目進度雙核心。
+- `public/art/aetheria.svg` 是本專案製作的原創向量插畫，無第三方遊戲素材或外部圖片依賴；來源說明見 public/art/README.md。初始建築與未來功能是靜態介紹，沒有升級／購買／招募按鈕、資源餘額或交易。
+- 國考倒數、課程準備、章節里程碑、正式結果各自顯示。考試當日與日期經過只改日期提示，章節仍進行中，正式結果尚未記錄；不自動通關、清空王國或重置原成果。里程碑依現有課程完成狀態唯讀呈現，不另存第二套完成資料。
+
+### 資料相容性
+
+本階段 **沒有新增 Firebase 路徑、Storage key 或資料遷移**。章節與建築為程式內固定定義；沒有 `becoming/v1/profile`、資源帳本、重複王國或經濟數值。王國使用現有 subjectStats、Planner list 和 lifeSummary，與原頁面共用狀態，不建立額外打卡或 XP 任務。未安排、症狀休息、恢復日與暫停以中性狀態顯示。
+
+保留 `questOS/v1/training`、`questOS/v1/adaptiveStudy/settings`、`habits/YYYY-MM-DD/questOS_v1`、`gamification/v1`、`gamification/v3/planner/tasks` 及其既有 localStorage keys。Firebase 設定、OWNER_UID、同步模組與既有資料模型保持原樣；auth.js 僅改登入視窗標題。Repository 沒有 Security Rules 檔案，本階段沒有新增權限需求，也未讀寫正式資料庫或發布 Rules。
+
+### 驗證與預覽
+
+- `npm run lint`：通過，包括章節、王國模組及 HTML inline scripts。
+- `npm test`：104 項通過（含版本、課程日期與既有功能），四科與原始 16 週資料 hash 不變。
+- `npm run build`：通過。
+- `npm run test:browser`：106 項完整回歸通過（包含 15 項王國／編年史與 9 項成長統計／領主檔案／圖表掛載測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
+
+截圖使用本機示例資料：`docs/screenshots/becoming-kingdom-desktop.png`、`docs/screenshots/becoming-kingdom-mobile.png`。
+
+Vercel Preview 應先用 `?mode=local` 隔離本機模式查看。本人仍需在已授權的預覽網域登入，人工檢查兩裝置修改課程／任務／運動／休閒／考試日期後，王國摘要與原頁面一致；重新整理、離線與重連後，舊紀錄和 XP 保留。這是正式 Firebase 的人工驗證，未在測試中操作正式資料。
+
+### Phase 2B 建議
+
+只從現有課程、Planner、運動與休閒紀錄產生唯讀的每日委託／每週成果摘要，先定義活動來源、重複判斷與安全休息狀態。避免再次打卡；正式資源結算、餘額、交易及建築升級留到 Phase 3 設計安全且冪等的帳本後開放。
+
+### Phase 2A：角色介面整合
+
+主要導覽移除獨立的「角色與成就」，首頁／側欄不再突出個人等級。王國頁的「我的編年史」預設收合，保留原成就名稱、條件、解鎖狀態、歷史 XP 與舊時間目標紀錄。每週首次完成數移至統計頁，沿用原獲獎學習紀錄的計算。
+
+舊 `switchTab('progression')`、保存的 active tab，以及 `#progression`、`#tab-content-progression`、`?tab=progression` 書籤會安全導向王國並展開編年史。`#kingdom-chronicles` 也可直接開啟。既有 XP 計算、Planner／課程冪等發放及 Firebase 同步維持原樣；沒有刪除 awards、修改 key／路徑、把 XP 換算成王國貨幣或新增角色能力。本階段只整合呈現，不實作經濟或軍隊。
+
+### Phase 2A：成長統計、領主檔案與編年史
+
+`growth-core.js`／`growth-ui.js` 以純計算整理統計頁，不新增任何持久化欄位或資料路徑。
+
+- 本週目前完成數來自 Planner 的有效任務（排除 deleted、waiting，依 task ID 去重），按安排日期所在週計數。取消完成、移除會減少目前完成數，復原／重新完成不會產生重複項目。現有 award.day 只是首次獎勵日期，不能代表每次完成時間，因此畫面明示「依安排日期」，沒有真實完成日或讀書時數的推測。
+- 整體課程百分比沿用首頁的單元數比率；四科百分比直接使用 subjectStats：生理／生化按單元數，解剖／藥理按影片時長。兩種基準明確標示，不把影片時長當成實際讀書時數。
+- 本週運動摘要只讀 habits 日期紀錄，截至今日區分正常完成、低強度替代、主動休息、症狀休息、明確未安排、已安排未完成；舊 daily-sport 打卡附來源說明。無紀錄日不依目前週課表推論狀態；暫停是目前設定，因沒有歷史暫停時間而不統計過去暫停天數。
+- 舊 XP 獲獎事件改放次要的「歷史首次完成獎勵」，不等於目前任務完成數或王國資源。原四週圖表只保留於週計畫頁，成長統計不掛載或注入圖表說明；圖表明示其為原週次的目前課程完成率／舊習慣紀錄，不是過往完成快照或真實學習速度；週次差異不稱為時間增長。
+
+王國頂部新增固定匿名「我的領主／學者領主／邊境開拓者」，本地原創 lord-emblem.svg 不代表特定性別或真實外貌，也不讀 Google 姓名、email、照片。已解鎖成就數沿用 gameStats，完成單元數沿用 subjectStats，章節／現實目標沿用 chapters.js 與 Planner 考試日期。
+
+編年史移到領地插畫下方，領主卡與編年史標題提供即時成就數摘要，只保留一份完整成就清單。「查看我的編年史」支援滑鼠與 Enter 鍵，展開後捲動並聚焦摘要，原 progression／書籤相容入口全部保留。歷史 XP／時間目標保持原樣，不新增角色能力或正式貨幣。
+
+截圖：becoming-kingdom-desktop.png、becoming-kingdom-mobile.png、becoming-growth-desktop.png、becoming-growth-mobile.png（均在 docs/screenshots，隔離示例資料）。人工驗收仍需在授權網域的兩裝置確認課程、任務、運動／休閒與成就摘要隨同步更新；沒有正式 Firebase 資料測試。
+
+### Phase 2A：週計畫圖表位置與說明一致性
+
+原有 progress-trend-card 由頁面啟動時移至 tab-content-plan，保留一張圖；清理舊週計畫卡片時明確保留此節點。進入週計畫、切換圖表模式與視窗 resize 才更新圖表。growth-ui.js 只建置成長統計摘要，不讀取或修改週計畫的圖表 DOM。圖表說明放在自身標題下，標明原週次的目前完成率／原習慣紀錄，並非實際完成日期的歷史趨勢。
+
+首頁、成長統計、王國共用 COURSE_PROGRESS_NOTE：整體按單元數；生理／生化按單元數，解剖／藥理按影片時長加權，影片時長不是實際讀書時間。只有文字與掛載位置調整，沒有修改進度、XP 或 Firebase 計算與資料。
+
+GitHub deployment 7012158711 已核對 SHA 02dfd1fe503114b69e6711af9b610a4d60493952，Preview 狀態 success；對應不可變網址為 https://med-exam-dashboard-6bhdvl4pp-peterlee0718-9156.vercel.app。這驗證前一版 02dfd1f 的部署，後續提交仍需各自核對 SHA 與部署結果。
+
+### Phase 2A：課程成果優先的本週學習摘要
+
+摘要順序為：本週有日期的課程首次紀錄 → 目前累積課程完成數／百分比 → 次要 Planner 任務 → 四科詳細進度。沒有 Planner 任務時顯示「本週尚未安排 Planner 任務」，不顯示 0/0 或視為沒有學習；缺少課程日期時提示資料不足，累積課程仍即時反映勾選。
+
+實際完成資料來源：physiology/{sectionId}、videos/{lectureId}、biochem/{courseId}、pharmacology/{lectureId}，值為布林完成狀態；對應 localStorage 為 med_exam_physio_cloud、med_exam_videos_cloud、med_exam_biochem_cloud、med_exam_pharm_cloud。科目單項和批次完成經 persistProgress 寫入指定 ID；取消寫 false，重勾寫 true，不含完成時間。
+
+gamification/v1/awards 的舊課程鍵為 path__id，值為 {xp:20, day:YYYY-MM-DD}，day 是首次獎勵的台灣日期。既有 syncGame transaction 用 existing || award 保留原獎勵；取消完成不刪除獎勵，重勾不新增首次紀錄。Planner 的獎勵另存在 v3 任務內的 award，讀取時鍵為 planner__taskId；舊時間目標來自 v2/timeTasks，讀取時鍵為 time__date__id。歷史 XP 可繼續合併這些來源，但課程首次統計不使用合併 awards。
+
+**目前科目勾選不保證有首次日期**：sync.js 送出 study-completed 事件，但最新版沒有監聽者建立新的 v1 課程獎勵。舊課程也可能完成而無獎勵或日期。本次按要求保留現有發放／同步邏輯，不新增監聽、不回填、不新增 schema。新勾選可增加累積成果，但未必增加本週有日期首次數；不能將缺日期視為本週未學習。
+
+growthSnapshot 新增唯讀 firstCourses 計算，courseAwards 直接取舊 game.awards。依 flattenSubjects 的四科有效 ID 與 awardKey 建立去重映射，只接受 canonical path__id、xp:20、有效且不晚於今日的 day。以台灣週一至週日篩選；孤立、別名、Planner、時間目標、不合法或未來日期不納入。另顯示本週紀錄目前仍完成／未勾選的數量，以及目前完成但缺日期的單元數。首次歷史和現在完成狀態不同，不能宣稱等同全部本週實際讀完課程。
+
+運動、歷史 XP、王國／編年史與週計畫圖表的位置和資料來源保持原樣。沒有資料遷移、額外打卡、課程 ID／原始課表／XP 變更；正式 Firebase 未測試。新增測試涵蓋無 Planner 的科目完成、有日期／無日期、四科有效獎勵篩選、取消重勾、週日／週一、遠端重複快照和離線重連。
+
+### 科目首次完成日期（獨立紀錄）
+
+今後首次勾選完成會記錄 Asia/Taipei 當天日期；取消或重勾不改日期。載入時已完成的舊單元不自動回填，既有有效課程獎勵日期可供顯示。各科每個單元可手動設定／修改日期（不晚於今天），紅色「移除日期」位於右側、立即移除；不取消課程完成、不刪 XP。舊課程若缺日期，使用者可填入自己確認的真實日期。
+
+新增 `questOS/v1/courseFirstCompletion/{path__id}`，欄位為 `day`（YYYY-MM-DD 或移除時 null／缺省）與 `_version`（操作 ID）。移除保留有版本的空日期標記，避免舊 awards 或重新勾選讓日期復活。新紀錄優先於舊獎勵日期供成長統計使用；XP／原四科布林完成資料不變，不遷移或回填歷史。移除後仍可手動重新填入。
+
+本機保存於 `med_exam_course_dates_v1`，隔離預覽使用 `_local` 後綴；內容為 records 與 pending。每個有效課程 ID 各自 transaction，同 ID 跨裝置手動修改衝突保留待同步並提供「採用雲端日期／保留本機日期」；同時自動首次記錄保留已存在的遠端原日期。離線佇列可跨重新整理，online／Firebase 重連／重試同步後送出。無直接操作正式資料庫；沿用 owner 根層 Rules 的授權，如自訂子路徑 Rules 限制 questOS，需人工確認新路徑可供本人讀寫。
+
+測試包含四科記錄、日期驗證、移除／重新整理／重勾、手動覆蓋舊獎勵日期、XP 不變、離線重連、同 ID 衝突與自動首次寫入競爭，以及桌面／手機完整操作。截圖：docs/screenshots/course-dates-desktop.png、course-dates-mobile.png（本機示例資料）。前節「沒有新的日期紀錄」描述僅適用於先前版本，此功能新增獨立日期資料，不改舊獎勵發放。

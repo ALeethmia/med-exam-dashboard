@@ -1,3 +1,4 @@
+export const COURSE_PROGRESS_NOTE='整體按單元數計算；生理、生化依單元數，解剖、藥理依影片時長加權。影片時長不是實際讀書時間。';
 export const GAME_KEY = 'med_exam_gamification_v1';
 export const GAME_PATH = 'gamification/v1';
 export function dateKey(date = new Date()) {

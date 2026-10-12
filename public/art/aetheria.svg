@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 380" role="img" aria-labelledby="title desc">
+<title id="title">艾瑟利亞邊境領地</title><desc id="desc">山脈與森林環繞的領地，左側奧術學院、中央王國要塞、右側皇家兵營，由石徑相連。</desc>
+<!-- Original vector artwork created for Becoming; no external image or font dependencies. -->
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#dce9f0"/><stop offset="1" stop-color="#f6efdc"/></linearGradient>
+ <linearGradient id="land" x2="0" y2="1"><stop stop-color="#809c8d"/><stop offset="1" stop-color="#496c62"/></linearGradient>
+ <linearGradient id="stone" x2="1" y2="1"><stop stop-color="#e2dbca"/><stop offset="1" stop-color="#a8b3b0"/></linearGradient>
+ <g id="tree"><path d="M0 0l-17 36h10l-15 25h44L7 36h10z" fill="#31584f"/><path d="M-3 61h6v12h-6z" fill="#6a6254"/></g>
+ <g id="tower"><path d="M0 38h38v78H0z" fill="url(#stone)"/><path d="M-5 40l24-31 24 31z" fill="#52637b"/><path d="M14 60h10v16H14z" fill="#678294"/><path d="M3 108h30" stroke="#8b9b9a" stroke-width="2"/></g>
+</defs>
+<rect width="960" height="380" rx="20" fill="url(#sky)"/>
+<circle cx="775" cy="58" r="26" fill="#fff9dd"/>
+<path d="M0 140L95 67l91 86L302 44l149 120L567 83l84 83 82-112 146 104 81-82v190H0z" fill="#a7bbc0"/>
+<path d="M222 115l80-71 74 60-51-16-21 13-15-23zM684 110l49-56 69 49-47-18-19 14-13-22z" fill="#e7efef"/>
+<path d="M0 181q150-50 260 5t253-6 447 23v177H0z" fill="#9bb2a0"/>
+<path d="M0 253q160-69 330-17t310-19 320 44v119H0z" fill="url(#land)"/>
+<g opacity=".85"><use href="#tree" x="69" y="194"/><use href="#tree" x="109" y="180"/><use href="#tree" x="146" y="197"/><use href="#tree" x="827" y="190"/><use href="#tree" x="868" y="179"/><use href="#tree" x="905" y="208"/></g>
+<path d="M462 348l18-76M480 300L256 266M480 300l225-37" fill="none" stroke="#c4c1a7" stroke-width="18" stroke-linecap="round"/>
+<!-- Academy -->
+<g transform="translate(216 146)"><use href="#tower"/><use href="#tower" x="70"/><path d="M30 69h48v67H30z" fill="url(#stone)"/><path d="M23 68l31-25 31 25z" fill="#647392"/><path d="M44 95h20v30H44z" fill="#455e76"/><path d="M47 105l7-8 7 8-7 8z" fill="none" stroke="#b9b4ec" stroke-width="3"/><path d="M54 43V-17" stroke="#4b6578" stroke-width="3"/><path d="M54-17l25 8-25 9z" fill="#7786b5"/></g>
+<!-- Keep -->
+<g transform="translate(412 112)"><use href="#tower" y="22"/><use href="#tower" x="96" y="22"/><path d="M26 65h82v112H26z" fill="url(#stone)"/><path d="M24 65V50h12v12h11V50h12v12h12V50h12v12h11V50h15v15z" fill="#d6ddcf"/><path d="M53 177v-38q14-26 28 0v38" fill="#466064"/><path d="M61 90h13v20H61z" fill="#657f8e"/><path d="M64 50V0" stroke="#46616b" stroke-width="3"/><path d="M64 0l38 9-38 12z" fill="#62749d"/><path d="M36 126h15m32 0h17M38 158h12m34 0h15" stroke="#92a39f" stroke-width="2"/></g>
+<!-- Barracks -->
+<g transform="translate(658 186)"><path d="M0 37h112v56H0z" fill="url(#stone)"/><path d="M-8 38l24-34h79l26 34z" fill="#63737b"/><path d="M38 93V56h30v37" fill="#4a6266"/><path d="M13 55h13v17H13zM85 55h13v17H85z" fill="#789099"/><path d="M110 9v60" stroke="#4c5b63" stroke-width="3"/><path d="M110 9l26 9-26 12z" fill="#7e879b"/></g>
+<g fill="none" stroke="#aaa7d6" stroke-width="2" opacity=".85"><path d="M351 201l7-10 7 10-7 10z"/><path d="M589 227l7-10 7 10-7 10z"/></g>
+<path d="M0 342q50-25 107-2t79-2M805 351q54-23 155-6" fill="none" stroke="#6f9882" stroke-width="8"/>
+</svg>

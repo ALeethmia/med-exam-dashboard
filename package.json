@@ -1,6 +1,6 @@
 {
   "name": "med-exam-dashboard",
-  "version": "1.0.0",
+  "version": "0.2.0-beta.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "start": "node server.js",
     "build": "node scripts/build.mjs",
     "lint": "node scripts/check.mjs",
-    "test": "node --test tests/core.test.js tests/planner.test.js tests/life.test.js tests/adaptive.test.js",
+    "test": "node --test tests/core.test.js tests/planner.test.js tests/life.test.js tests/adaptive.test.js tests/kingdom.test.js tests/growth.test.js tests/course-dates.test.js tests/version.test.js",
     "test:browser": "playwright test"
   },
   "dependencies": {

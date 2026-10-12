@@ -1,0 +1,54 @@
+/* Fantasy styling stays within the kingdom page; the study workspace keeps its tokens. */
+.kingdom-page { --kingdom-rune:#5967a3; --kingdom-stone:#eef1ed; gap:24px; }
+:root[data-theme=dark] .kingdom-page { --kingdom-rune:#a8b2ec; --kingdom-stone:#252e2d; }
+.kingdom-eyebrow { color:var(--kingdom-rune); text-transform:uppercase; letter-spacing:.12em; font-size:12px; margin:0 0 8px; }
+.kingdom-intro { padding:8px 0; max-width:840px; }
+.kingdom-intro h2 { font-size:18px; font-weight:500; color:var(--muted); margin:0 0 16px; }
+.kingdom-intro h2 span { display:block; font-size:32px; color:var(--ink); margin-top:4px; font-weight:650; letter-spacing:-.5px; }
+.kingdom-intro > p:not(.kingdom-eyebrow) { line-height:1.85; color:var(--muted); }
+.kingdom-chapter-meta { display:flex; flex-wrap:wrap; gap:8px 24px; font-size:13px; color:var(--muted); margin-top:16px; }
+.kingdom-territory { background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+.kingdom-territory > .panel-heading { padding:24px 24px 0; margin-bottom:16px; }
+.kingdom-territory h3 { font-size:20px; margin:0; }
+.kingdom-map { display:block; width:calc(100% - 48px); height:auto; margin:0 24px; border-radius:12px; }
+:root[data-theme=dark] .kingdom-map { filter:brightness(.78) saturate(.8); }
+.kingdom-buildings,.kingdom-life { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+.kingdom-buildings { padding:24px; }
+.kingdom-building h4,.kingdom-life h4 { font-size:16px; margin:0 0 8px; }
+.kingdom-building > p:not(.kingdom-eyebrow),.kingdom-life p { font-size:14px; margin:0 0 8px; line-height:1.65; }
+.kingdom-building small { display:block; line-height:1.8; }
+.kingdom-academy-progress { color:var(--kingdom-rune); margin-top:12px!important; }
+.kingdom-life { padding:8px 0 24px; }
+.kingdom-life a { color:var(--accent); font-size:13px; }
+.kingdom-subject { display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-top:1px solid var(--line); font-size:14px; }
+.kingdom-subject span:last-child { color:var(--muted); text-align:right; }
+.kingdom-outlook { display:grid; grid-template-columns:1fr 1fr; gap:32px; padding:0 8px; }
+.kingdom-outlook h3 { font-size:16px; margin:0 0 12px; }
+.kingdom-outlook p,.kingdom-outlook li { line-height:1.8; font-size:14px; }
+.kingdom-outlook ul { padding:0; margin:0 0 12px; list-style:none; }
+.kingdom-footer { text-align:center; font-size:13px; color:var(--muted); line-height:1.8; margin:8px 0; }
+@media(max-width:700px) {
+ .kingdom-intro h2 span { font-size:28px; }
+ .kingdom-buildings,.kingdom-life,.kingdom-outlook { grid-template-columns:1fr; gap:24px; }
+ .kingdom-buildings { padding:16px; }
+ .kingdom-territory > .panel-heading { padding:16px 16px 0; align-items:flex-start; }
+ .kingdom-map { width:calc(100% - 32px); margin:0 16px; }
+ .kingdom-building + .kingdom-building { padding-top:16px; border-top:1px solid var(--line); }
+ .kingdom-subject { flex-wrap:wrap; gap:8px; }
+ .kingdom-subject span:last-child { text-align:left; }
+}
+
+.kingdom-chronicles > summary { font-size:16px; font-weight:600; cursor:pointer; }
+.kingdom-chronicles[open] > summary { margin-bottom:16px; }
+.kingdom-chronicles .achievement-list { margin:16px 0; }
+
+.lord-profile { display:flex; gap:24px; align-items:center; }
+.lord-emblem { flex-shrink:0; width:128px; height:128px; border-radius:24px; }
+.lord-identity { min-width:0; }
+.lord-identity h2 { font-size:26px; margin:0 0 8px; }
+.lord-identity p { margin:0 0 8px; }
+.lord-summary { display:flex; flex-wrap:wrap; gap:8px 24px; font-size:14px; margin:16px 0; }
+#lord-open-chronicles { color:var(--accent); display:inline-block; padding:8px 0; }
+.kingdom-chronicles > summary { display:flex; flex-wrap:wrap; gap:8px 24px; align-items:center; }
+:root[data-theme=dark] .lord-emblem { filter:brightness(.85); }
+@media(max-width:700px) { .lord-profile { align-items:flex-start; gap:16px; flex-wrap:wrap; } .lord-emblem { width:88px; height:88px; } .lord-summary { flex-direction:column; gap:8px; } }

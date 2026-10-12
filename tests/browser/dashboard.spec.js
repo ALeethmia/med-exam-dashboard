@@ -2,6 +2,7 @@ import {test,expect} from '@playwright/test';
 import {OWNER_UID} from '../../owner-config.js';
 async function navigate(page,tab) {
   await page.waitForFunction(()=>typeof window.updateWorkspace==='function');
+  if(tab==='progression'){await page.evaluate(()=>window.switchTab('progression'));return;}
   const group=['physiology','anatomy','biochem','pharmacology'].includes(tab)?'subjects':['schedule','exercise','focus'].includes(tab)?'calendar':tab;
   const primary=page.locator('#tab-btn-'+group);
   if(!await primary.isVisible()) await page.locator('#mobile-menu').click();
@@ -37,7 +38,7 @@ test('planned tasks award XP once and never change course completion',async({pag
   expect(errors).toEqual([]);expect(await page.evaluate(()=>window.learningDB)).toBe(null);
 });
 
-test('Quest OS shell uses six destinations, equal columns and exact theme tokens',async({page})=>{
+test('Becoming shell uses six destinations, equal columns and exact theme tokens',async({page})=>{
   await page.setViewportSize({width:1440,height:1000});await page.goto('/');
   await expect(page.locator('#main-tabs-header-container button')).toHaveCount(6);
   await expect(page.locator('#tab-content-home #achievements')).toHaveCount(0);
@@ -73,19 +74,19 @@ test('all subjects keep search, filters, item checks and batch operations',async
   await navigate(page,'anatomy');await expect(page.locator('.anatomy-lec-card')).toHaveCount(30);
   await page.locator('#video-search-input').fill('頭顱');expect(await page.locator('.anatomy-lec-card').count()).toBeGreaterThan(0);
   await page.locator('#video-search-input').fill('no-match-123');await expect(page.locator('.anatomy-lec-card')).toHaveCount(0);
-  await page.locator('#video-search-input').fill('');await page.locator('.anatomy-lec-card input').first().check();
+  await page.locator('#video-search-input').fill('');await page.locator('.anatomy-lec-card input[type=checkbox]').first().check();
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('med_exam_videos_cloud'))['1'])).toBe(true);
   await page.locator('.course-batch button:visible').filter({hasText:/^全選$/}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().videos).filter(Boolean).length)).toBe(2);
   await navigate(page,'biochem');await expect(page.locator('#biochem-units-container > details')).toHaveCount(8);
-  await page.locator('#biochem-search-input').fill('no-match-123');await expect(page.locator('#biochem-units-container input')).toHaveCount(0);
-  await page.locator('#biochem-search-input').fill('');await page.locator('#biochem-units-container input').first().check();
+  await page.locator('#biochem-search-input').fill('no-match-123');await expect(page.locator('#biochem-units-container input[type=checkbox]')).toHaveCount(0);
+  await page.locator('#biochem-search-input').fill('');await page.locator('#biochem-units-container input[type=checkbox]').first().check();
   expect(await page.evaluate(()=>window.readStudyStates().biochem['1'])).toBe(true);
-  await navigate(page,'physiology');await expect(page.locator('#physio-chapters-container input')).toHaveCount(39);
-  await page.locator('#physio-search-input').fill('no-match-123');await expect(page.locator('#physio-chapters-container input')).toHaveCount(0);
-  await page.locator('#physio-search-input').fill('');await page.locator('#physio-chapters-container input').first().check();
+  await navigate(page,'physiology');await expect(page.locator('#physio-chapters-container input[type=checkbox]')).toHaveCount(39);
+  await page.locator('#physio-search-input').fill('no-match-123');await expect(page.locator('#physio-chapters-container input[type=checkbox]')).toHaveCount(0);
+  await page.locator('#physio-search-input').fill('');await page.locator('#physio-chapters-container input[type=checkbox]').first().check();
   await navigate(page,'pharmacology');await expect(page.locator('.pharm-lec-card')).toHaveCount(38);
   await page.locator('#pharm-search-input').fill('no-match-123');await expect(page.locator('.pharm-lec-card')).toHaveCount(0);
-  await page.locator('#pharm-search-input').fill('');await page.locator('.pharm-lec-card input').first().check();
+  await page.locator('#pharm-search-input').fill('');await page.locator('.pharm-lec-card input[type=checkbox]').first().check();
   await page.locator('.course-batch button:visible').filter({hasText:/^全選$/}).first().click();expect(await page.evaluate(()=>Object.values(window.readStudyStates().pharmacology).filter(Boolean).length)).toBe(2);
 });
 test('appearance remembers preference and follows system changes',async({page})=>{
@@ -105,7 +106,7 @@ test('separate pages retain calendar, routines, exercise and focus timer',async(
   await navigate(page,'schedule');await expect(page.locator('#daily-sport')).toBeVisible();await page.locator('#daily-sport').check();
   await navigate(page,'exercise');await expect(page.locator('#training-stage')).toBeVisible();await expect(page.locator('#training-description')).toContainText('正常完成');
   await navigate(page,'plan');await expect(page.locator('#checklist-container input')).toHaveCount(16);await page.locator('[data-week="1"] > summary').click();await page.locator('#w-1').check();
-  await navigate(page,'stats');await expect(page.locator('#progress-trend-card')).toBeVisible();
+  await navigate(page,'plan');await expect(page.locator('#progress-trend-card')).toBeVisible();
   await expect(page.locator('.recharts-wrapper')).toBeVisible();
   await navigate(page,'focus');await page.locator('#pomo-toggle-btn').click();await expect(page.locator('#pomo-toggle-text')).toContainText('暫停');
 });
@@ -156,13 +157,14 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
   await page.locator('#task-list input').first().check();await expect(page.locator('#xp-detail')).toContainText('20 XP');
   await expect.poll(()=>page.evaluate(()=>Object.values(window.mockDatabase.records.gamification?.v3?.planner?.tasks || {}).filter(t=>t.award?.xp===20).length)).toBe(1);
   await page.locator('#task-list input').first().uncheck();await page.locator('#task-list input').first().check();
-  await navigate(page,'anatomy');await page.locator('.anatomy-lec-card input').nth(1).check();
+  await navigate(page,'anatomy');await page.locator('.anatomy-lec-card input[type=checkbox]').nth(1).check();
   await expect.poll(()=>page.evaluate(()=>window.mockDatabase.records.videos['2'])).toBe(true);
   const result=await page.evaluate(()=>window.mockDatabase);
   expect(result.records.videos['1']).toBe(true);expect(result.records.videos.unrelated).toBe(true);expect(result.records.biochem['8']).toBe(true);
   expect(result.records.legacy).toEqual({keep:'unchanged'});
+  const courseDate=result.records.questOS.v1.courseFirstCompletion.videos__2;expect(courseDate.day).toBe('2026-10-12');expect(courseDate.xp).toBeUndefined();
   expect(Object.values(result.records.gamification.v3.planner.tasks).filter(t=>t.award?.xp===20)).toHaveLength(1);
-  expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/')||w.path.startsWith('gamification/v2/timeTasks/')||w.path.startsWith('gamification/v3/planner/tasks/'))).toBe(true);
+  expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/')||w.path.startsWith('gamification/v2/timeTasks/')||w.path.startsWith('gamification/v3/planner/tasks/')||w.path.startsWith('questOS/v1/courseFirstCompletion/'))).toBe(true);
   expect(result.writes.filter(w=>w.kind==='update').every(w=>Object.keys(w.patch).every(key=>key.includes('/')))).toBe(true);
 });
 
@@ -227,7 +229,7 @@ test('mobile chapter picker restores the book position and leaves completion rec
   await expect(select).toBeVisible();await select.selectOption('庚');
   await expect(page.locator('[data-group="physiology__庚"]')).toBeVisible();
   await expect(page.locator('[data-group="physiology__甲"]')).not.toBeVisible();
-  await expect(page.locator('[data-group="physiology__庚"] input')).toHaveCount(8);
+  await expect(page.locator('[data-group="physiology__庚"] input[type=checkbox]')).toHaveCount(8);
   expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({});
   await page.reload();await expect(select).toHaveValue('庚');
   await expect(page.locator('[data-group="physiology__庚"]')).toBeVisible();
@@ -389,8 +391,8 @@ test('planner selects across subjects, keeps task and course completion separate
   await page.locator('#task-list .task-link').first().click();
   await expect(page.locator('#page-title')).toHaveText('First Choice 生理學');
   await expect(page.locator('[data-study-key="physiology__fc_p_3_a"]')).toBeVisible();
-  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input')).toBeFocused();
-  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input')).not.toBeChecked();
+  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input[type=checkbox]')).toBeFocused();
+  await expect(page.locator('[data-study-key="physiology__fc_p_3_a"] input[type=checkbox]')).not.toBeChecked();
 });
 
 test('free tasks retain ID through edits, ordering, postponement and deletion; copying starts a new activity',async({page})=>{
@@ -400,19 +402,19 @@ test('free tasks retain ID through edits, ordering, postponement and deletion; c
   await page.locator('.planner-task').nth(1).locator('summary').click();await page.locator('.planner-task').nth(1).getByRole('button',{name:'上移',exact:true}).click();
   await expect(page.locator('.planner-task').first()).toContainText('閱讀');
   const task=page.locator(`[data-task-id="${original}"]`);
-  await task.locator('input').check();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await task.locator('input').check();await expect(page.locator('#xp-detail')).toHaveText('20 XP');
   await task.locator('summary').click();await task.getByRole('button',{name:'編輯',exact:true}).click();
   await page.locator('#edit-title').fill('考古题 60 題');await page.locator('#edit-minutes').fill('45');
   await page.getByRole('button',{name:'儲存任務'}).click();await expect(task).toContainText('預計 45 分鐘');
   await task.locator('summary').click();await task.getByRole('button',{name:'延後',exact:true}).click();await page.locator('#edit-date').fill('2026-10-13');await page.getByRole('button',{name:'儲存任務'}).click();
   await expect(task).toHaveCount(0);await page.locator('#planner-date').fill('2026-10-13');await expect(task).toBeVisible();
-  await task.locator('input').uncheck();await task.locator('input').check();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
-  await task.locator('summary').click();await task.getByRole('button',{name:'刪除',exact:true}).click();await expect(task).toHaveCount(0);await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await task.locator('input').uncheck();await task.locator('input').check();await expect(page.locator('#xp-detail')).toHaveText('20 XP');
+  await task.locator('summary').click();await task.getByRole('button',{name:'刪除',exact:true}).click();await expect(task).toHaveCount(0);await expect(page.locator('#xp-detail')).toHaveText('20 XP');
   await page.getByRole('button',{name:'復原刪除'}).click();await expect(task).toBeVisible();
   await task.locator('summary').click();await task.getByRole('button',{name:'複製至今天',exact:true}).click();
   await expect(page.locator('#planner-date')).toHaveValue('2026-10-12');
   const copied=page.locator('.planner-task').filter({hasText:'考古题 60 題'});await expect(copied.locator('input')).not.toBeChecked();expect(await copied.getAttribute('data-task-id')).not.toBe(original);
-  await page.reload();await expect(copied).toBeVisible();await expect(page.locator('#growth-xp')).toHaveText('20 XP');
+  await page.reload();await expect(copied).toBeVisible();await expect(page.locator('#xp-detail')).toHaveText('20 XP');
 });
 
 test('week plan opens only current week and offers optional course selection without creating tasks',async({page})=>{
@@ -434,8 +436,8 @@ test('legacy time goals and course awards retain XP and readable history',async(
     localStorage.setItem('med_exam_gamification_v1',JSON.stringify({days:{},awards:{physiology__fc_p_1_a:{xp:20,day:'2026-10-09'}}}));
     localStorage.setItem('med_exam_physio_cloud','{"fc_p_1_a":true}');
   });
-  await page.goto('/');await expect(page.locator('#growth-xp')).toHaveText('40 XP');await expect(page.locator('#task-list input')).toHaveCount(0);
-  await addCustom(page);await page.locator('#task-list input').check();await expect(page.locator('#growth-xp')).toHaveText('60 XP');
+  await page.goto('/');await expect(page.locator('#xp-detail')).toHaveText('40 XP');await expect(page.locator('#task-list input')).toHaveCount(0);
+  await addCustom(page);await page.locator('#task-list input').check();await expect(page.locator('#xp-detail')).toHaveText('60 XP');
   await navigate(page,'progression');await page.getByText('舊時間目標紀錄',{exact:true}).click();await expect(page.locator('#legacy-time-history')).toContainText('2026-10-10');await expect(page.locator('#legacy-time-history')).toContainText('上午: 完成');
   expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({fc_p_1_a:true});
 });

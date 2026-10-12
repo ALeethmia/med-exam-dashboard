@@ -422,3 +422,21 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 #biochem-filter-chips button { white-space:normal; overflow-wrap:anywhere; }
 #adaptive-removed-tasks .adaptive-inline span { flex:1; min-width:0; overflow-wrap:anywhere; }
 #adaptive-removed-tasks .adaptive-inline button { flex-shrink:0; }
+
+.workspace-brand { flex-direction:column; align-items:flex-start; gap:8px; }
+.workspace-brand small { font-size:12px; white-space:normal; line-height:1.6; }
+.becoming-home-brand { margin:24px 0 0; text-align:center; }
+
+.growth-main-number { font-size:22px; margin:16px 0 8px; font-weight:600; }
+.growth-history summary { cursor:pointer; font-weight:600; }
+
+.growth-planner-summary { border-top:1px solid var(--line); padding-top:16px; margin-top:16px; }
+
+.course-first-date { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:0 0 8px 32px; width:100%; }
+.course-first-date label { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px; }
+.course-first-date input { width:144px; min-width:0; background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:4px 8px; }
+.course-date-remove { margin-left:auto; color:var(--danger,#c83d3d); background:none; border:0; font-size:12px; padding:8px; }
+.course-date-remove:disabled { opacity:.4; }
+.course-row { flex-wrap:wrap; }
+
+.app-version { margin-top:24px; padding-top:16px; text-align:right; font-size:12px; }
