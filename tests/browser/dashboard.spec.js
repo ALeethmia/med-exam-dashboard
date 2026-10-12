@@ -439,7 +439,7 @@ test('legacy time goals and course awards retain XP and readable history',async(
   });
   await page.goto('/');await expect(page.locator('#xp-detail')).toHaveText('40 XP');await expect(page.locator('#task-list input')).toHaveCount(0);
   await addCustom(page);await page.locator('#task-list input').check();await expect(page.locator('#xp-detail')).toHaveText('60 XP');
-  await navigate(page,'progression');await page.getByText('舊時間目標紀錄',{exact:true}).click();await expect(page.locator('#legacy-time-history')).toContainText('2026-10-10');await expect(page.locator('#legacy-time-history')).toContainText('上午: 完成');
+  await navigate(page,'progression');await expect(page.locator('#chronicle-detailed-history')).not.toHaveAttribute('open','');await page.locator('#chronicle-detailed-history > summary').click();await page.getByText('舊時間目標紀錄',{exact:true}).click();await expect(page.locator('#legacy-time-history')).toContainText('2026-10-10');await expect(page.locator('#legacy-time-history')).toContainText('上午: 完成');
   expect(await page.evaluate(()=>window.readStudyStates().physiology)).toEqual({fc_p_1_a:true});
 });
 

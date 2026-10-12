@@ -197,7 +197,9 @@ function render() {
   document.getElementById('game-sync-status').textContent=(gameFailed||timeTasks.failed()||planner.status().error)?'成就雲端同步失敗，本機紀錄已保留；可使用重試同步。':db?'成就獨立同步，不影響原有學習紀錄。':'XP 與成就保存在此瀏覽器。';
   const achievements=document.getElementById('achievements'); achievements.replaceChildren();
   for(const a of stats.achievements) {
-    const el=document.createElement('div'); el.className='achievement'+(a.unlocked?' unlocked':''); el.textContent=(a.unlocked?'✓ ':'○ ')+a.title;
+    const el=document.createElement('div'); el.className='achievement'+(a.unlocked?' unlocked':'');
+    const title=document.createElement('strong'); title.textContent=a.title; el.append(title);
+    const status=document.createElement('small'); status.className='achievement-status'; status.textContent=a.unlocked?'已解鎖':'待解鎖'; el.append(status);
     const detail=document.createElement('small'); detail.textContent=a.detail; el.append(detail); achievements.append(el);
   }
 }
