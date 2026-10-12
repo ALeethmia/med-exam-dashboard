@@ -1,3 +1,4 @@
+import {writeVersionInfo} from './version-info.mjs';
 import {mkdirSync, copyFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
 mkdirSync('public', {recursive:true});
@@ -11,3 +12,5 @@ for(const [source,target] of [
   ['recharts/umd/Recharts.js','recharts.js'],
   ['recharts/umd/Recharts.js.LICENSE.txt','recharts.LICENSE.txt']
 ]) copyFileSync('node_modules/'+source,'public/'+target);
+
+writeVersionInfo();

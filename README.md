@@ -4,6 +4,10 @@ Your life. Your story. Your world. 每一步成長，都是人生的新篇章。
 
 Becoming 是現實生活目標管理平台；第一章「學者的試煉」以醫師第一階段國考為現實目標，奇幻世界 Aetheria（艾瑟利亞）提供唯讀的成長回饋。沿用 HTML / JavaScript / Express 學習工作台與原有課程、生活、同步功能；考試日期讀取現有 Adaptive Study Planner 設定，預設為 2027 年 1 月 16 日。
 
+## 版本管理
+
+產品版號以 package.json 為唯一來源，build 產生頁尾版本資訊；詳見 [VERSIONING.md](VERSIONING.md) 與 [CHANGELOG.md](CHANGELOG.md)。Phase 2A 仍為待驗收 Beta，不代表已正式發布。產品版本與 Firebase Schema 版本分離。
+
 ## 開發
 
 已使用 Node.js 24、npm 11 驗證。
@@ -256,9 +260,9 @@ Firebase Console 需啟用 Authentication → Google，並在授權網域加入�
 ### 驗證與預覽
 
 - `npm run lint`：通過，包括章節、王國模組及 HTML inline scripts。
-- `npm test`：101 項通過（原有 82 項＋王國／編年史 7 項＋成長統計 8 項），四科與原始 16 週資料 hash 不變。
+- `npm test`：104 項通過（含版本、課程日期與既有功能），四科與原始 16 週資料 hash 不變。
 - `npm run build`：通過。
-- `npm run test:browser`：102 項完整回歸通過（包含 15 項王國／編年史與 9 項成長統計／領主檔案／圖表掛載測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
+- `npm run test:browser`：106 項完整回歸通過（包含 15 項王國／編年史與 9 項成長統計／領主檔案／圖表掛載測試），涵蓋桌面／手機、Light／Dark／System、固定課、重排、最近移除、運動歷史、Google 登入／OWNER_UID、離線衝突與 Mock Firebase。王國測試驗證頁面切換不改資料、考試日期單一來源、日期經過不自動通關、XP 不重發、遠端更新及離線狀態。
 
 截圖使用本機示例資料：`docs/screenshots/becoming-kingdom-desktop.png`、`docs/screenshots/becoming-kingdom-mobile.png`。
 

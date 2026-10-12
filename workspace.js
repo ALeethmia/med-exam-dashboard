@@ -1,3 +1,4 @@
+import {showVersion} from './version-ui.js';
 import {createCourseDates} from './course-dates.js';
 import {createGrowthUI} from './growth-ui.js';
 import {createKingdomUI} from './kingdom-ui.js';
@@ -240,3 +241,5 @@ window.addEventListener('online',()=>{window.retryLearningSync();void courseDate
 render();
 void syncGame();
 void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();
+
+void showVersion();
