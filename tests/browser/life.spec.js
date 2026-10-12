@@ -41,18 +41,19 @@ test('specific seated menu saves each action and final result, alternative and s
  await page.getByRole('button',{name:'症狀休息',exact:true}).click();await expect(page.locator('#training-description')).toContainText('症狀休息');await expect(page.locator('#training-actions')).toContainText('不需要完成訓練');await expect(page.locator('#daily-sport')).not.toBeChecked();await expect(page.locator('#finish-training')).toBeDisabled();
  await go(page,'home');await expect(page.locator('#life-exercise')).toContainText('症狀休息');await expect(page.locator('#xp-detail')).toContainText('0 XP');await page.reload();await expect(page.locator('#life-exercise')).toContainText('症狀休息');
 });
-test('stage changes are explicit, tolerate rests and preserve earlier menus after fourteen days',async({page})=>{
- await page.goto('/');await go(page,'exercise');await page.locator('#training-settings').click();await page.getByRole('button',{name:'開始兩週適應期'}).click();
- await expect(page.locator('#training-stage')).toHaveText('階段 1 · 適應與穩定');await expect(page.locator('#training-actions')).toContainText('5 分鐘');
- await page.locator('#training-settings').click();await expect(page.getByRole('button',{name:'確認提升一階'})).toBeDisabled();await page.locator('#training-settings-form [data-close]').click();
+test('stage picker allows immediate jumps and corrections while preserving saved menus',async({page})=>{
+ await page.goto('/');await go(page,'exercise');await page.locator('#training-settings').click();await page.getByRole('button',{name:'開始訓練',exact:true}).click();
  await arrange(page,'seated');await page.locator('#training-actions input').first().check();
+ await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('4');await page.locator('#training-settings-form button[type=submit]').click();await expect(page.locator('#training-stage')).toHaveText('階段 4 · 維持與鞏固');
+ await expect(page.locator('#training-actions')).toContainText('1 組 × 10 下');await expect(page.locator('#training-actions input').first()).toBeChecked();
+ await page.locator('#training-date').fill('2026-10-14');await expect(page.locator('#training-actions')).toContainText('2 組 × 12 下');
+ await page.locator('#training-settings').click();await page.getByRole('button',{name:'回到階段 1'}).click();await page.locator('#training-settings-form button[type=submit]').click();await expect(page.locator('#training-stage')).toHaveText('階段 1 · 適應與穩定');await expect(page.locator('#training-actions')).toContainText('1 組 × 10 下');
+ await page.locator('#training-settings').click();await page.locator('#training-stage-select').selectOption('3');await page.locator('#training-settings-form [data-close]').click();await expect(page.locator('#training-stage')).toHaveText('階段 1 · 適應與穩定');
  await page.clock.setSystemTime(new Date('2026-10-26T04:00:00Z'));await page.reload();await expect(page.locator('#training-stage')).toHaveText('階段 1 · 適應與穩定');
- await page.locator('#training-settings').click();await page.getByRole('button',{name:'確認提升一階'}).click();await expect(page.locator('#settings-error')).toContainText('確認耐受良好');await page.locator('#training-tolerated').check();await page.getByRole('button',{name:'確認提升一階'}).click();await expect(page.locator('#training-stage')).toHaveText('階段 2 · 建立規律');
- await page.locator('#training-date').fill('2026-10-12');await expect(page.locator('#training-actions')).toContainText('1 組 × 10 下');await expect(page.locator('#training-actions input').first()).toBeChecked();
- await page.locator('#training-settings').click();await page.locator('#training-paused').check();await page.locator('#training-settings-form button[type=submit]').click();await page.locator('#training-date').fill('2026-10-27');await expect(page.locator('#training-description')).toContainText('休息與恢復');await expect(page.locator('#finish-training')).toBeDisabled();
+ await page.locator('#training-settings').click();await page.locator('#training-paused').check();await page.locator('#training-stage-select').selectOption('2');await page.locator('#training-settings-form button[type=submit]').click();await expect(page.locator('#training-stage')).toHaveText('階段 2 · 建立規律');await page.locator('#training-date').fill('2026-10-27');await expect(page.locator('#training-description')).toContainText('休息與恢復');await expect(page.locator('#finish-training')).toBeDisabled();
 });
 test('weekly templates, alternate dates, unscheduled and rest states are quick to change',async({page})=>{
- await page.goto('/');await go(page,'exercise');await page.locator('#training-settings').click();await page.getByRole('button',{name:'開始兩週適應期'}).click();await page.locator('#training-settings').click();await page.locator('#training-weekday-1').selectOption('seated');await page.locator('#training-settings-form button[type=submit]').click();
+ await page.goto('/');await go(page,'exercise');await page.locator('#training-settings').click();await page.getByRole('button',{name:'開始訓練'}).click();await page.locator('#training-settings').click();await page.locator('#training-weekday-1').selectOption('seated');await page.locator('#training-settings-form button[type=submit]').click();
  await page.locator('#training-week button').nth(1).click();await expect(page.locator('#training-actions input')).toHaveCount(4);await arrange(page,'walk','2026-10-14');await expect(page.locator('#training-date')).toHaveValue('2026-10-14');await page.locator('#training-date').fill('2026-10-13');await expect(page.locator('#training-description')).toContainText('未安排');
  await page.getByRole('button',{name:'設為恢復日'}).click();await expect(page.locator('#training-actions')).toContainText('不需打卡或補做');await expect(page.locator('#daily-sport')).not.toBeChecked();
 });
@@ -100,7 +101,7 @@ test('mock Firebase persists training offline through reload and reconnect witho
   window.mockLife={records,writes,setOnline(value){online=value;localStorage.setItem('test_life_offline',String(!value));listeners.filter(l=>l.path==='.info/connected').forEach(l=>l.callback(snap(l.path)));if(value){notify();window.dispatchEvent(new Event('online'));}}};
  });
  await page.goto('/');await expect(page.locator('#life-title')).toBeVisible();await expect(page.locator('#xp-detail')).toContainText('20 XP');
- await go(page,'exercise');await page.locator('#training-settings').click();await page.getByRole('button',{name:'開始兩週適應期'}).click();
+ await go(page,'exercise');await page.locator('#training-settings').click();await page.getByRole('button',{name:'開始訓練'}).click();
  await expect.poll(()=>page.evaluate(()=>window.mockLife.records.questOS?.v1?.training?.stage)).toBe(1);
  await page.evaluate(()=>window.mockLife.setOnline(false));await arrange(page);await completeMenu(page);await expect(page.locator('#training-feedback')).toContainText('同步失敗');
  await page.reload();await expect(page.locator('#training-description')).toContainText('正常完成');await expect(page.locator('#daily-sport')).toBeChecked();

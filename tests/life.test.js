@@ -60,12 +60,13 @@ test('actions and final result persist; cancellation, substitution and symptom r
   const weekly=trainingWeek(restored.training(),day,restored.habits);assert.equal(weekly.planned,0);assert.equal(weekly.completed,0);assert.equal(weekly.rest,1);
   restored.schedule(day,'none');assert.equal(restored.exercise(day).status,'not_scheduled');assert.equal(restored.status().pending,0);
 });
-test('calendar never advances stages; each explicit increase needs fourteen days and confirmation',()=>{
-  const h=local();h.store.start();h.setDay('2026-10-25');assert.throws(()=>h.store.advance(true));
-  h.setDay('2026-10-26');assert.throws(()=>h.store.advance(false));h.store.advance(true);assert.equal(h.store.training().stage,2);
+test('stages can freely move both directions on the same day, including while paused, without calendar upgrades',()=>{
+  const h=local();h.store.start();h.store.setStage(4);assert.equal(h.store.training().stage,4);
+  h.store.setStage(1);h.store.advance();assert.equal(h.store.training().stage,2);
+  h.store.setTraining({paused:true});h.store.setStage(3);assert.equal(h.store.training().paused,true);assert.equal(h.store.training().stage,3);
+  h.store.lower();assert.equal(h.store.training().stage,2);assert.throws(()=>h.store.setStage(0));assert.throws(()=>h.store.setStage(5));
   h.setDay('2027-06-01');assert.equal(h.store.training().stage,2);assert.equal(exerciseForDay(h.store.training(),'2027-06-01').stage,2);
-  h.store.setTraining({paused:true});assert.throws(()=>h.store.advance(true));assert.equal(h.store.exercise('2027-06-01').type,'rest');
-  h.store.setTraining({paused:false});h.store.lower();assert.equal(h.store.training().stage,1);assert.throws(()=>h.store.advance(true));
+  h.store.setTraining({paused:false});h.store.setStage(1);h.store.lower();assert.equal(h.store.training().stage,1);h.store.setStage(4);h.store.advance();assert.equal(h.store.training().stage,4);
 });
 test('settings change unrecorded menus only; recorded training retains its stage and dose',()=>{
   const h=local(),day='2026-10-12';h.store.start();h.store.schedule(day,'seated');h.store.toggleAction(day,'ankle',true);

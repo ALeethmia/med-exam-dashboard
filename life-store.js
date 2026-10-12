@@ -1,6 +1,6 @@
 import {dateKey} from './study-core.js';
 import {validDate} from './daily-planner.js';
-import {defaultTraining,canAdvance,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS} from './life-core.js';
+import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS} from './life-core.js';
 export const LIFE_KEY='med_exam_life_v1';
 export const TRAINING_PATH='questOS/v1/training';
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -46,15 +46,14 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
     if(!Number.isInteger(config.stage)||config.stage<1||config.stage>4)throw new Error('訓練階段需為 1–4。');
     if(!Array.isArray(config.week)||config.week.length!==7||config.week.some(type=>!Object.hasOwn(TYPES,type)))throw new Error('請設定七天的訓練類型。');
     for(const date of [config.startedOn,config.stageSince])if(date!==null&&!validDate(date))throw new Error('階段日期無效。');
+    if(config.stage!==training().stage)config.stageSince=config.startedOn?today():null;
     config.paused=!!config.paused;config.supportedStanding=!!config.supportedStanding;
     queue('training','training',config);
   }
   function start() {setTraining({startedOn:today(),stageSince:today(),paused:false});}
-  function advance(confirmed) {
-    const config=training();if(!confirmed||!canAdvance(config,today()))throw new Error('需在目前階段至少兩週，並確認耐受良好且症狀沒有明顯加重。');
-    setTraining({stage:config.stage+1,stageSince:today()});
-  }
-  function lower() {setTraining({stage:Math.max(1,training().stage-1),stageSince:today()});}
+  function setStage(stage) {setTraining({stage});}
+  function advance() {setStage(Math.min(4,training().stage+1));}
+  function lower() {setStage(Math.max(1,training().stage-1));}
   function checkDate(day) {if(!validDate(day))throw new Error('請選擇有效日期。');}
   function minutes(value) {if(value!==null&&(!Number.isInteger(value)||value<1||value>240))throw new Error('時間需為 1–240 分鐘，或留空。');return value;}
   function exercise(day=today()) {return exerciseForDay(training(),day,habits(day));}
@@ -162,7 +161,7 @@ export function createLifeStore({db=null,localOnly=false,storage=localStorage,ev
       onHabits(today(),habits(today()));onChange();void retry();
     }catch{}
   });
-  return {habits,training,start,advance,lower,setTraining,exercise,setExercise,schedule,toggleAction,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
+  return {habits,training,start,advance,lower,setStage,setTraining,exercise,setExercise,schedule,toggleAction,alternative,finish,symptomRest,setLeisure,setStudyMinutes,setHabit,retry,resolve,
     status:()=>({syncing,error,pending:Object.keys(saved.pending).length,conflicts:clone(conflicts)}),
     choices:id=>({local:clone(saved.pending[id]?.value??null),cloud:clone(saved.pending[id]?value(remote[id],saved.pending[id])??null:null)})};
 }

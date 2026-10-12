@@ -15,8 +15,6 @@ const SEATED=[
 ];
 export function defaultTraining() {return {category:'exercise',stage:1,startedOn:null,stageSince:null,paused:false,supportedStanding:false,week:['walk','rest','seated','rest','walk','rest','rest']};}
 export function addDays(day,amount) {const d=new Date(day+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+amount);return d.toISOString().slice(0,10);}
-export function daysBetween(start,end) {return Math.floor((new Date(end+'T12:00:00Z')-new Date(start+'T12:00:00Z'))/86400000);}
-export function canAdvance(config,today=dateKey()) {return !!config.stageSince && daysBetween(config.stageSince,today)>=14 && config.stage<4 && !config.paused;}
 export function exerciseMenu({type='seated',stage=1,alternative=false,supportedStanding=false,minutes}={}) {
   const phase=STAGES[stage-1]||STAGES[0];
   if(type==='rest'||type==='none')return [];
