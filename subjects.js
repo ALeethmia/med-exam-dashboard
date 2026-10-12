@@ -27,6 +27,7 @@
         courseLink.setAttribute('aria-label','開啟子翔藥理課程（另開分頁）');
         summary.append(courseLink);
       }
+      if(tab==='biochem'){const period=node('p','workspace-note','正式課程：2026-11-06–2026-12-23 · 18:00–22:00（台灣時間）');period.id='biochem-course-period';summary.append(period);}
       const tools=node('section','course-tools');
       const input=document.getElementById(prefix+'-search-input');input.className='course-search';input.placeholder='搜尋課程、章節或考點';input.setAttribute('aria-label','搜尋'+({anatomy:'解剖學',biochem:'生化學',physiology:'生理學',pharmacology:'藥理學'}[tab]));tools.append(input);
       const chips=document.getElementById((tab==='anatomy'?'anatomy':prefix)+'-filter-chips');
@@ -36,7 +37,7 @@
         const value=button.dataset.week || button.dataset.filter;
         // The FC chapter index is rendered from the book, not mixed with study weeks.
         if(tab==='physiology' && !['ALL','W1','W2'].includes(value)){button.remove();return;}
-        if(value==='ALL')button.textContent='不限週次';else if(/^W\d+$/.test(value))button.textContent='第 '+value.slice(1)+' 週';
+        if(value==='ALL')button.textContent='不限週次';else if(tab!=='biochem'&&/^W\d+$/.test(value))button.textContent='第 '+value.slice(1)+' 週';
       });
       const plan=node('details','course-plan-filter');plan.append(node('summary','','讀書計畫篩選'),chips);tools.append(plan);
       const container=document.getElementById(containerId);container.className='course-list';
@@ -66,7 +67,7 @@
       if(path!=='physiology')button.append(node('span','course-index-number',String(i+1).padStart(2,'0')));
       button.append(node('span','course-index-title',group.title),node('small','',`${done}/${group.all.length}`));
       button.addEventListener('click',()=>selectGroup(group.id));index.append(button);
-      const option=node('option','',group.title);option.value=group.id;option.selected=active;mobile.append(option);
+      const option=node('option','',group.title+(path==='biochem'?' · '+group.meta:''));option.value=group.id;option.selected=active;mobile.append(option);
     });
     mobile.addEventListener('change',()=>selectGroup(mobile.value));index.append(mobile);
     container.replaceChildren();

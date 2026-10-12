@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
-for(const file of ['server.js','theme.js','sync.js','study-core.js','workspace.js','subjects.js','time-tasks.js','auth.js','firebase-config.js','owner-config.js','daily-planner.js','planner-ui.js','week-plan-ui.js','life-core.js','life-store.js','life-ui.js']) {
+for(const file of ['server.js','theme.js','sync.js','study-core.js','workspace.js','subjects.js','time-tasks.js','auth.js','firebase-config.js','owner-config.js','daily-planner.js','planner-ui.js','week-plan-ui.js','life-core.js','life-store.js','life-ui.js','adaptive-core.js','adaptive-store.js','adaptive-ui.js']) {
   const result=spawnSync(process.execPath,['--check',file],{stdio:'inherit'});
   if(result.status) process.exit(result.status);
 }

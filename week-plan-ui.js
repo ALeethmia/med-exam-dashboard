@@ -17,6 +17,7 @@ export function createWeekPlanUI({data,openPlanner,today=()=>dateKey()}) {
         const add=node('button','workspace-button','選取內容加入今日任務');add.type='button';add.onclick=()=>openPlanner(week.w);card.append(add);
         details.addEventListener('toggle',()=>{if(details.open)expanded.add(week.w);else expanded.delete(week.w);});
       }
+      const label=card.querySelector('.week-plan-title');if(label)label.textContent=window.studyWeekLabel?.(week)||week.title;
       const percent=window.readWeekCompletion(week.w);
       details.querySelector('.week-plan-state').textContent=`${percent===100?'已完成':percent>0?'進行中':'尚未開始'} · ${percent}%`;
       details.classList.toggle('is-current',today()>=week.start&&today()<=week.end);
@@ -29,6 +30,6 @@ export function createWeekPlanUI({data,openPlanner,today=()=>dateKey()}) {
     const week=data.weeks.find(week=>today()>=week.start&&today()<=week.end);if(!week)return;
     const details=container.querySelector(`[data-week="${week.w}"]`);details.open=true;details.scrollIntoView({block:'center',behavior:'smooth'});
   });
-  const note=node('p','workspace-note','週計畫供安排參考，完成率沿用既有課程與手動週勾選紀錄；不會自動建立每日任務。');container.before(note);
+  const note=node('p','workspace-note','週次與區間保留原計畫作歷史參考；生化正式課日期依固定課表顯示。完成率沿用既有課程與手動週勾選紀錄；不會自動建立每日任務。');container.before(note);
   refresh();return {refresh};
 }

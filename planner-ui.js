@@ -1,3 +1,5 @@
+import {planningLocked} from './daily-planner.js';
+import {PRIORITIES,taskPlanning} from './adaptive-core.js';
 import {flattenSubjects, dateKey} from './study-core.js';
 const node=(tag,className,text)=>{const element=document.createElement(tag);element.className=className;if(text!==undefined)element.textContent=text;return element;};
 const button=(text,action,className='workspace-button')=>{const element=node('button',className,text);element.type='button';element.onclick=action;return element;};
@@ -28,6 +30,7 @@ export function createPlannerUI({data,planner,states,today=()=>dateKey()}) {
     dialog.querySelector('[data-close]').onclick=()=>dialog.close();return dialog;
   }
   const picker=makeDialog('<form id="planner-form"><div class="dialog-heading"><h2>規劃學習任務</h2><button type="button" data-close aria-label="關閉任務規劃">關閉</button></div><div class="planner-form-grid"><label>安排日期<input type="date" id="task-date" required></label><label>每個任務預計分鐘（選填）<input type="number" id="task-minutes" min="1" max="1440" step="1" placeholder="不設定時間"></label></div><label>自由任務<input id="task-custom" maxlength="160" placeholder="例如：考古題 50 題、閱讀或複習"></label><div class="picker-tools"><label>科目<select id="task-subject"></select></label><label>快速選擇<select id="task-source"><option value="all">全部課程</option><option value="unfinished">尚未完成課程</option><option value="week">週計畫相關</option><option value="recent">最近安排的課程</option></select></label><label id="task-week-label" hidden>參考週次<select id="task-week"></select></label></div><label>搜尋課程<input id="task-search" type="search" placeholder="搜尋章節或課程"></label><p id="task-selection" class="workspace-note" role="status"></p><div id="task-course-picker"></div><p class="workspace-note">完成今日任務不會自動完成課程。</p><p id="planner-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="workspace-button primary">加入任務</button></div></form>');
+  const priorityLabel=node('label','','任務優先級');const priority=node('select');priority.id='task-priority';for(const [value,title] of Object.entries(PRIORITIES)){const option=node('option','',title);option.value=value;option.selected=value==='normal';priority.append(option);}priorityLabel.append(priority);picker.querySelector('#planner-error').before(priorityLabel);
   const choices=new Map();
   const subjectSelect=picker.querySelector('#task-subject');
   for(const subject of catalog){const option=node('option','',subject.title);option.value=subject.path;subjectSelect.append(option);}
@@ -72,16 +75,18 @@ export function createPlannerUI({data,planner,states,today=()=>dateKey()}) {
     if(!title&&!choices.size){picker.querySelector('#planner-error').textContent='請選擇課程或輸入自由任務。';return;}
     const raw=picker.querySelector('#task-minutes').value,minutes=raw?Number(raw):null;
     const targetDate=picker.querySelector('#task-date').value;
+    const planning={version:1,priority:priority.value,waiting:false,locked:false};
     try {
-      for(const item of choices.values())planner.add({title:item.title,date:targetDate,minutes,links:[{path:item.path,id:String(item.id)}]});
-      if(title)planner.add({title,date:targetDate,minutes});
+      for(const item of choices.values())planner.add({title:item.title,date:targetDate,minutes,planning,links:[{path:item.path,id:String(item.id)}]});
+      if(title)planner.add({title,date:targetDate,minutes,planning});
       selectedDate=targetDate;date.value=selectedDate;picker.close();render();
     }catch(error){picker.querySelector('#planner-error').textContent=error.message;}
   };
   const editor=makeDialog('<form><div class="dialog-heading"><h2 id="editor-heading">編輯任務</h2><button type="button" data-close aria-label="關閉任務編輯">關閉</button></div><label>任務名稱<input id="edit-title" required maxlength="160"></label><div class="planner-form-grid"><label>安排日期<input id="edit-date" type="date" required></label><label>預計分鐘（選填）<input id="edit-minutes" type="number" min="1" max="1440" step="1"></label></div><p id="edit-error" role="alert"></p><div class="dialog-actions"><button type="submit" class="workspace-button primary">儲存任務</button></div></form>');
+  const advanced=node('details','planner-history');advanced.append(node('summary','','排程設定（優先級、鎖定、選填時段）'));advanced.innerHTML+='<label>優先級<select id="edit-priority"><option value="core">核心</option><option value="normal">一般</option><option value="flexible">彈性</option></select></label><label class="life-check"><input id="edit-locked" type="checkbox"> 鎖定日期，不參與重排</label><div class="planner-form-grid"><label>開始時間（選填）<input id="edit-start" type="time"></label><label>結束時間（選填）<input id="edit-end" type="time"></label></div><p class="workspace-note">自主生化複習不會因科目被鎖定；未指定時段者只檢查每日容量。完成任務仍不會自動完成課程。</p>';editor.querySelector('#edit-error').before(advanced);
   let editing=null;
-  function edit(task,postpone=false) {editing=task.id;editor.querySelector('#editor-heading').textContent=postpone?'延後任務':'編輯任務';editor.querySelector('#edit-title').value=task.title;editor.querySelector('#edit-date').value=task.date;editor.querySelector('#edit-minutes').value=task.minutes??'';editor.querySelector('#edit-error').textContent='';editor.showModal();editor.querySelector(postpone?'#edit-date':'#edit-title').focus();}
-  editor.querySelector('form').onsubmit=event=>{event.preventDefault();try{const minutes=editor.querySelector('#edit-minutes').value;planner.update(editing,{title:editor.querySelector('#edit-title').value,date:editor.querySelector('#edit-date').value,minutes:minutes?Number(minutes):null});editor.close();render();}catch(error){editor.querySelector('#edit-error').textContent=error.message;}};
+  function edit(task,postpone=false) {editing=task.id;editor.querySelector('#editor-heading').textContent=postpone?'延後任務':'編輯任務';editor.querySelector('#edit-title').value=task.title;editor.querySelector('#edit-date').value=task.date;editor.querySelector('#edit-minutes').value=task.minutes??'';editor.querySelector('#edit-priority').value=task.planning?.priority||'normal';editor.querySelector('#edit-locked').checked=planningLocked(task);editor.querySelector('#edit-locked').disabled=!!task.planning?.fixedId;editor.querySelector('#edit-date').disabled=planningLocked(task);editor.querySelector('#edit-start').value=task.planning?.start||'';editor.querySelector('#edit-end').value=task.planning?.end||'';advanced.open=false;editor.querySelector('#edit-error').textContent='';editor.showModal();editor.querySelector(postpone?'#edit-date':'#edit-title').focus();}
+  editor.querySelector('form').onsubmit=event=>{event.preventDefault();try{const minutes=editor.querySelector('#edit-minutes').value;planner.update(editing,{title:editor.querySelector('#edit-title').value,date:editor.querySelector('#edit-date').value,minutes:minutes?Number(minutes):null,planning:{...taskPlanning(planner.get(editing),data),priority:editor.querySelector('#edit-priority').value,locked:editor.querySelector('#edit-locked').checked,start:editor.querySelector('#edit-start').value||null,end:editor.querySelector('#edit-end').value||null}});editor.close();render();}catch(error){editor.querySelector('#edit-error').textContent=error.message;}};
   function locate(link) {
     const subject=catalog.find(subject=>subject.path===link.path);if(!subject)return;
     const prefix={videos:'video',physiology:'physio',biochem:'biochem',pharmacology:'pharm'}[link.path];
@@ -99,21 +104,25 @@ export function createPlannerUI({data,planner,states,today=()=>dateKey()}) {
     list.replaceChildren();
     if(!tasks.length){const empty=node('div','planner-empty');empty.append(node('p','','今天想讀什麼？先安排一個任務就好。'),button('新增學習任務',()=>open()));list.append(empty);}
     for(const task of tasks) {
+      const batched=status.batch?.ids?.includes(task.id);
       const row=node('div','task-row planner-task'+(task.complete?' is-complete':''));row.dataset.taskId=task.id;
-      const label=node('label','');const cb=node('input','');cb.type='checkbox';cb.checked=!!task.complete;cb.dataset.task=task.id;cb.onchange=()=>planner.update(task.id,{complete:cb.checked});
+      const label=node('label','');const cb=node('input','');cb.type='checkbox';cb.checked=!!task.complete;cb.disabled=!!batched;cb.dataset.task=task.id;cb.onchange=()=>planner.update(task.id,{complete:cb.checked});
       const text=node('span','task-copy');text.append(node('strong','',task.title),node('small','',`${task.minutes?'預計 '+task.minutes+' 分鐘 · ':''}${task.award?'已獲得 20 XP':'+20 XP'}`));label.append(cb,text);row.append(label);
+      if(batched)text.append(node('small','','整批排程待同步；同步或撤回後可修改'));
+      if(planningLocked(task))text.append(node('small','','🔒 鎖定日期'));
       const tools=node('div','task-tools');
       for(const link of task.links||[]){const course=courseMap.get(link.path+'__'+link.id);if(course){const jump=button('課程',()=>locate(link),'task-link');jump.setAttribute('aria-label','前往課程：'+course.title);tools.append(jump);}}
       const menu=node('details','task-menu');const summary=node('summary','','•••');summary.setAttribute('aria-label','管理任務：'+task.title);menu.append(summary);const actions=node('div','task-menu-actions');
-      for(const [title,action] of [['編輯',()=>edit(task)],['延後',()=>edit(task,true)],['複製至今天',()=>{planner.copy(task.id,today());selectedDate=today();date.value=selectedDate;render();}],['上移',()=>planner.move(task.id,-1)],['下移',()=>planner.move(task.id,1)],['刪除',()=>{undoId=task.id;planner.remove(task.id);render();}]])actions.append(button(title,action));
+      for(const [title,action] of [['編輯',()=>edit(task)],['延後',()=>edit(task,true)],['複製至今天',()=>{planner.copy(task.id,today());selectedDate=today();date.value=selectedDate;render();}],['上移',()=>planner.move(task.id,-1)],['下移',()=>planner.move(task.id,1)],['刪除',()=>{undoId=task.id;planner.remove(task.id);render();}]]){const control=button(title,action);control.disabled=!!batched||(planningLocked(task)&&['延後','刪除','上移','下移'].includes(title));actions.append(control);}
       menu.append(actions);tools.append(menu);row.append(tools);list.append(row);
     }
     if(focused)list.querySelector(`[data-task="${CSS.escape(focused)}"]`)?.focus({preventScroll:true});
     const estimated=tasks.reduce((sum,task)=>sum+(task.minutes||0),0);
     feedback.replaceChildren(node('span','',status.error?'任務同步失敗（'+status.error+'），本機修改已保留。':status.pending?'任務待同步 · 本機修改已保留':estimated?'本日已設定預計 '+estimated+' 分鐘；完成率依任務數計算。':'完成率依任務數計算；時間可不設定。'));
+    const waiting=planner.all().filter(task=>!task.deleted&&task.planning?.waiting).length;if(waiting)feedback.append(button(waiting+' 項待安排 → 週計畫',()=>window.switchTab('plan'),'workspace-link'));
     if(undoId)feedback.append(button('復原刪除',()=>{planner.update(undoId,{deleted:false});undoId=null;render();},'workspace-link'));
     conflicts.replaceChildren();
-    const names={title:'名稱',date:'日期',minutes:'預計時間',complete:'完成狀態',deleted:'刪除狀態',order:'順序',links:'課程'};
+    const names={title:'名稱',date:'日期',minutes:'預計時間',complete:'完成狀態',deleted:'刪除狀態',order:'順序',links:'課程',planning:'排程設定'};
     for(const [id,fields] of Object.entries(status.conflicts)) {
       const cloud=planner.cloud(id),local=planner.get(id);
       const notice=node('div','planner-conflict');notice.append(node('p','',`「${local?.title||cloud.title||'任務'}」的${fields.map(field=>names[field]||field).join('、')}也在其他裝置修改。`));
