@@ -38,6 +38,7 @@ async function readStudyContext(){
   return {settings:normalizeSettings(config.val()||{}),events:events.val()||{}};
 }
 function validateStudyTask(task,{batch=false}={}){
+  if(task.deleted)return;
   const range=interval(task.planning?.start,task.planning?.end);if(!range||task.planning?.waiting||task.planning?.fixedId)return;
   const busy=calendarConstraints(task.date,fixedClasses(data,studySettings?.config()||normalizeSettings()),window.readCalendarEvents()||{});
   if(busy.items.some(e=>range[0]<e.range[1]&&e.range[0]<range[1]))throw new Error('任務時段與固定課程／定時行程衝突，請調整時段。');
