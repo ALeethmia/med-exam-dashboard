@@ -162,8 +162,9 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
   const result=await page.evaluate(()=>window.mockDatabase);
   expect(result.records.videos['1']).toBe(true);expect(result.records.videos.unrelated).toBe(true);expect(result.records.biochem['8']).toBe(true);
   expect(result.records.legacy).toEqual({keep:'unchanged'});
+  const courseDate=result.records.questOS.v1.courseFirstCompletion.videos__2;expect(courseDate.day).toBe('2026-10-12');expect(courseDate.xp).toBeUndefined();
   expect(Object.values(result.records.gamification.v3.planner.tasks).filter(t=>t.award?.xp===20)).toHaveLength(1);
-  expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/')||w.path.startsWith('gamification/v2/timeTasks/')||w.path.startsWith('gamification/v3/planner/tasks/'))).toBe(true);
+  expect(result.writes.filter(w=>w.kind==='transaction').every(w=>w.path.startsWith('gamification/v1/')||w.path.startsWith('gamification/v2/timeTasks/')||w.path.startsWith('gamification/v3/planner/tasks/')||w.path.startsWith('questOS/v1/courseFirstCompletion/'))).toBe(true);
   expect(result.writes.filter(w=>w.kind==='update').every(w=>Object.keys(w.patch).every(key=>key.includes('/')))).toBe(true);
 });
 
