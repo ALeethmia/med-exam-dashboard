@@ -466,3 +466,10 @@ input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); flex
 
 .territory-source-note { margin:16px 24px 0; }
 @media(max-width:700px) { .territory-source-note { margin:16px 16px 0; } }
+
+.keep-current-paths,.building-next:has(.keep-path) { list-style:none; padding:0; }
+.keep-path { padding:12px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.keep-path h6,.building-event-group h6 { font-size:13px; font-weight:600; margin:8px 0; }
+.keep-requirement { font-size:13px; margin:8px 0; }
+.realm-event-group + .realm-event-group { border-top:1px solid var(--line); padding-top:16px; margin-top:16px; }
+.building-event-group .building-events { margin-top:8px; }

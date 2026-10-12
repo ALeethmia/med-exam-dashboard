@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildingProgressSnapshot,realmEvidenceSnapshot,realmActivitySnapshot,territoryMilestoneSnapshot} from '../territory-core.js';
+import {buildingProgressSnapshot,realmEvidenceSnapshot,realmActivitySnapshot,realmActivityGroups,COURSE_THRESHOLDS,territoryMilestoneSnapshot} from '../territory-core.js';
 import {createLifeStore} from '../life-store.js';
 import {memoryStorage,mockEvents,planningBackend,settle} from './helpers/planning-mock.js';
 const data={physio:[{sections:Array.from({length:100},(_,i)=>({id:'p'+i,title:'單元'+i}))}],anatomy:[],biochem:[],pharm:[]};
@@ -38,4 +38,51 @@ test('readonly recorded habits include old date keys without creating historical
 });
 test('remote repeated snapshots and offline reconnect retain one date per exercise without kingdom writes',async()=>{
  const backend=planningBackend({habits:days(3)}),client=backend.client(),store=createLifeStore({db:client.db,storage:memoryStorage(),events:mockEvents(),today:()=>empty.day});await settle(store);const read=()=>buildingProgressSnapshot({...empty,habits:store.recordedHabits()});assert.equal(read().evidence.training,3);backend.notify();backend.notify();await settle(store);assert.equal(read().evidence.training,3);client.connection.online=false;backend.put('habits/2026-10-01',{'daily-sport':true});backend.notify();await settle(store);client.connection.online=true;backend.notify();await settle(store);assert.equal(new Set(realmActivitySnapshot(read()).map(e=>e.id)).size,realmActivitySnapshot(read()).length);assert.deepEqual(backend.writes,[]);
+});
+
+test('keep reports study-only, cross-only and both attained routes for the current stage',()=>{
+ const study=buildingProgressSnapshot({...empty,states:state(20)}).keep;
+ assert.deepEqual(study.metRoutes,['study']);assert.equal(study.currentPaths[1].met,false);assert.equal(study.currentPaths[1].progress,0);
+ const cross=buildingProgressSnapshot({...empty,states:state(5),habits:days(8)}).keep;
+ assert.equal(cross.stage,3);assert.deepEqual(cross.metRoutes,['cross']);assert.equal(cross.currentPaths[0].progress,25);assert.equal(cross.currentPaths[0].requirements[0].gap,15);
+ const both=buildingProgressSnapshot({...empty,states:state(20),habits:days(8)}).keep;
+ assert.deepEqual(both.metRoutes,['study','cross']);assert.ok(both.reason.includes('純學習路徑、跨領域路徑'));
+ assert.deepEqual(buildingProgressSnapshot(empty).keep.currentPaths,[]);
+});
+test('independent next-route progress exposes the limiting requirement and exact rounded-up gaps',()=>{
+ const actual={...data,physio:[{sections:Array.from({length:115},(_,i)=>({id:'p'+i,title:'unit'}))}]};
+ const k=buildingProgressSnapshot({...empty,data:actual,states:state(6),habits:days(3)}).keep;
+ const [study,cross]=k.nextPaths;
+ assert.equal(study.requirements[0].required,23);assert.equal(study.requirements[0].actual,6);assert.equal(study.requirements[0].gap,17);assert.equal(study.progress,6/23*100);
+ assert.equal(cross.requirements[0].required,6);assert.equal(cross.requirements[0].gap,0);assert.equal(cross.requirements[1].gap,5);assert.equal(cross.progress,37.5);assert.equal(cross.met,false);
+ const insufficient=buildingProgressSnapshot({...empty,states:state(4),habits:days(8)}).keep;
+ assert.equal(insufficient.nextPaths[1].progress,80);assert.equal(insufficient.nextPaths[1].met,false);
+ const noCourses=buildingProgressSnapshot({...empty,data:{physio:[],anatomy:[],biochem:[],pharm:[]},habits:days(8)}).keep;
+ assert.equal(noCourses.stage,2);assert.equal(noCourses.nextPaths[0].progress,0);assert.equal(noCourses.nextPaths[0].requirements[0].available,false);assert.equal(noCourses.nextPaths[1].progress,0);
+});
+test('highest keep stage does not claim the other route attained and still exposes its gaps',()=>{
+ const study=buildingProgressSnapshot({...empty,states:state(85)}).keep;
+ assert.equal(study.stage,5);assert.deepEqual(study.nextPaths,[]);assert.deepEqual(study.metRoutes,['study']);assert.equal(study.currentPaths[1].requirements[1].gap,30);assert.equal(study.currentPaths[1].progress,0);
+ const cross=buildingProgressSnapshot({...empty,states:state(50),habits:days(30)}).keep;
+ assert.equal(cross.stage,5);assert.deepEqual(cross.metRoutes,['cross']);assert.equal(cross.currentPaths[0].requirements[0].gap,35);
+});
+test('all unchanged keep boundaries retain both OR paths and cross-path AND requirements',()=>{
+ for(const [course,activity,stage] of [[5,3,2],[20,8,3],[50,16,4],[85,30,5]]){
+  assert.equal(buildingProgressSnapshot({...empty,states:state(course-1)}).keep.stage,stage-1);
+  assert.equal(buildingProgressSnapshot({...empty,states:state(course)}).keep.stage,stage);
+  const crossCourse=stage===2?0:COURSE_THRESHOLDS[stage-2];
+  assert.equal(buildingProgressSnapshot({...empty,states:state(crossCourse),habits:days(activity-1)}).keep.stage,stage-1);
+  assert.equal(buildingProgressSnapshot({...empty,states:state(crossCourse),habits:days(activity)}).keep.stage,stage);
+  if(stage>2)assert.equal(buildingProgressSnapshot({...empty,states:state(crossCourse-1),habits:days(activity)}).keep.stage,stage-1);
+ }
+});
+test('dated history, undated current achievements and milestones remain separate and stable',()=>{
+ const input={...empty,states:state(20),courseDates:{physiology__p0:{day:'2026-10-10'},physiology__p1:{day:null},physiology__p2:{day:'2026-02-30'},physiology__p3:{day:'2026-10-13'}},habits:days(3)},before=JSON.stringify(input);
+ const buildings=buildingProgressSnapshot(input),groups=realmActivityGroups(buildings);
+ assert.ok(groups.dated.every(e=>e.date&&!e.id.startsWith('milestone:')));assert.ok(groups.undated.every(e=>e.date===null&&e.id.startsWith('course:')));assert.ok(groups.milestones.every(e=>e.date===null&&e.id.startsWith('milestone:')));
+ assert.equal(groups.dated[0].id,'course:physiology__p0');assert.equal(groups.undated.length,19);assert.equal(groups.milestones.length,3);
+ const all=Object.values(groups).flat();assert.equal(all.length,realmActivitySnapshot(buildings).length);assert.equal(new Set(all.map(e=>e.id)).size,all.length);assert.deepEqual(realmActivityGroups(buildingProgressSnapshot(input)),groups);assert.equal(JSON.stringify(input),before);
+ input.states.physiology.p0=false;assert.ok(realmActivityGroups(buildingProgressSnapshot(input)).dated.find(e=>e.id==='course:physiology__p0').detail.includes('未勾選'));
+ input.courseDates.physiology__p0.day=null;assert.ok(!Object.values(realmActivityGroups(buildingProgressSnapshot(input))).flat().some(e=>e.id==='course:physiology__p0'));
+ assert.deepEqual(realmActivityGroups(buildingProgressSnapshot(empty)),{dated:[],undated:[],milestones:[]});
 });

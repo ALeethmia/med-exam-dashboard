@@ -41,11 +41,19 @@ export function buildingProgressSnapshot(input) {
  const keepConditions=i=>[courseGap(COURSE_THRESHOLDS[i]),i===1?`運動／休閒有效日 3 天，尚差 ${Math.max(0,3-evidence.activityDays)} 天`:`${courseGap(COURSE_THRESHOLDS[i-1])}，以及運動／休閒有效日 ${TRAINING_THRESHOLDS[i]} 天，尚差 ${Math.max(0,TRAINING_THRESHOLDS[i]-evidence.activityDays)} 天`];
  const academy=decorate('academy',ACADEMY_STAGES,ai,ai?`目前完成 ${done} / ${total} 單元，達到 ${COURSE_THRESHOLDS[ai]}% 的實際單元門檻`:'研究營地從現有學習進度起步',ai===4?[]:[courseGap(COURSE_THRESHOLDS[ai+1])],`課程 ${done} / ${total} 單元 · ${evidence.courses.percent}%`,total?(ai===4?100:done/required(COURSE_THRESHOLDS[ai+1])*100):0);
  const barracks=decorate('barracks',BARRACKS_STAGES,bi,bi?`已載入日期紀錄中有 ${evidence.training} 次有效訓練，達到 ${TRAINING_THRESHOLDS[bi]} 次門檻`:'訓練空地從已有完成證據起步',bi===4?[]:[`有效訓練 ${TRAINING_THRESHOLDS[bi+1]} 次，尚差 ${Math.max(0,TRAINING_THRESHOLDS[bi+1]-evidence.training)} 次`],`可驗證訓練下限 ${evidence.training} 次`,bi===4?100:evidence.training/TRAINING_THRESHOLDS[bi+1]*100);
- const keepReason=ki?(courseMet(COURSE_THRESHOLDS[ki])?`學習路徑達標：${courseGap(COURSE_THRESHOLDS[ki])}`:`跨領域路徑達標：${done} 個課程單元＋${evidence.activityDays} 個有效運動／休閒日`):'邊境營地已建立，下一步沿用真實成果累積';
- const nextKeep=ki===4?[]:keepConditions(ki+1);
- const keepProgress=ki===4?100:Math.max(total?done/required(COURSE_THRESHOLDS[ki+1])*100:0,ki===0?evidence.activityDays/3*100:Math.min(total?done/required(COURSE_THRESHOLDS[ki])*100:0,evidence.activityDays/TRAINING_THRESHOLDS[ki+1]*100));
- const keep=decorate('keep',KEEP_STAGES,ki,keepReason,nextKeep,`課程 ${done} 單元 · 運動／休閒 ${evidence.activityDays} 個有效日`,keepProgress);
+ // Each route exposes its own AND requirements; a shared percentage hides the limiting condition.
+ const courseRequirement=percent=>({kind:'courses',label:`課程單元（${percent}% 門檻，向上取整）`,actual:done,required:required(percent),gap:Math.max(0,required(percent)-done),unit:'單元',available:total>0,met:courseMet(percent),progress:total?Math.min(100,done/required(percent)*100):0});
+ const activityRequirement=count=>({kind:'activityDays',label:'運動／休閒有效日（同日只計一次）',actual:evidence.activityDays,required:count,gap:Math.max(0,count-evidence.activityDays),unit:'天',available:true,met:evidence.activityDays>=count,progress:Math.min(100,evidence.activityDays/count*100)});
+ const route=(id,label,index,requirements)=>({id,label,stage:index+1,roman:romans[index],name:KEEP_STAGES[index],requirements,met:requirements.every(r=>r.met),progress:Math.min(...requirements.map(r=>r.progress))});
+ const keepPaths=index=>[
+  route('study','純學習路徑',index,[courseRequirement(COURSE_THRESHOLDS[index])]),
+  route('cross','跨領域路徑',index,index===1?[activityRequirement(3)]:[courseRequirement(COURSE_THRESHOLDS[index-1]),activityRequirement(TRAINING_THRESHOLDS[index])])
+ ];
+ const currentPaths=ki?keepPaths(ki):[],nextPaths=ki===4?[]:keepPaths(ki+1),metRoutes=currentPaths.filter(path=>path.met).map(path=>path.id);
+ const keepReason=ki?`目前 ${romans[ki]} 階段達標路徑：${currentPaths.filter(path=>path.met).map(path=>path.label).join('、')}。條件依目前資料判定。`:'邊境營地為初始階段，尚未達到升級門檻；可選任一路徑累積。';
+ const keep={id:'keep',stage:ki+1,roman:romans[ki],name:KEEP_STAGES[ki],reason:keepReason,next:ki===4?[]:keepConditions(ki+1),metric:`課程 ${done} 單元 · 運動／休閒 ${evidence.activityDays} 個有效日`,currentOnly:true,currentPaths,nextPaths,metRoutes};
  return {academy,barracks,keep,evidence};
 }
 export function territoryMilestoneSnapshot(buildings){return ['academy','barracks','keep'].map(id=>buildings[id]).filter(b=>b.stage>1).map(b=>({id:'milestone:'+b.id+':'+b.stage,date:null,category:b.id,title:`目前達標：${b.roman} · ${b.name}`,original:b.metric,source:'依目前完成狀態與已載入日期紀錄推導，無歷史解鎖時間',detail:b.reason+'；非永久解鎖紀錄'}));}
 export function realmActivitySnapshot(buildings){const events=new Map([...buildings.evidence.events,...territoryMilestoneSnapshot(buildings)].map(event=>[event.id,event]));return [...events.values()].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||a.id.localeCompare(b.id));}
+export function realmActivityGroups(buildings){const events=realmActivitySnapshot(buildings);return {dated:events.filter(event=>event.date),undated:events.filter(event=>!event.date&&!event.id.startsWith('milestone:')),milestones:events.filter(event=>event.id.startsWith('milestone:'))};}
