@@ -7,7 +7,7 @@ for(const width of [320,390,768,1440])test('地圖全景與控制項在 '+width+
  if(width===390||width===1440)await page.screenshot({path:'docs/screenshots/kingdom-map-preview-'+(width===390?'mobile':'desktop')+'.png',fullPage:true});
 });
 test('滾輪縮放有邊界，拖曳建築不會選取，點擊與鍵盤可操作',async({page})=>{
- await page.setViewportSize({width:1440,height:1000});await ready(page);const map=page.locator('[data-map]');await map.hover();await page.mouse.wheel(0,-300);await expect(page.locator('[data-zoom]')).not.toHaveText('100%');
+ await page.setViewportSize({width:1440,height:1000});await ready(page);const map=page.locator('[data-map]');await page.locator('[data-wheel-mode]').selectOption('zoom');await map.hover();await page.mouse.wheel(0,-300);await expect(page.locator('[data-zoom]')).not.toHaveText('100%');
  for(let i=0;i<10;i++)await page.mouse.wheel(0,-300);await expect(page.locator('[data-zoom]')).toHaveText('400%');await page.getByRole('button',{name:'全景／重設'}).click();
  const b=await page.locator('[data-building=academy]').boundingBox();await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2+80,b.y+b.height/2,{steps:5});await page.mouse.up();await expect(page.locator('[data-stage]')).toBeDisabled();
  await page.getByRole('button',{name:'全景／重設'}).click();await page.locator('[data-building=academy]').click();await expect(page.locator('[data-status]')).toContainText('奧術學院');
@@ -28,10 +28,10 @@ test('預覽沒有持久化寫入或業務初始化，重新載入清除模擬',
   window.auditBefore=JSON.stringify(Object.entries(localStorage).sort());window.auditWrites=[];
   for(const name of ['setItem','removeItem','clear']){Storage.prototype[name]=function(){window.auditWrites.push(name);throw new Error('預覽不得寫入儲存');};}
   indexedDB.open=()=>{window.auditWrites.push('indexedDB.open');throw new Error('預覽不得開啟資料庫');};
- });await ready(page);await page.locator('[data-select=academy]').click();await page.locator('[data-stage]').selectOption('5');await expect(page.locator('[data-status]')).toContainText('5 / 5');
+ });await ready(page);await page.locator('[data-select=academy]').click();await page.locator('[data-stage]').selectOption('5');await page.locator('[data-wheel-mode]').selectOption('zoom');await expect(page.locator('[data-status]')).toContainText('5 / 5');
  await page.evaluate(()=>{dispatchEvent(new Event('online'));dispatchEvent(new Event('storage'));document.dispatchEvent(new Event('visibilitychange'));});
  expect(await page.evaluate(()=>({writes:window.auditWrites,same:JSON.stringify(Object.entries(localStorage).sort())===window.auditBefore,business:typeof window.learningDB}))).toEqual({writes:[],same:true,business:'undefined'});
- expect(requests.some(url=>/firebase|auth\.js|workspace\.js|sync\.js|store\.js|theme\.js/.test(url))).toBe(false);await page.reload();await expect(page.locator('[data-building=academy]')).toHaveAttribute('aria-label','奧術學院，模擬階段 1 / 5');await expect(page.locator('[data-stage]')).toBeDisabled();
+ expect(requests.some(url=>/firebase|auth\.js|workspace\.js|sync\.js|store\.js|theme\.js/.test(url))).toBe(false);await page.reload();await expect(page.locator('[data-building=academy]')).toHaveAttribute('aria-label','奧術學院，模擬階段 1 / 5');await expect(page.locator('[data-stage]')).toBeDisabled();await expect(page.locator('[data-wheel-mode]')).toHaveValue('auto');
 });
 test('二十次掛載與清理移除場景、observer 及輸入，離開預覽可回到正式介面',async({page})=>{
  await ready(page);const result=await page.evaluate(async()=>{
@@ -55,7 +55,25 @@ test('macOS Chrome 回報情境：拖曳 SVG 文字不反白，地圖外仍可�
  await page.mouse.move(text.x+3,text.y+text.height/2);await page.mouse.down();await page.mouse.move(bounds.x+bounds.width+20,bounds.y+bounds.height+30,{steps:15});await page.mouse.up();
  expect(await page.evaluate(()=>getSelection().toString())).toBe('');await expect(page.locator('[data-stage]')).toBeDisabled();
  await page.getByRole('button',{name:'全景／重設'}).click();await page.locator('[data-building=academy]').click();await expect(page.locator('[data-status]')).toContainText('奧術學院');await expect(page.locator('[data-building=academy]')).toBeFocused();
- await page.keyboard.press('Enter');await page.keyboard.press('+');await expect(page.locator('[data-zoom]')).toHaveText('120%');await map.hover();await page.mouse.wheel(0,-100);await expect(page.locator('[data-zoom]')).not.toHaveText('120%');await map.focus();await page.keyboard.press('Home');await expect(page.locator('[data-zoom]')).toHaveText('100%');
+ await page.keyboard.press('Enter');await page.keyboard.press('+');await expect(page.locator('[data-zoom]')).toHaveText('120%');await page.locator('[data-wheel-mode]').selectOption('zoom');await map.hover();await page.mouse.wheel(0,-100);await expect(page.locator('[data-zoom]')).not.toHaveText('120%');await map.focus();await page.keyboard.press('Home');await expect(page.locator('[data-zoom]')).toHaveText('100%');
  await page.locator('h1').scrollIntoViewIfNeeded();const heading=await page.locator('h1').boundingBox();await page.mouse.move(heading.x+1,heading.y+heading.height/2);await page.mouse.down();await page.mouse.move(heading.x+heading.width-1,heading.y+heading.height/2,{steps:15});await page.mouse.up();
  const selected=await page.evaluate(()=>getSelection().toString());expect(selected).toContain('艾瑟利亞');await context.grantPermissions(['clipboard-read','clipboard-write']);await page.keyboard.press('ControlOrMeta+c');expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(selected);
+});
+
+test('地圖滑鼠操作不留下上下焦點藍線，Tab 仍有清楚焦點提示',async({page})=>{
+ await page.setViewportSize({width:1440,height:1000});await ready(page);const map=page.locator('[data-map]');
+ await page.getByRole('button',{name:'全景／重設'}).focus();await page.keyboard.press('Tab');await expect(map).toBeFocused();
+ expect(await map.evaluate(el=>({visible:el.matches(':focus-visible'),outline:getComputedStyle(el).outlineStyle,offset:getComputedStyle(el).outlineOffset}))).toEqual({visible:true,outline:'solid',offset:'-3px'});
+ const r=await map.boundingBox();await page.mouse.move(r.x+20,r.y+20);await page.mouse.down();await page.mouse.move(r.x+80,r.y+40,{steps:4});await page.mouse.up();
+ expect(await page.evaluate(()=>getSelection().toString())).toBe('');expect(await map.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
+ await page.getByRole('button',{name:'全景／重設'}).focus();await page.keyboard.press('Tab');await expect(map).toBeFocused();expect(await map.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');await page.keyboard.press('Tab');await expect(page.locator('[data-building=academy]')).toBeFocused();expect(await page.locator('[data-building=academy] > polygon').first().evaluate(el=>getComputedStyle(el).strokeWidth)).toBe('5px');
+});
+
+test('Chrome wheel 模擬：雙指滑動優先平移，捏合與滑鼠模式縮放',async({page})=>{
+ await page.setViewportSize({width:1440,height:1000});await ready(page);const map=page.locator('[data-map]');await page.getByRole('button',{name:'放大',exact:true}).click();const scene=page.locator('[data-scene]');const before=await scene.getAttribute('transform');
+ await map.dispatchEvent('wheel',{deltaMode:0,deltaX:24,deltaY:36});await expect(scene).not.toHaveAttribute('transform',before);await expect(page.locator('[data-zoom]')).toHaveText('120%');
+ await map.dispatchEvent('wheel',{deltaMode:0,deltaY:-40,ctrlKey:true});await expect(page.locator('[data-zoom]')).not.toHaveText('120%');
+ await page.locator('[data-wheel-mode]').selectOption('zoom');await page.getByRole('button',{name:'全景／重設'}).click();await map.hover();await page.mouse.wheel(0,-100);await expect(page.locator('[data-zoom]')).not.toHaveText('100%');
+ await page.locator('[data-wheel-mode]').selectOption('pan');const zoom=await page.locator('[data-zoom]').textContent();await map.dispatchEvent('wheel',{deltaMode:0,deltaX:0,deltaY:100});await expect(page.locator('[data-zoom]')).toHaveText(zoom);
+ await map.dispatchEvent('wheel',{deltaMode:0,deltaY:-40,ctrlKey:true});await expect(page.locator('[data-zoom]')).not.toHaveText(zoom);await page.reload();await expect(page.locator('[data-wheel-mode]')).toHaveValue('auto');
 });

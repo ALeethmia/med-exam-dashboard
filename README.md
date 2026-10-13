@@ -368,7 +368,7 @@ Phase 2B.1a UX 收尾：領主與同一份完整編年史整合為角色與故�
 ### Phase 2B.2a：獨立技術地圖（待審查）
 
 執行既有 `npm run dev`，開啟 `http://localhost:3000/kingdom-preview.html`。
-預設全景；拖曳移動、滾輪／雙指縮放，或使用放大／縮小／全景按鈕。地圖取得焦點後可用方向鍵、＋／−、Home／0 操作；建築可用 Tab、Enter／空白鍵或下方按鈕選取。
+預設全景；拖曳移動、雙指捏合縮放，或使用放大／縮小／全景按鈕。Chrome 的像素 wheel 無法可靠區分滑鼠與觸控板：自動模式優先平移像素滑動，行／頁單位滾輪與 Ctrl／捏合訊號縮放；像素型滑鼠可選「滑鼠滾輪（縮放）」，觸控板可選「觸控板滑動（平移）」。操作模式只存在記憶體。地圖取得焦點後可用方向鍵、＋／−、Home／0 操作；建築可用 Tab、Enter／空白鍵或下方按鈕選取。
 
 此入口只載入獨立原生 modules，不啟動正式 Dashboard、Firebase、登入、pending retry 或業務 stores。模擬階段 1–5 僅存在記憶體；重新載入即清除，不寫入 localStorage／IndexedDB。既有 `?mode=local` 不作為此隔離保證。
 

@@ -18,6 +18,9 @@ button:focus-visible,select:focus-visible,svg:focus-visible { outline:3px solid 
 [data-map] { display:block; width:100%; height:clamp(300px,52vw,620px); background:#e8ede4; touch-action:none; cursor:grab; }
 /* 僅地圖互動區阻止原生反白與拖曳，外部文字仍可選取。 */
 [data-map],[data-map] * { -webkit-user-select:none; user-select:none; -webkit-user-drag:none; }
+/* 指標焦點不畫鍵盤外框；Tab 或方向鍵會恢復地圖焦點提示。 */
+[data-map]:focus-visible { outline-offset:-3px; }
+[data-map][data-pointer-focus]:focus-visible { outline:none; }
 [data-map]:active { cursor:grabbing; }
 [data-building] { cursor:pointer; }
 [data-building]:focus-visible { outline:none; }

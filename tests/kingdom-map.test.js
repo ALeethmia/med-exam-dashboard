@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {fitCamera,fitScale,constrainCamera,zoomCamera,worldPoint,createCamera} from '../kingdom-map-core.js';
 import {createPreviewState} from '../kingdom-preview-state.js';
 import {BUILDING_MANIFEST,WORLD} from '../kingdom-building-manifest.js';
-import {bindMapInput} from '../kingdom-map-input.js';
+import {bindMapInput,wheelIntent} from '../kingdom-map-input.js';
 const view={width:960,height:600};
 test('全景在不同尺寸保留世界邊界，縮放不超出四倍',()=>{
  for(const width of [288,358,736,1136]){const v={width,height:320},c=fitCamera(v,WORLD);assert.ok(c.x>=0&&c.y>=0);assert.ok(c.x+WORLD.width*c.scale<=width);assert.ok(c.y+WORLD.height*c.scale<=320);const maximum=constrainCamera({scale:999,x:999,y:-999},v,WORLD);assert.equal(maximum.scale,fitScale(v,WORLD)*4);const minimum=constrainCamera({scale:0,x:0,y:0},v,WORLD);assert.equal(minimum.scale,fitScale(v,WORLD));}
@@ -22,7 +22,7 @@ class Surface extends EventTarget {
  hasPointerCapture(id){return this.captured.has(id);}
  releasePointerCapture(id){this.captured.delete(id);}
 }
-function send(surface,type,values={}){const e=new Event(type,{cancelable:true});Object.assign(e,{pointerId:1,pointerType:'touch',button:0,clientX:100,clientY:100,...values});surface.dispatchEvent(e);return e;}
+function send(surface,type,values={}){const e=new Event(type,{cancelable:true});Object.assign(e,{pointerId:1,pointerType:'touch',button:0,clientX:100,clientY:100,deltaX:0,...values});surface.dispatchEvent(e);return e;}
 test('拖曳、雙指與取消不選建築，解除綁定後沒有殘留輸入',()=>{
  const s=new Surface(),calls=[];const input=bindMapInput(s,{pan:p=>calls.push(['pan',p]),zoom:(f,p)=>calls.push(['zoom',f,p]),reset:()=>calls.push(['reset']),select:id=>calls.push(['select',id])});
  send(s,'pointerdown');send(s,'pointermove',{clientX:160});send(s,'pointerup');assert.ok(calls.some(c=>c[0]==='pan'));assert.ok(!calls.some(c=>c[0]==='select'));
@@ -33,7 +33,7 @@ test('拖曳、雙指與取消不選建築，解除綁定後沒有殘留輸入',
 });
 test('多次綁定與清理不累積 wheel 處理器',()=>{
  const s=new Surface();let count=0;
- for(let i=0;i<20;i++){const input=bindMapInput(s,{pan:()=>{},zoom:()=>count++,reset:()=>{},select:()=>{}});send(s,'wheel',{deltaY:10,deltaMode:0});assert.equal(count,i+1);input.dispose();send(s,'wheel',{deltaY:10,deltaMode:0});assert.equal(count,i+1);}
+ for(let i=0;i<20;i++){const input=bindMapInput(s,{pan:()=>{},zoom:()=>count++,wheelMode:()=> 'zoom',reset:()=>{},select:()=>{}});send(s,'wheel',{deltaY:10,deltaMode:0});assert.equal(count,i+1);input.dispose();send(s,'wheel',{deltaY:10,deltaMode:0});assert.equal(count,i+1);}
 });
 test('地圖僅阻止主要滑鼠按鍵的原生選取與拖曳，清理後不攔截事件',()=>{
  const surface=new Surface();let focused=0;surface.focus=()=>focused++;
@@ -42,4 +42,13 @@ test('地圖僅阻止主要滑鼠按鍵的原生選取與拖曳，清理後不�
  assert.equal(send(surface,'pointerdown',{pointerType:'mouse'}).defaultPrevented,true);assert.equal(focused,1);send(surface,'pointerup',{pointerType:'mouse'});
  assert.equal(send(surface,'pointerdown',{pointerType:'touch'}).defaultPrevented,false);send(surface,'pointercancel');assert.equal(send(surface,'dragstart').defaultPrevented,true);
  input.dispose();assert.equal(send(surface,'dragstart').defaultPrevented,false);assert.equal(send(surface,'pointerdown',{pointerType:'mouse'}).defaultPrevented,false);
+});
+test('wheel 使用事件語意與明確 fallback，不推測所有實體裝置',()=>{
+ assert.equal(wheelIntent({deltaMode:0,deltaY:100,ctrlKey:false}),'pan');assert.equal(wheelIntent({deltaMode:0,deltaX:12,deltaY:3.5}),'pan');
+ assert.equal(wheelIntent({deltaMode:1}),'zoom');assert.equal(wheelIntent({deltaMode:2}),'zoom');assert.equal(wheelIntent({deltaMode:0,ctrlKey:true},'pan'),'zoom');assert.equal(wheelIntent({deltaMode:0},'zoom'),'zoom');assert.equal(wheelIntent({deltaMode:1},'pan'),'pan');
+ const surface=new Surface(),calls=[];let mode='auto';const input=bindMapInput(surface,{pan:d=>calls.push(['pan',d]),zoom:f=>calls.push(['zoom',f]),reset:()=>{},select:()=>{},wheelMode:()=>mode});
+ send(surface,'wheel',{deltaX:20,deltaY:30,deltaMode:0});assert.deepEqual(calls.pop(),['pan',{x:-20,y:-30}]);
+ send(surface,'wheel',{deltaY:-30,deltaMode:0,ctrlKey:true});assert.ok(calls.pop()[1]>1);
+ send(surface,'wheel',{deltaY:3,deltaMode:1});assert.ok(calls.pop()[1]<1);
+ mode='zoom';send(surface,'wheel',{deltaY:20,deltaMode:0});assert.equal(calls.pop()[0],'zoom');mode='pan';send(surface,'wheel',{deltaY:1,deltaMode:1});assert.deepEqual(calls.pop(),['pan',{x:-0,y:-16}]);input.dispose();
 });

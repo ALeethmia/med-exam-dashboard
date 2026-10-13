@@ -6,7 +6,9 @@
  <section class="map-card" aria-label="王國地圖預覽">
   <div class="toolbar"><span>固定領地 · 三座建築</span><div><output data-zoom aria-label="縮放比例"></output><button data-zoom-factor="0.8333333333" aria-label="縮小">−</button><button data-zoom-factor="1.2" aria-label="放大">＋</button><button data-reset>全景／重設</button></div></div>
   <svg data-map role="group" aria-label="可拖曳與縮放的王國地圖" tabindex="0"></svg>
-  <p class="map-hint">拖曳移動 · 滾輪或雙指縮放 · 方向鍵移動 · ＋／− 縮放 · Home 重設</p>
+  <div class="toolbar"><label>滾動操作 <select data-wheel-mode aria-describedby="wheel-help"><option value="auto">自動（像素滑動平移）</option><option value="zoom">滑鼠滾輪（縮放）</option><option value="pan">觸控板滑動（平移）</option></select></label></div>
+  <p class="map-hint" id="wheel-help">自動模式優先平移像素滑動；捏合或 Ctrl＋滾輪縮放。像素型滑鼠請選「滑鼠滾輪」。瀏覽器無法完全辨識裝置。</p>
+  <p class="map-hint">拖曳移動 · 雙指捏合縮放 · 方向鍵移動 · ＋／− 縮放 · Home 重設</p>
  </section>
  <section class="preview-controls" aria-label="記憶體模擬"><h2>建築互動測試</h2><div class="building-choices"><button data-select="academy" aria-pressed="false">✦ 奧術學院</button><button data-select="keep" aria-pressed="false">⚑ 王國要塞</button><button data-select="barracks" aria-pressed="false">⚔ 皇家兵營</button></div><p data-status role="status"></p><label>模擬主要階段 <select data-stage disabled><option value="1">1 / 5</option><option value="2">2 / 5</option><option value="3">3 / 5</option><option value="4">4 / 5</option><option value="5">5 / 5</option></select></label><p class="note">這是位置與操作骨架，不代表真實學習進度或正式美術；不發放 XP，不觸發升級演出。重新載入後回到初始狀態。</p></section>
  <footer><p>正式 Dashboard、學習紀錄與 Firebase 同步不在此頁啟動。</p><a href="./">離開預覽，返回 Dashboard</a><p>本頁以外的區域保留一般捲動。手機觸控手感仍需實機驗收。</p></footer>
