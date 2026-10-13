@@ -1,0 +1,168 @@
+[
+  {
+    "file": "academy-v-concept-v1-warm-metal.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "bytes": 2738894,
+    "sha256": "973609f993c635163c72433a5f2c5d00f61437c2c03b37a470456204b8b4048b",
+    "decodedRGBABytes": 6290064,
+    "alphaBounds": [
+      0,
+      19,
+      1254,
+      1254
+    ],
+    "alphaBuckets": {
+      "zero": 647382,
+      "1-63": 30775,
+      "64-127": 3603,
+      "128-239": 11155,
+      "240-254": 879356,
+      "255": 245
+    },
+    "alpha64Bounds": [
+      6,
+      24,
+      1251,
+      1238
+    ]
+  },
+  {
+    "file": "academy-v-concept.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "bytes": 2598108,
+    "sha256": "ad654d4de19904d043101792c160e9af23820fa30ae1f850d4874f69b23a31c0",
+    "decodedRGBABytes": 6290064,
+    "alphaBounds": [
+      15,
+      56,
+      1243,
+      1222
+    ],
+    "alphaBuckets": {
+      "zero": 712490,
+      "1-63": 21852,
+      "64-127": 4531,
+      "128-239": 11093,
+      "240-254": 822201,
+      "255": 349
+    },
+    "alpha64Bounds": [
+      20,
+      59,
+      1240,
+      1215
+    ]
+  },
+  {
+    "file": "barracks-v-concept.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "bytes": 2980768,
+    "sha256": "cfb11eaae69b148f6ac632b57f8fb256f508f16a865789b2b94877573ab3a2b2",
+    "decodedRGBABytes": 6290064,
+    "alphaBounds": [
+      0,
+      0,
+      1254,
+      1238
+    ],
+    "alphaBuckets": {
+      "zero": 558674,
+      "1-63": 29957,
+      "64-127": 3533,
+      "128-239": 11807,
+      "240-254": 968301,
+      "255": 244
+    },
+    "alpha64Bounds": [
+      10,
+      54,
+      1245,
+      1231
+    ]
+  },
+  {
+    "file": "keep-v-concept.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "bytes": 2952486,
+    "sha256": "7ef8266d2b400ec5066619533eb29580b84ac351640b30b799efcdb3aa7e0888",
+    "decodedRGBABytes": 6290064,
+    "alphaBounds": [
+      0,
+      11,
+      1254,
+      1254
+    ],
+    "alphaBuckets": {
+      "zero": 565895,
+      "1-63": 24298,
+      "64-127": 2847,
+      "128-239": 8267,
+      "240-254": 970954,
+      "255": 255
+    },
+    "alpha64Bounds": [
+      3,
+      13,
+      1253,
+      1240
+    ]
+  },
+  {
+    "file": "kingdom-scene-v1-perspective-reference.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "bytes": 3974294,
+    "sha256": "3c4eb0dadb797d395dfa4a7efd82313a47047522f5041e7df759fa1a3c924211",
+    "decodedRGBABytes": 6291456,
+    "alphaBounds": null,
+    "alphaBuckets": null,
+    "alpha64Bounds": null
+  },
+  {
+    "file": "kingdom-scene-v2-style-reference.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "bytes": 3451472,
+    "sha256": "8af0605b5a43dbb43a2fb4159511d855601ed4c7fdd1c3200cd066a8f79e2fad",
+    "decodedRGBABytes": 6291456,
+    "alphaBounds": null,
+    "alphaBuckets": null,
+    "alpha64Bounds": null
+  },
+  {
+    "file": "kingdom-scene-v3-concept.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "bytes": 3598123,
+    "sha256": "73887600836c4dd26463d4778f47844a8c83f097e7bc501cc4ae6786b02cf876",
+    "decodedRGBABytes": 6291456,
+    "alphaBounds": null,
+    "alphaBuckets": null,
+    "alpha64Bounds": null
+  }
+]

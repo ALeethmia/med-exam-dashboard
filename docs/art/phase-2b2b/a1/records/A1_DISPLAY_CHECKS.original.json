@@ -1,0 +1,159 @@
+[
+  {
+    "name": "art-comparison",
+    "viewport": 1600,
+    "documentWidth": 1600,
+    "images": [
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1536,
+        "height": 1024
+      }
+    ],
+    "externalRequests": 0
+  },
+  {
+    "name": "desktop-thumbnails",
+    "viewport": 1440,
+    "documentWidth": 1440,
+    "images": [
+      {
+        "loaded": true,
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      }
+    ],
+    "externalRequests": 0
+  },
+  {
+    "name": "mobile-thumbnails",
+    "viewport": 390,
+    "documentWidth": 390,
+    "images": [
+      {
+        "loaded": true,
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      }
+    ],
+    "externalRequests": 0
+  },
+  {
+    "name": "mobile-320-thumbnails",
+    "viewport": 320,
+    "documentWidth": 320,
+    "images": [
+      {
+        "loaded": true,
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "loaded": true,
+        "width": 1254,
+        "height": 1254
+      }
+    ],
+    "externalRequests": 0
+  }
+]

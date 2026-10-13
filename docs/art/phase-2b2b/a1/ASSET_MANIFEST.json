@@ -1,0 +1,260 @@
+{
+  "status": "美術概念已核准；Git封存供審查，非正式分層遊戲素材",
+  "primary_baseline": "approved/a11/kingdom-scene-a11.png",
+  "entries": [
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/approved/a11/kingdom-scene-a11.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/images/kingdom-scene-a11.png",
+      "role": "A1.1 核准概念；共同場景為主基準",
+      "bytes": 2977966,
+      "sha256": "3098bde3f8a3ac75f08d44cb672d4897f0a9d0017584f4633bf246a3bca8eec3",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/approved/a11/building-comparison-a11.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/images/building-comparison-a11.png",
+      "role": "A1.1 核准概念；共同場景為主基準",
+      "bytes": 2487508,
+      "sha256": "448748682b07f2221b457444b2f69951a7f32d63e1139aca9da2c395091bb0a8",
+      "width": 1942,
+      "height": 809,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/approved/a11/academy-v-a11.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/images/academy-v-a11.png",
+      "role": "A1.1 核准概念；共同場景為主基準",
+      "bytes": 2355624,
+      "sha256": "3258d969e636bfc4c7a12e6bedd89b125d8e92472f1f82e2f8cd27555d140d81",
+      "width": 1374,
+      "height": 1145,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/approved/a11/keep-v-a11.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/images/keep-v-a11.png",
+      "role": "A1.1 核准概念；共同場景為主基準",
+      "bytes": 2328979,
+      "sha256": "97dec35f1775188c25d8a62f506ac354522ebe24674cf68b1ca7896d5c0d756f",
+      "width": 1374,
+      "height": 1145,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-original/kingdom-scene-v3-concept.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/images/kingdom-scene-v3-concept.png",
+      "role": "早期複雜版歷史，非目前基準",
+      "bytes": 3598123,
+      "sha256": "73887600836c4dd26463d4778f47844a8c83f097e7bc501cc4ae6786b02cf876",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-original/academy-v-concept.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/images/academy-v-concept.png",
+      "role": "早期複雜版歷史，非目前基準",
+      "bytes": 2598108,
+      "sha256": "ad654d4de19904d043101792c160e9af23820fa30ae1f850d4874f69b23a31c0",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-original/barracks-v-concept.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/images/barracks-v-concept.png",
+      "role": "早期複雜版歷史，非目前基準",
+      "bytes": 2980768,
+      "sha256": "cfb11eaae69b148f6ac632b57f8fb256f508f16a865789b2b94877573ab3a2b2",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-original/keep-v-concept.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/images/keep-v-concept.png",
+      "role": "早期複雜版歷史，非目前基準",
+      "bytes": 2952486,
+      "sha256": "7ef8266d2b400ec5066619533eb29580b84ac351640b30b799efcdb3aa7e0888",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-drafts/kingdom-scene-v1-perspective-reference.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/images/kingdom-scene-v1-perspective-reference.png",
+      "role": "早期草稿，僅歷史對照",
+      "bytes": 3974294,
+      "sha256": "3c4eb0dadb797d395dfa4a7efd82313a47047522f5041e7df759fa1a3c924211",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-drafts/kingdom-scene-v2-style-reference.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/images/kingdom-scene-v2-style-reference.png",
+      "role": "早期草稿，僅歷史對照",
+      "bytes": 3451472,
+      "sha256": "8af0605b5a43dbb43a2fb4159511d855601ed4c7fdd1c3200cd066a8f79e2fad",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-drafts/academy-v-concept-v1-warm-metal.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/images/academy-v-concept-v1-warm-metal.png",
+      "role": "早期草稿，僅歷史對照",
+      "bytes": 2738894,
+      "sha256": "973609f993c635163c72433a5f2c5d00f61437c2c03b37a470456204b8b4048b",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-simplified/kingdom-scene-before.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/images/kingdom-scene-before.png",
+      "role": "A1.1 修正前的已定案簡化版",
+      "bytes": 3161206,
+      "sha256": "1fc097552e0bcd6a95c2e9dff86f20b12e98706c7d4340ae38aac6eb3b41fbc2",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/history/a1-simplified/building-comparison-before.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/images/building-comparison-before.png",
+      "role": "A1.1 修正前的已定案簡化版",
+      "bytes": 2446908,
+      "sha256": "02aedfadeb3393ea64f0767e39c39d2af8339702fa366dbc21b11151fa4217ec",
+      "width": 1942,
+      "height": 809,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/review/a1-original-desktop-comparison.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/review/art-comparison.png",
+      "role": "歷史靜態展示證據，非A1.1最新截圖",
+      "bytes": 3689306,
+      "sha256": "fdc0496787827a36dbadf6111896bd44f7cbd93c034c47285e53c187004f15b9",
+      "width": 1600,
+      "height": 1944,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/review/a1-original-mobile-390.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/review/mobile-thumbnails.png",
+      "role": "歷史靜態展示證據，非A1.1最新截圖",
+      "bytes": 902986,
+      "sha256": "05304005e7bebfb109abd312a18ad0fc8eefab84986150604c191fe6bc783ec4",
+      "width": 390,
+      "height": 2533,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/review/a1-simplified-desktop-1440.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/review/simplified-1440.png",
+      "role": "歷史靜態展示證據，非A1.1最新截圖",
+      "bytes": 2306416,
+      "sha256": "078dd07ae55cc7b1da102b99abf373aa9bac96036a17ffd1d9cf727d5bfa089c",
+      "width": 1440,
+      "height": 1831,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/review/a1-simplified-mobile-390.png",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/review/simplified-390.png",
+      "role": "歷史靜態展示證據，非A1.1最新截圖",
+      "bytes": 944161,
+      "sha256": "aa83ce2cea3a758a06a5a3b03e8b34e6d4a6a5f3ba5757618e96d91da385fbc5",
+      "width": 390,
+      "height": 2695,
+      "mode": "RGB"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/records/A1_ART_REVIEW.original.md",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/ART_REVIEW.md",
+      "role": "歷史原始紀錄；其工作路徑保留作來源追溯",
+      "bytes": 5358,
+      "sha256": "6bd62c04b8eed30aa99b156e10768b8441762c64697629534ecf7c459a8de039"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/records/A1_SOURCE_MANIFEST.original.json",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/SOURCE_MANIFEST.json",
+      "role": "歷史原始紀錄；其工作路徑保留作來源追溯",
+      "bytes": 716,
+      "sha256": "74cbf3172fb518918fbee395775368581fbda33c81c90b0eaee5bf0565425f09"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/records/A1_IMAGE_AUDIT.original.json",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/image-audit.json",
+      "role": "歷史原始紀錄；其工作路徑保留作來源追溯",
+      "bytes": 3220,
+      "sha256": "60a35a5794670cddaa7aaa4a77b7e72e04c575b870c30835551db96ea7c0654b"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/records/A1_DISPLAY_CHECKS.original.json",
+      "source_path": "/workspace/work/becoming-phase2b2b-a1/review/display-checks.json",
+      "role": "歷史原始紀錄；其工作路徑保留作來源追溯",
+      "bytes": 2731,
+      "sha256": "6100a4b9233de3cf8b3ddd4143070c4194d71d8ed2ad7d90bd8687ca69702a0b"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/records/A1_1_REVIEW.original.md",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/A1_1_REVIEW.md",
+      "role": "歷史原始紀錄；其工作路徑保留作來源追溯",
+      "bytes": 3706,
+      "sha256": "aa39120c112fa0eaefd74a7aa24addeacb70f10ecdd014cbab75ae30614d9ade"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/records/A1_1_PIXEL_AUDIT.original.json",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/pixel-audit.json",
+      "role": "歷史原始紀錄；其工作路徑保留作來源追溯",
+      "bytes": 505,
+      "sha256": "765727b6ec46d47c3eeab67dea5189f248e52c1587cedf968e490bc4ddc88388"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/records/A1_1_IMAGE_MANIFEST.original.json",
+      "source_path": "/workspace/work/becoming-phase2b2b-a11/image-manifest.json",
+      "role": "歷史原始紀錄；其工作路徑保留作來源追溯",
+      "bytes": 1321,
+      "sha256": "d0defd1ea7f9e07443c6be25b4854f614fc1299b13b9a289f279407e3bb9140e"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/records/A1_1_DISPLAY_CHECKS.original.json",
+      "source_path": "/workspace/work/a11-display-checks.json",
+      "role": "A1.1展示頁模擬檢查與下載驗證，非手機實機",
+      "bytes": 397,
+      "sha256": "6fbddebe1cde10ba836b5cef246e8c92c8255439dd547df8d444b9d64fa3c885"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/README.md",
+      "source_path": "/workspace/work/becoming-a1-archive-preparation/candidate/docs/art/phase-2b2b/a1/README.md",
+      "role": "本輪準備文件",
+      "bytes": 1599,
+      "sha256": "e6343f09df9db6464e034808817437975c443d226f8df8857358a0ce4ca37b1d"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/A1_ACCEPTANCE.md",
+      "source_path": "/workspace/work/becoming-a1-archive-preparation/candidate/docs/art/phase-2b2b/a1/A1_ACCEPTANCE.md",
+      "role": "本輪準備文件",
+      "bytes": 4233,
+      "sha256": "5c55d17b29f1ba8f95ba02d7f6ecf377c1ed2f82a18a987080b0f99cf2ea6ba6"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/A2_HANDOFF.md",
+      "source_path": "/workspace/work/becoming-a1-archive-preparation/candidate/docs/art/phase-2b2b/a1/A2_HANDOFF.md",
+      "role": "本輪準備文件",
+      "bytes": 2149,
+      "sha256": "9130d24e4df7da686fe7e374a57f7b0d78b2aa66fa9003c655a75fe1a68447aa"
+    },
+    {
+      "repository_path": "docs/art/phase-2b2b/a1/SOURCE_AND_LIMITATIONS.md",
+      "source_path": "/workspace/work/becoming-a1-archive-preparation/candidate/docs/art/phase-2b2b/a1/SOURCE_AND_LIMITATIONS.md",
+      "role": "本輪準備文件",
+      "bytes": 1751,
+      "sha256": "112f8fa5f45379ac138ddecfffb3a305b83ff3333a693ab7729f6d62b95e3a9b"
+    }
+  ]
+}
