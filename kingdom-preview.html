@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Becoming · 王國技術預覽</title><link rel="stylesheet" href="./kingdom-map.css"></head>
+<body><main data-preview>
+ <header><div><p class="eyebrow">BECOMING · PHASE 2B.2a</p><h1>艾瑟利亞 · 地圖工坊</h1><p>獨立技術預覽，所有模擬操作只存在本頁記憶體。</p></div><span class="badge">臨時佔位素材</span></header>
+ <section class="map-card" aria-label="王國地圖預覽">
+  <div class="toolbar"><span>固定領地 · 三座建築</span><div><output data-zoom aria-label="縮放比例"></output><button data-zoom-factor="0.8333333333" aria-label="縮小">−</button><button data-zoom-factor="1.2" aria-label="放大">＋</button><button data-reset>全景／重設</button></div></div>
+  <svg data-map role="group" aria-label="可拖曳與縮放的王國地圖" tabindex="0"></svg>
+  <p class="map-hint">拖曳移動 · 滾輪或雙指縮放 · 方向鍵移動 · ＋／− 縮放 · Home 重設</p>
+ </section>
+ <section class="preview-controls" aria-label="記憶體模擬"><h2>建築互動測試</h2><div class="building-choices"><button data-select="academy" aria-pressed="false">✦ 奧術學院</button><button data-select="keep" aria-pressed="false">⚑ 王國要塞</button><button data-select="barracks" aria-pressed="false">⚔ 皇家兵營</button></div><p data-status role="status"></p><label>模擬主要階段 <select data-stage disabled><option value="1">1 / 5</option><option value="2">2 / 5</option><option value="3">3 / 5</option><option value="4">4 / 5</option><option value="5">5 / 5</option></select></label><p class="note">這是位置與操作骨架，不代表真實學習進度或正式美術；不發放 XP，不觸發升級演出。重新載入後回到初始狀態。</p></section>
+ <footer><p>正式 Dashboard、學習紀錄與 Firebase 同步不在此頁啟動。</p><a href="./">離開預覽，返回 Dashboard</a><p>本頁以外的區域保留一般捲動。手機觸控手感仍需實機驗收。</p></footer>
+</main><script type="module" src="./kingdom-preview.js"></script></body></html>

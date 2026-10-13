@@ -364,3 +364,14 @@ territoryMilestoneSnapshot 只說明「目前達標」，日期為 null；沒有
 
 
 Phase 2B.1a UX 收尾：領主與同一份完整編年史整合為角色與故事區域，寬桌面並排、窄螢幕上下排列；展開內容不拉高領主卡。三個檢視入口直接可見，點選即在原區域展開內容；既有領主連結、progression 書籤與詳細歷史收合保留。重複大型章節區改為精簡考試資訊列，倒數與章節資料不變。三座建築改為各自獨立開關，可同時比較所有建築；預設仍收合，計算與資料來源不變。
+
+### Phase 2B.2a：獨立技術地圖（待審查）
+
+執行既有 `npm run dev`，開啟 `http://localhost:3000/kingdom-preview.html`。
+預設全景；拖曳移動、滾輪／雙指縮放，或使用放大／縮小／全景按鈕。地圖取得焦點後可用方向鍵、＋／−、Home／0 操作；建築可用 Tab、Enter／空白鍵或下方按鈕選取。
+
+此入口只載入獨立原生 modules，不啟動正式 Dashboard、Firebase、登入、pending retry 或業務 stores。模擬階段 1–5 僅存在記憶體；重新載入即清除，不寫入 localStorage／IndexedDB。既有 `?mode=local` 不作為此隔離保證。
+
+`kingdom-map-core.js` 負責鏡頭純運算；`kingdom-map-input.js` 處理手勢意圖；renderer 提供 `update/setCamera/dispose`，只接受不可變 Building View Model；manifest 定義固定區域，preview state 不接觸學習或 XP。離開頁面清理 listener 與 ResizeObserver，沒有常駐動畫迴圈。
+
+所有美術皆為臨時佔位；未實作正式素材、多面板、底部抽屜、日夜、升級演出、真實資料整合或 App 封裝。實機雙指手感與效能仍需人工驗收。完整檢查使用既有 build、lint、unit、browser 指令；所有測試資料使用本機／Mock，禁止寫入正式 Firebase。
