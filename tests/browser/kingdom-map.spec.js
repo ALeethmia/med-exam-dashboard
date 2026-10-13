@@ -93,3 +93,9 @@ test('滑鼠冷啟動點擊地圖與建築沒有原生矩形框，選取與 Tab 
  const keyboard=await base.evaluate(el=>({stroke:getComputedStyle(el).stroke,width:getComputedStyle(el).strokeWidth,dash:getComputedStyle(el).strokeDasharray}));expect(keyboard.width).toBe('5px');expect(keyboard.stroke).not.toBe(selected.stroke);expect(keyboard.dash).not.toBe('none');
  await page.keyboard.press('Tab');await expect(page.locator('[data-building=keep]')).toBeFocused();await expect(building).toHaveAttribute('aria-pressed','true');expect(await base.evaluate(el=>getComputedStyle(el).strokeWidth)).toBe('3px');
 });
+
+test('觸控板捏合靈敏度提高為 1.5 倍，普通滾輪與按鈕速度不變',async({page})=>{
+ await ready(page);const map=page.locator('[data-map]');await map.dispatchEvent('wheel',{deltaMode:0,deltaY:-50,ctrlKey:true});await expect(page.locator('[data-zoom]')).toHaveText('116%');
+ await page.getByRole('button',{name:'全景／重設'}).click();await page.locator('[data-wheel-mode]').selectOption('zoom');await map.dispatchEvent('wheel',{deltaMode:0,deltaY:-50,ctrlKey:false});await expect(page.locator('[data-zoom]')).toHaveText('111%');
+ await page.getByRole('button',{name:'全景／重設'}).click();await page.getByRole('button',{name:'放大',exact:true}).click();await expect(page.locator('[data-zoom]')).toHaveText('120%');
+});

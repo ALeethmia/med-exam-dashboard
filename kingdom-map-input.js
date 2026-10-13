@@ -40,7 +40,8 @@ export function bindMapInput(surface,{pan,zoom,reset,select,wheelMode=()=> 'auto
  listen('wheel',event=>{
   event.preventDefault();clear();const unit=event.deltaMode===1?16:event.deltaMode===2?surface.clientHeight:1;
   if(wheelIntent(event,wheelMode())==='pan')pan({x:-event.deltaX*unit,y:-event.deltaY*unit});
-  else zoom(Math.exp(-Math.max(-300,Math.min(300,event.deltaY*unit))*.002),local(event));
+  // Chrome 捏合與 Ctrl＋滾輪共用訊號；僅此路徑提高為 1.5 倍。
+  else zoom(Math.exp(-Math.max(-300,Math.min(300,event.deltaY*unit))*.002*(event.ctrlKey?1.5:1)),local(event));
  },{passive:false});
  listen('keydown',event=>{
   surface.removeAttribute?.('data-pointer-focus');
