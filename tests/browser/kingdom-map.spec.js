@@ -77,3 +77,19 @@ test('Chrome wheel 模擬：雙指滑動優先平移，捏合與滑鼠模式縮�
  await page.locator('[data-wheel-mode]').selectOption('pan');const zoom=await page.locator('[data-zoom]').textContent();await map.dispatchEvent('wheel',{deltaMode:0,deltaX:0,deltaY:100});await expect(page.locator('[data-zoom]')).toHaveText(zoom);
  await map.dispatchEvent('wheel',{deltaMode:0,deltaY:-40,ctrlKey:true});await expect(page.locator('[data-zoom]')).not.toHaveText(zoom);await page.reload();await expect(page.locator('[data-wheel-mode]')).toHaveValue('auto');
 });
+
+test('滑鼠冷啟動點擊地圖與建築沒有原生矩形框，選取與 Tab 焦點不同',async({page})=>{
+ await page.setViewportSize({width:1440,height:1000});await ready(page);const map=page.locator('[data-map]'),building=page.locator('[data-building=academy]');
+ const inspect=el=>({focus:el.matches(':focus'),visible:el.matches(':focus-visible'),outline:getComputedStyle(el).outlineStyle});
+ // 另外模擬 Chrome 可能出現的 :focus 而非 :focus-visible，避免只測單一平台啟發式。
+ const client=await page.context().newCDPSession(page);await client.send('DOM.enable');await client.send('CSS.enable');const {root}=await client.send('DOM.getDocument');const forced=[];
+ for(const selector of ['[data-map]','[data-building=academy]']){const {nodeId}=await client.send('DOM.querySelector',{nodeId:root.nodeId,selector});await client.send('CSS.forcePseudoState',{nodeId,forcedPseudoClasses:['focus']});forced.push(await page.locator(selector).evaluate(inspect));await client.send('CSS.forcePseudoState',{nodeId,forcedPseudoClasses:[]});}
+ await client.detach();for(const state of forced){expect(state.visible).toBe(false);expect(state.outline).toBe('none');}
+
+ const r=await map.boundingBox();await page.mouse.click(r.x+20,r.y+20);const rootState=await map.evaluate(inspect);await building.click();const buildingState=await building.evaluate(inspect);
+ expect(rootState.outline).toBe('none');expect(buildingState.outline).toBe('none');
+ await expect(building).toHaveAttribute('aria-pressed','true');await expect(building).toHaveAttribute('tabindex','0');const base=building.locator('> polygon').first();const selected=await base.evaluate(el=>({stroke:getComputedStyle(el).stroke,width:getComputedStyle(el).strokeWidth,dash:getComputedStyle(el).strokeDasharray}));expect(selected.width).toBe('3px');expect(selected.dash).toBe('none');
+ await page.getByRole('button',{name:'全景／重設'}).focus();await page.keyboard.press('Tab');await expect(map).toBeFocused();expect(await map.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');await page.keyboard.press('Tab');await expect(building).toBeFocused();expect(await building.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
+ const keyboard=await base.evaluate(el=>({stroke:getComputedStyle(el).stroke,width:getComputedStyle(el).strokeWidth,dash:getComputedStyle(el).strokeDasharray}));expect(keyboard.width).toBe('5px');expect(keyboard.stroke).not.toBe(selected.stroke);expect(keyboard.dash).not.toBe('none');
+ await page.keyboard.press('Tab');await expect(page.locator('[data-building=keep]')).toBeFocused();await expect(building).toHaveAttribute('aria-pressed','true');expect(await base.evaluate(el=>getComputedStyle(el).strokeWidth)).toBe('3px');
+});

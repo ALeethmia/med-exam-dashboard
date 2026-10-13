@@ -14,17 +14,18 @@ p { line-height:1.7; }
 button,select { font:inherit; color:inherit; background:#f9faf5; border:1px solid #bec7b6; border-radius:9px; padding:10px 14px; min-height:44px; cursor:pointer; }
 button:hover { background:#e7eedf; }
 button[aria-pressed=true] { background:#dce6d2; border-color:#5d7350; }
-button:focus-visible,select:focus-visible,svg:focus-visible { outline:3px solid #6b79ae; outline-offset:3px; }
+button:focus-visible,select:focus-visible { outline:3px solid #6b79ae; outline-offset:3px; }
 [data-map] { display:block; width:100%; height:clamp(300px,52vw,620px); background:#e8ede4; touch-action:none; cursor:grab; }
 /* 僅地圖互動區阻止原生反白與拖曳，外部文字仍可選取。 */
 [data-map],[data-map] * { -webkit-user-select:none; user-select:none; -webkit-user-drag:none; }
-/* 指標焦點不畫鍵盤外框；Tab 或方向鍵會恢復地圖焦點提示。 */
-[data-map]:focus-visible { outline-offset:-3px; }
-[data-map][data-pointer-focus]:focus-visible { outline:none; }
+/* 僅覆蓋地圖的原生矩形框，再明確畫出鍵盤焦點；不依賴平台啟發式。 */
+[data-map]:focus,[data-map] [data-building]:focus { outline:none; }
+[data-map]:not([data-pointer-focus]):focus-visible { outline:3px solid #6b79ae; outline-offset:-3px; }
 [data-map]:active { cursor:grabbing; }
 [data-building] { cursor:pointer; }
-[data-building]:focus-visible { outline:none; }
-[data-building]:focus-visible > polygon,[data-building][aria-pressed=true] > polygon { stroke:#344a81; stroke-width:5; }
+/* 選取狀態與鍵盤焦點分開；只描繪地基，不使用大型包圍矩形。 */
+[data-map] [data-building][aria-pressed=true] > polygon:first-of-type { stroke:#8b641e; stroke-width:3; }
+[data-map]:not([data-pointer-focus]) [data-building]:focus-visible > polygon:first-of-type { stroke:#344a81; stroke-width:5; stroke-dasharray:6 4; }
 .map-hint { margin:0; padding:12px 16px; color:#687568; font-size:12px; }
 .preview-controls { padding:24px; margin-top:20px; }
 .building-choices { display:flex; flex-wrap:wrap; gap:10px; }
