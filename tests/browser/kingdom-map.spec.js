@@ -46,3 +46,16 @@ test('觸控模擬的雙指縮放正常，地圖外仍可捲動頁面',async({pa
  const r=await page.locator('[data-map]').boundingBox();const points=[{x:r.x+100,y:r.y+140,id:1},{x:r.x+200,y:r.y+140,id:2}];await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points});await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[points[0],{...points[1],x:r.x+270}]});await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await expect(page.locator('[data-zoom]')).not.toHaveText('100%');await expect(page.locator('[data-stage]')).toBeDisabled();
  await page.getByRole('button',{name:'全景／重設'}).click();await page.locator('footer').scrollIntoViewIfNeeded();const before=await page.evaluate(()=>scrollY);await page.mouse.move(10,20);await page.mouse.wheel(0,-400);await expect.poll(()=>page.evaluate(()=>scrollY)).toBeLessThan(before);await expect(page.locator('[data-zoom]')).toHaveText('100%');await client.detach();
 });
+
+test('macOS Chrome 回報情境：拖曳 SVG 文字不反白，地圖外仍可選取與複製',async({page,context})=>{
+ // 本機以 Chromium 驗證原生選取路徑；不宣稱已在 macOS 實機執行。
+ await page.setViewportSize({width:1440,height:1000});await ready(page);
+ const map=page.locator('[data-map]'),label=page.locator('[data-building=academy] text').filter({hasText:'奧術學院'});
+ const bounds=await map.boundingBox(),text=await label.boundingBox();
+ await page.mouse.move(text.x+3,text.y+text.height/2);await page.mouse.down();await page.mouse.move(bounds.x+bounds.width+20,bounds.y+bounds.height+30,{steps:15});await page.mouse.up();
+ expect(await page.evaluate(()=>getSelection().toString())).toBe('');await expect(page.locator('[data-stage]')).toBeDisabled();
+ await page.getByRole('button',{name:'全景／重設'}).click();await page.locator('[data-building=academy]').click();await expect(page.locator('[data-status]')).toContainText('奧術學院');await expect(page.locator('[data-building=academy]')).toBeFocused();
+ await page.keyboard.press('Enter');await page.keyboard.press('+');await expect(page.locator('[data-zoom]')).toHaveText('120%');await map.hover();await page.mouse.wheel(0,-100);await expect(page.locator('[data-zoom]')).not.toHaveText('120%');await map.focus();await page.keyboard.press('Home');await expect(page.locator('[data-zoom]')).toHaveText('100%');
+ await page.locator('h1').scrollIntoViewIfNeeded();const heading=await page.locator('h1').boundingBox();await page.mouse.move(heading.x+1,heading.y+heading.height/2);await page.mouse.down();await page.mouse.move(heading.x+heading.width-1,heading.y+heading.height/2,{steps:15});await page.mouse.up();
+ const selected=await page.evaluate(()=>getSelection().toString());expect(selected).toContain('艾瑟利亞');await context.grantPermissions(['clipboard-read','clipboard-write']);await page.keyboard.press('ControlOrMeta+c');expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(selected);
+});

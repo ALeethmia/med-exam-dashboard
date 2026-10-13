@@ -7,6 +7,8 @@ export function bindMapInput(surface,{pan,zoom,reset,select}){
  const clear=()=>{for(const id of pointers.keys())if(surface.hasPointerCapture?.(id))surface.releasePointerCapture(id);pointers.clear();gesture=null;};
  listen('pointerdown',event=>{
   if(event.pointerType==='mouse'&&event.button!==0||pointers.size>=2)return;
+  // 阻止滑鼠啟動原生選取，同時明確保留建築與地圖的鍵盤焦點。
+  if(event.pointerType==='mouse'){event.preventDefault();(event.target.closest?.('[data-building]')||surface).focus?.({preventScroll:true});}
   const point=local(event);pointers.set(event.pointerId,point);surface.setPointerCapture?.(event.pointerId);
   if(pointers.size===1)gesture={start:point,last:point,dragged:false,building:event.target.closest?.('[data-building]')?.dataset.building};
   else gesture={pinch:true,previous:pair(),dragged:true};
@@ -26,6 +28,7 @@ export function bindMapInput(surface,{pan,zoom,reset,select}){
   pointers.delete(event.pointerId);if(surface.hasPointerCapture?.(event.pointerId))surface.releasePointerCapture(event.pointerId);
   if(!pointers.size)gesture=null;
  });
+ listen('dragstart',event=>event.preventDefault());
  listen('pointercancel',clear);listen('lostpointercapture',event=>{if(pointers.has(event.pointerId))clear();});
  listen('wheel',event=>{event.preventDefault();clear();const unit=event.deltaMode===1?16:event.deltaMode===2?surface.clientHeight:1;zoom(Math.exp(-Math.max(-300,Math.min(300,event.deltaY*unit))*.002),local(event));},{passive:false});
  listen('keydown',event=>{

@@ -16,6 +16,8 @@ button:hover { background:#e7eedf; }
 button[aria-pressed=true] { background:#dce6d2; border-color:#5d7350; }
 button:focus-visible,select:focus-visible,svg:focus-visible { outline:3px solid #6b79ae; outline-offset:3px; }
 [data-map] { display:block; width:100%; height:clamp(300px,52vw,620px); background:#e8ede4; touch-action:none; cursor:grab; }
+/* 僅地圖互動區阻止原生反白與拖曳，外部文字仍可選取。 */
+[data-map],[data-map] * { -webkit-user-select:none; user-select:none; -webkit-user-drag:none; }
 [data-map]:active { cursor:grabbing; }
 [data-building] { cursor:pointer; }
 [data-building]:focus-visible { outline:none; }

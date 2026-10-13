@@ -35,3 +35,11 @@ test('多次綁定與清理不累積 wheel 處理器',()=>{
  const s=new Surface();let count=0;
  for(let i=0;i<20;i++){const input=bindMapInput(s,{pan:()=>{},zoom:()=>count++,reset:()=>{},select:()=>{}});send(s,'wheel',{deltaY:10,deltaMode:0});assert.equal(count,i+1);input.dispose();send(s,'wheel',{deltaY:10,deltaMode:0});assert.equal(count,i+1);}
 });
+test('地圖僅阻止主要滑鼠按鍵的原生選取與拖曳，清理後不攔截事件',()=>{
+ const surface=new Surface();let focused=0;surface.focus=()=>focused++;
+ const input=bindMapInput(surface,{pan:()=>{},zoom:()=>{},reset:()=>{},select:()=>{}});
+ assert.equal(send(surface,'pointerdown',{pointerType:'mouse',button:2}).defaultPrevented,false);assert.equal(focused,0);
+ assert.equal(send(surface,'pointerdown',{pointerType:'mouse'}).defaultPrevented,true);assert.equal(focused,1);send(surface,'pointerup',{pointerType:'mouse'});
+ assert.equal(send(surface,'pointerdown',{pointerType:'touch'}).defaultPrevented,false);send(surface,'pointercancel');assert.equal(send(surface,'dragstart').defaultPrevented,true);
+ input.dispose();assert.equal(send(surface,'dragstart').defaultPrevented,false);assert.equal(send(surface,'pointerdown',{pointerType:'mouse'}).defaultPrevented,false);
+});
