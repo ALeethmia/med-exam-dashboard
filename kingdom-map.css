@@ -1,0 +1,36 @@
+:root { color-scheme:light; font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif; color:#2c3932; background:#f4f3ed; }
+* { box-sizing:border-box; }
+body { margin:0; }
+main { max-width:1200px; margin:auto; padding:32px; }
+header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+h1 { margin:6px 0 12px; font-size:clamp(24px,4vw,36px); }
+h2 { margin:0 0 16px; font-size:18px; }
+p { line-height:1.7; }
+.eyebrow { font-size:12px; letter-spacing:.14em; color:#65756b; }
+.badge { font-size:12px; padding:8px 12px; border:1px solid #c6c9bd; border-radius:20px; white-space:nowrap; }
+.map-card,.preview-controls { background:#fffdf7; border:1px solid #d8dcd0; border-radius:18px; overflow:hidden; }
+.toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:16px; font-size:13px; }
+.toolbar > div { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+button,select { font:inherit; color:inherit; background:#f9faf5; border:1px solid #bec7b6; border-radius:9px; padding:10px 14px; min-height:44px; cursor:pointer; }
+button:hover { background:#e7eedf; }
+button[aria-pressed=true] { background:#dce6d2; border-color:#5d7350; }
+button:focus-visible,select:focus-visible { outline:3px solid #6b79ae; outline-offset:3px; }
+[data-map] { display:block; width:100%; height:clamp(300px,52vw,620px); background:#e8ede4; touch-action:none; cursor:grab; }
+/* 僅地圖互動區阻止原生反白與拖曳，外部文字仍可選取。 */
+[data-map],[data-map] * { -webkit-user-select:none; user-select:none; -webkit-user-drag:none; }
+/* 僅覆蓋地圖的原生矩形框，再明確畫出鍵盤焦點；不依賴平台啟發式。 */
+[data-map]:focus,[data-map] [data-building]:focus { outline:none; }
+[data-map]:not([data-pointer-focus]):focus-visible { outline:3px solid #6b79ae; outline-offset:-3px; }
+[data-map]:active { cursor:grabbing; }
+[data-building] { cursor:pointer; }
+/* 選取狀態與鍵盤焦點分開；只描繪地基，不使用大型包圍矩形。 */
+[data-map] [data-building][aria-pressed=true] > polygon:first-of-type { stroke:#8b641e; stroke-width:3; }
+[data-map]:not([data-pointer-focus]) [data-building]:focus-visible > polygon:first-of-type { stroke:#344a81; stroke-width:5; stroke-dasharray:6 4; }
+.map-hint { margin:0; padding:12px 16px; color:#687568; font-size:12px; }
+.preview-controls { padding:24px; margin-top:20px; }
+.building-choices { display:flex; flex-wrap:wrap; gap:10px; }
+label { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+.note,footer { color:#6b756c; font-size:13px; }
+footer { padding:20px 0; }
+a { color:#455b91; }
+@media(max-width:600px) { main { padding:16px; } header { flex-direction:column; align-items:flex-start; } .preview-controls { padding:16px; } .toolbar { padding:12px; } .toolbar > div { gap:6px; } .toolbar button { padding:8px 10px; } }
