@@ -1,0 +1,17 @@
+{
+  "tool": "ChatGPT 內建 image_gen",
+  "external_paid_api": false,
+  "selected": [
+    "kingdom-scene-v3-concept.png",
+    "academy-v-concept.png",
+    "barracks-v-concept.png",
+    "keep-v-concept.png"
+  ],
+  "method": "共同場景先建立風格；學院建立獨立建築參考，再生成兵營與要塞；三棟參考生成共同場景；最後修正學院銀色星象儀。",
+  "limitations": [
+    "共同場景仍沿用修正前星象儀色調",
+    "未取得可分離的建築圖層",
+    "模型版本、種子與精準投影參數未提供"
+  ],
+  "rights": "內建生成，未以第三方遊戲素材作參考。依服務適用條款使用；未進行完整相似性、商標或獨占權審查。"
+}

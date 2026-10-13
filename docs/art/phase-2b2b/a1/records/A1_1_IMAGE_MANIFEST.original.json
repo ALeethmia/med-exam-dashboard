@@ -1,0 +1,62 @@
+[
+  {
+    "file": "images/academy-v-a11.png",
+    "size": [
+      1374,
+      1145
+    ],
+    "mode": "RGB",
+    "bytes": 2355624,
+    "sha256": "3258d969e636bfc4c7a12e6bedd89b125d8e92472f1f82e2f8cd27555d140d81"
+  },
+  {
+    "file": "images/building-comparison-a11.png",
+    "size": [
+      1942,
+      809
+    ],
+    "mode": "RGB",
+    "bytes": 2487508,
+    "sha256": "448748682b07f2221b457444b2f69951a7f32d63e1139aca9da2c395091bb0a8"
+  },
+  {
+    "file": "images/building-comparison-before.png",
+    "size": [
+      1942,
+      809
+    ],
+    "mode": "RGB",
+    "bytes": 2446908,
+    "sha256": "02aedfadeb3393ea64f0767e39c39d2af8339702fa366dbc21b11151fa4217ec"
+  },
+  {
+    "file": "images/keep-v-a11.png",
+    "size": [
+      1374,
+      1145
+    ],
+    "mode": "RGB",
+    "bytes": 2328979,
+    "sha256": "97dec35f1775188c25d8a62f506ac354522ebe24674cf68b1ca7896d5c0d756f"
+  },
+  {
+    "file": "images/kingdom-scene-a11.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "bytes": 2977966,
+    "sha256": "3098bde3f8a3ac75f08d44cb672d4897f0a9d0017584f4633bf246a3bca8eec3"
+  },
+  {
+    "file": "images/kingdom-scene-before.png",
+    "size": [
+      1536,
+      1024
+    ],
+    "mode": "RGB",
+    "bytes": 3161206,
+    "sha256": "1fc097552e0bcd6a95c2e9dff86f20b12e98706c7d4340ae38aac6eb3b41fbc2"
+  }
+]

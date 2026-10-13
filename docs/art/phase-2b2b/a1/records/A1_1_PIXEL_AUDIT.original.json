@@ -1,0 +1,28 @@
+[
+  {
+    "image": "kingdom-scene",
+    "original_size": [
+      1536,
+      1024
+    ],
+    "revised_size": [
+      1536,
+      1024
+    ],
+    "mean_absolute_channel_difference": 10.045,
+    "pixels_with_any_channel_difference_gt_16_pct": 28.53
+  },
+  {
+    "image": "building-comparison",
+    "original_size": [
+      1942,
+      809
+    ],
+    "revised_size": [
+      1942,
+      809
+    ],
+    "mean_absolute_channel_difference": 8.515,
+    "pixels_with_any_channel_difference_gt_16_pct": 20.04
+  }
+]
