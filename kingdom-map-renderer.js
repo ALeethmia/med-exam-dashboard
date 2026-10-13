@@ -15,5 +15,5 @@ export function createMapRenderer(svg,world,manifest){
   g.append(label,stage);scene.append(g);nodes.set(b.id,{g,stage});
  }
  svg.append(scene);
- return {update(snapshot){for(const b of snapshot.buildings){const item=nodes.get(b.id);if(!item)continue;item.stage.textContent=`模擬階段 ${b.stage} / 5`;item.g.setAttribute('aria-pressed',String(snapshot.selected===b.id));item.g.setAttribute('aria-label',`${b.title}，模擬階段 ${b.stage} / 5`);}},setCamera(camera){scene.setAttribute('transform',`translate(${camera.x} ${camera.y}) scale(${camera.scale})`);},dispose(){scene.remove();nodes.clear();}};
+ return {focusBuilding(id){nodes.get(id)?.g.focus({preventScroll:true});},update(snapshot){for(const b of snapshot.buildings){const item=nodes.get(b.id);if(!item)continue;item.stage.textContent=`模擬階段 ${b.stage} / 5`;item.g.setAttribute('aria-pressed',String(snapshot.selected===b.id));item.g.setAttribute('aria-label',`${b.title}，模擬階段 ${b.stage} / 5`);}},setCamera(camera){scene.setAttribute('transform',`translate(${camera.x} ${camera.y}) scale(${camera.scale})`);},dispose(){scene.remove();nodes.clear();}};
 }

@@ -368,10 +368,10 @@ Phase 2B.1a UX 收尾：領主與同一份完整編年史整合為角色與故�
 ### Phase 2B.2a：獨立技術地圖（待審查）
 
 執行既有 `npm run dev`，開啟 `http://localhost:3000/kingdom-preview.html`。
-預設全景；拖曳移動、雙指捏合縮放，或使用放大／縮小／全景按鈕。Chrome 的像素 wheel 無法可靠區分滑鼠與觸控板：自動模式優先平移像素滑動，行／頁單位滾輪與 Ctrl／捏合訊號縮放；像素型滑鼠可選「滑鼠滾輪（縮放）」，觸控板可選「觸控板滑動（平移）」。操作模式只存在記憶體。地圖取得焦點後可用方向鍵、＋／−、Home／0 操作；建築可用 Tab、Enter／空白鍵或下方按鈕選取。
+預設全景；拖曳移動、雙指捏合縮放，或使用放大／縮小／全景按鈕。Chrome 的像素 wheel 無法可靠區分滑鼠與觸控板：自動模式優先平移像素滑動，行／頁單位滾輪與 Ctrl／捏合訊號縮放；像素型滑鼠可選「滑鼠滾輪（縮放）」，觸控板可選「觸控板滑動（平移）」。操作模式只存在記憶體。地圖取得焦點後可用方向鍵平移、＋／− 縮放、Home／0 重設；建築取得焦點後，方向鍵依世界座標導覽其他建築，無合理候選時保持焦點，Enter／空白鍵才選取，Esc 返回地圖。Tab／Shift+Tab 保留原生順序，地圖外控制項保持原生行為。
 
 此入口只載入獨立原生 modules，不啟動正式 Dashboard、Firebase、登入、pending retry 或業務 stores。模擬階段 1–5 僅存在記憶體；重新載入即清除，不寫入 localStorage／IndexedDB。既有 `?mode=local` 不作為此隔離保證。
 
-`kingdom-map-core.js` 負責鏡頭純運算；`kingdom-map-input.js` 處理手勢意圖；renderer 提供 `update/setCamera/dispose`，只接受不可變 Building View Model；manifest 定義固定區域，preview state 不接觸學習或 XP。離開頁面清理 listener 與 ResizeObserver，沒有常駐動畫迴圈。
+`kingdom-map-core.js` 負責鏡頭純運算；`kingdom-map-input.js` 處理手勢意圖；renderer 提供 `update/setCamera/focusBuilding/dispose`，只接受不可變 Building View Model；manifest 定義固定區域，preview state 不接觸學習或 XP。離開頁面清理 listener 與 ResizeObserver，沒有常駐動畫迴圈。
 
 所有美術皆為臨時佔位；未實作正式素材、多面板、底部抽屜、日夜、升級演出、真實資料整合或 App 封裝。實機雙指手感與效能仍需人工驗收。完整檢查使用既有 build、lint、unit、browser 指令；所有測試資料使用本機／Mock，禁止寫入正式 Firebase。

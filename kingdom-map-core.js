@@ -19,3 +19,10 @@ export function createCamera(initialView,world){
   return {...value};
  }};
 }
+
+// 以世界座標找方向候選；排除相反方向及近乎垂直的候選，不按 DOM 順序跳轉。
+export function directionalBuilding(buildings,currentId,key){
+ const directions={ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1}},direction=directions[key],current=buildings.find(b=>b.id===currentId);
+ if(!direction||!current)return null;
+ return buildings.filter(b=>b.id!==currentId).map(b=>{const dx=b.x-current.x,dy=b.y-current.y,forward=dx*direction.x+dy*direction.y,lateral=Math.abs(dx*direction.y-dy*direction.x);return {id:b.id,forward,lateral,score:Math.hypot(dx,dy)+lateral};}).filter(b=>b.forward>0&&b.lateral<=b.forward*3).sort((a,b)=>a.score-b.score||a.id.localeCompare(b.id))[0]?.id||null;
+}

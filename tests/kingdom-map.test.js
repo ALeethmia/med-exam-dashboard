@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fitCamera,fitScale,constrainCamera,zoomCamera,worldPoint,createCamera} from '../kingdom-map-core.js';
+import {fitCamera,fitScale,constrainCamera,zoomCamera,worldPoint,createCamera,directionalBuilding} from '../kingdom-map-core.js';
 import {createPreviewState} from '../kingdom-preview-state.js';
 import {BUILDING_MANIFEST,WORLD} from '../kingdom-building-manifest.js';
 import {bindMapInput,wheelIntent} from '../kingdom-map-input.js';
@@ -51,4 +51,14 @@ test('wheel 使用事件語意與明確 fallback，不推測所有實體裝置',
  send(surface,'wheel',{deltaY:-30,deltaMode:0,ctrlKey:true});assert.ok(calls.pop()[1]>1);
  send(surface,'wheel',{deltaY:3,deltaMode:1});assert.ok(calls.pop()[1]<1);
  mode='zoom';send(surface,'wheel',{deltaY:20,deltaMode:0});assert.equal(calls.pop()[0],'zoom');mode='pan';send(surface,'wheel',{deltaY:1,deltaMode:1});assert.deepEqual(calls.pop(),['pan',{x:-0,y:-16}]);input.dispose();
+});
+test('建築方向導覽依世界座標，排序改變仍一致，邊界不跳相反方向',()=>{
+ for(const buildings of [BUILDING_MANIFEST,[...BUILDING_MANIFEST].reverse()]){
+  assert.equal(directionalBuilding(buildings,'academy','ArrowRight'),'keep');assert.equal(directionalBuilding(buildings,'academy','ArrowDown'),'keep');assert.equal(directionalBuilding(buildings,'keep','ArrowLeft'),'academy');assert.equal(directionalBuilding(buildings,'keep','ArrowRight'),'barracks');assert.equal(directionalBuilding(buildings,'barracks','ArrowLeft'),'keep');assert.equal(directionalBuilding(buildings,'academy','ArrowLeft'),null);assert.equal(directionalBuilding(buildings,'keep','ArrowDown'),null);
+ }
+ assert.equal(directionalBuilding([{id:'a',x:0,y:0},{id:'b',x:1,y:100}],'a','ArrowRight'),null);
+});
+test('建築方向鍵僅移動焦點，Enter／Space 才選取，Esc 返回地圖且 Tab 原生',()=>{
+ const surface=new Surface(),calls=[];surface.focus=()=>calls.push('map-focus');surface.closest=()=>({dataset:{building:'academy'}});const input=bindMapInput(surface,{pan:()=>calls.push('pan'),zoom:()=>{},reset:()=>{},select:id=>calls.push('select:'+id),navigate:(id,key)=>calls.push(id+':'+key)});
+ assert.equal(send(surface,'keydown',{key:'ArrowRight'}).defaultPrevented,true);assert.deepEqual(calls,['academy:ArrowRight']);send(surface,'keydown',{key:'Enter'});send(surface,'keydown',{key:' '});send(surface,'keydown',{key:'Escape'});assert.deepEqual(calls,['academy:ArrowRight','select:academy','select:academy','map-focus']);assert.equal(send(surface,'keydown',{key:'Tab'}).defaultPrevented,false);delete surface.closest;send(surface,'keydown',{key:'ArrowRight'});assert.equal(calls.at(-1),'pan');assert.equal(send(surface,'keydown',{key:'Escape'}).defaultPrevented,false);input.dispose();
 });

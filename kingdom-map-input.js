@@ -5,7 +5,7 @@ export function wheelIntent(event,mode='auto'){
  if(mode==='zoom'||mode==='pan')return mode;
  return event.deltaMode===1||event.deltaMode===2?'zoom':'pan';
 }
-export function bindMapInput(surface,{pan,zoom,reset,select,wheelMode=()=> 'auto'}){
+export function bindMapInput(surface,{pan,zoom,reset,select,wheelMode=()=> 'auto',navigate=()=>{}}){
  const listeners=[],pointers=new Map();let gesture=null,disposed=false;
  const listen=(type,fn,options)=>{surface.addEventListener(type,fn,options);listeners.push(()=>surface.removeEventListener(type,fn,options));};
  const local=event=>{const r=surface.getBoundingClientRect();return {x:event.clientX-r.left,y:event.clientY-r.top};};
@@ -14,7 +14,8 @@ export function bindMapInput(surface,{pan,zoom,reset,select,wheelMode=()=> 'auto
  listen('pointerdown',event=>{
   if(event.pointerType==='mouse'&&event.button!==0||pointers.size>=2)return;
   // 阻止滑鼠啟動原生選取，同時明確保留建築與地圖的鍵盤焦點。
-  if(event.pointerType==='mouse'){event.preventDefault();(event.target.closest?.('[data-building]')||surface).focus?.({preventScroll:true});surface.setAttribute?.('data-pointer-focus','');}
+  if(event.pointerType==='mouse'){event.preventDefault();(event.target.closest?.('[data-building]')||surface).focus?.({preventScroll:true});}
+  surface.setAttribute?.('data-pointer-focus','');
   const point=local(event);pointers.set(event.pointerId,point);surface.setPointerCapture?.(event.pointerId);
   if(pointers.size===1)gesture={start:point,last:point,dragged:false,building:event.target.closest?.('[data-building]')?.dataset.building};
   else gesture={pinch:true,previous:pair(),dragged:true};
@@ -48,7 +49,8 @@ export function bindMapInput(surface,{pan,zoom,reset,select,wheelMode=()=> 'auto
   const id=event.target.closest?.('[data-building]')?.dataset.building;
   if(id&&['Enter',' '].includes(event.key)){event.preventDefault();select(id);return;}
   const moves={ArrowLeft:{x:40,y:0},ArrowRight:{x:-40,y:0},ArrowUp:{x:0,y:40},ArrowDown:{x:0,y:-40}};
-  if(moves[event.key]){event.preventDefault();pan(moves[event.key]);}
+  if(id&&event.key==='Escape'){event.preventDefault();surface.focus?.({preventScroll:true});return;}
+  if(moves[event.key]){event.preventDefault();if(id)navigate(id,event.key);else pan(moves[event.key]);}
   else if(['+','=','-','0','Home'].includes(event.key)){event.preventDefault();if(['0','Home'].includes(event.key))reset();else zoom(event.key==='-'?1/1.2:1.2,{x:surface.clientWidth/2,y:surface.clientHeight/2});}
  });
  return {dispose(){if(disposed)return;disposed=true;for(const remove of listeners)remove();clear();surface.removeAttribute?.('data-pointer-focus');}};
