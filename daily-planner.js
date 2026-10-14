@@ -1,3 +1,4 @@
+import {taskKind} from './task-projection.js';
 import {dateKey} from './study-core.js';
 export const PLANNER_PATH = 'gamification/v3/planner/tasks';
 export const PLANNER_KEY = 'med_exam_daily_planner_v3';
@@ -11,11 +12,14 @@ export function validDate(value) {
   const parsed=new Date(value+'T12:00:00Z');
   return /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0,10) === value;
 }
-export function createPlanner({db=null,localOnly=false,storage=localStorage,events=window,onChange=()=>{},newId=()=>crypto.randomUUID(),today=()=>dateKey(),now=()=>Date.now(),batchContext=()=>null,readBatchContext=async()=>batchContext(),validateTask=()=>{}}={}) {
+export function createPlanner({db=null,localOnly=false,storage=learningStorage,events=window,onChange=()=>{},newId=()=>crypto.randomUUID(),today=()=>dateKey(),now=()=>Date.now(),batchContext=()=>null,readBatchContext=async()=>batchContext(),validateTask=()=>{},projectTask=task=>task,canOperate=()=>true}={}) {
   const key=PLANNER_KEY+(localOnly?'_local':'');
   let saved={tasks:{},pending:{},batch:null};
   try {const value=JSON.parse(storage.getItem(key)||'{}');saved={tasks:value.tasks||{},pending:value.pending||{},batch:value.batch||null};} catch {}
   const remote={}, conflicts={};
+  const held=id=>!!saved.pending[id]?.awardDay||(Object.hasOwn(saved.pending[id]?.patch||{},'complete')&&taskKind(saved.tasks[id])!=='general');
+  const effective=task=>projectTask(task);
+  const incomplete=task=>effective(task).completionKnown!==false&&effective(task).complete!==true;
   let batchCommitting=false;
   let syncing=false,dirty=false,error='';
   const persist=()=>storage.setItem(key,JSON.stringify(saved));
@@ -23,7 +27,7 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
   function overlay(id,value) {
     const intent=saved.pending[id];
     saved.tasks[id]={...value,...(intent?.patch||{}),...(saved.batch?.changes[id]||{})};
-    if(intent?.awardDay && !saved.tasks[id].award) saved.tasks[id].award={xp:20,day:intent.awardDay};
+    // Historical reward intents are preserved but never projected as newly earned XP.
   }
   function clean(patch) {
     const result={};
@@ -41,9 +45,12 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
     return result;
   }
   function update(id,patch) {
+    if(!canOperate())throw new Error('資料尚未就緒，未更動任務。');
+    if(held(id))throw new Error('舊待同步獎勵意圖已保留，請先核對。');
     if(!saved.tasks[id])throw new Error('找不到任務。');
     if(saved.batch?.changes[id])throw new Error('此任務的整批排程待同步，請先完成或撤回排程。');
     patch=clean(patch);
+    if(Object.hasOwn(patch,'complete')&&taskKind(saved.tasks[id])!=='general'&&Object.keys(saved.tasks[id]).length)throw new Error('課程型任務依課程進度，不另寫完成狀態。');
     const task=saved.tasks[id];
     if(planningLocked(task)&&(('date' in patch&&patch.date!==task.date)||patch.deleted||patch.planning?.waiting))throw new Error('鎖定任務不可延期、刪除或移入待安排區。');
     validateTask({...task,...patch,id});
@@ -52,7 +59,7 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
       if(!Object.hasOwn(intent.patch,field))intent.bases[field]=task._versions?.[field] || null;
       intent.patch[field]=value;intent.tokens[field]=newId();
     }
-    if(patch.complete && !task.award) intent.awardDay ||= today();
+    // No new task XP in this growth system.
     overlay(id,task);
     if(localOnly) {delete saved.pending[id];delete conflicts[id];}
     changed();void retry();
@@ -60,15 +67,16 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
   function add({title,date=today(),minutes=null,links=[],planning}) {
     const id=newId();
     const order=Math.max(now(),...list(date).map(task=>(task.order||0)+1024));
-    const patch=clean({title,date,minutes,links,complete:false,deleted:false,order,createdAt:now(),...(planning?{planning}:{})});
+    const patch=clean({title,date,minutes,links,...(Array.isArray(links)&&links.length?{}:{complete:false}),deleted:false,order,createdAt:now(),...(planning?{planning}:{})});
     saved.tasks[id]={};try{update(id,patch);}catch(error){delete saved.tasks[id];throw error;}return id;
   }
   function batch(changes,{expected=snapshot(),context=batchContext()}={}) {
+    if(!canOperate())throw new Error('資料尚未就緒。');
     if(saved.batch)throw new Error('請先完成或撤回上一批排程。');
     if(!planningSnapshotSame(saved.tasks,expected)||!planningSnapshotSame(batchContext(),context))throw new Error('任務、容量或行程已更新，請重新預覽。');
     const patches={};
     for(const [id,input] of Object.entries(changes)) {
-      const task=saved.tasks[id];if(!task||task.complete||task.deleted||planningLocked(task))throw new Error('已完成、刪除或鎖定的任務不可重新排程。');
+      const task=saved.tasks[id];if(!task||!incomplete(task)||task.deleted||planningLocked(task))throw new Error('已完成、刪除或鎖定的任務不可重新排程。');
       if(Object.keys(input).some(field=>!['date','planning','minutes'].includes(field)))throw new Error('整批排程只能修改日期、估時與排程 metadata。');
       patches[id]=clean(input);validateTask({...task,...patches[id],id},{batch:true});
     }
@@ -94,7 +102,7 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
     syncing=true;dirty=false;
     try {
       for(const [id,original] of Object.entries(saved.pending)) {
-        if(conflicts[id])continue;
+        if(conflicts[id]||held(id))continue;
         const intent=clone(original);
         const reference=db.ref(`${PLANNER_PATH}/${id}`);
         // Populate the transaction cache before checking field versions on reconnect.
@@ -102,7 +110,7 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
         const result=await reference.transaction(current=>{
           if(conflictFields(current,intent).length)return;
           const next={...(current||{}),...intent.patch,_versions:{...(current?._versions||{}),...intent.tokens}};
-          if(intent.awardDay && !next.award)next.award={xp:20,day:intent.awardDay};
+          // Existing next.award is untouched; no reward minting or legacy replay.
           return next;
         },undefined,false);
         const value=result.snapshot.val() || {};
@@ -117,7 +125,7 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
               delete pending.patch[field];delete pending.bases[field];delete pending.tokens[field];
             } else if(pending.bases[field]===intent.bases[field]) pending.bases[field]=value._versions?.[field]||null;
           }
-          if(value.award)delete pending.awardDay;
+          // No clearing of historical award intents.
           if(!Object.keys(pending.patch).length && !pending.awardDay)delete saved.pending[id];
         }
         delete conflicts[id];overlay(id,value);persist();
@@ -138,7 +146,7 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
           if(!planningSnapshotSame(records,intent.expected)||!planningSnapshotSame(batchContext(),intent.context))return;
           const next=clone(records);
           for(const [id,patch] of Object.entries(intent.changes)) {
-            if(!next[id]||next[id].complete||next[id].deleted||planningLocked(next[id]))return;
+            if(!next[id]||!incomplete(next[id])||next[id].deleted||planningLocked(next[id]))return;
             next[id]={...next[id],...patch,_versions:{...(next[id]._versions||{}),...Object.fromEntries(Object.keys(patch).map(field=>[field,intent.token]))}};
           }
           return next;
@@ -162,7 +170,7 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
     delete conflicts[id];overlay(id,remote[id]||{});changed();void retry();
   }
   function list(date,includeDeleted=false) {
-    return Object.entries(saved.tasks).map(([id,value])=>({id,...value})).filter(task=>task.date===date && !task.planning?.waiting && (includeDeleted||!task.deleted)).sort((a,b)=>(a.order||0)-(b.order||0)||(a.createdAt||0)-(b.createdAt||0)||a.id.localeCompare(b.id));
+    return Object.entries(saved.tasks).map(([id,value])=>effective({id,...value})).filter(task=>task.date===date && !task.planning?.waiting && (includeDeleted||!task.deleted)).sort((a,b)=>(a.order||0)-(b.order||0)||(a.createdAt||0)-(b.createdAt||0)||a.id.localeCompare(b.id));
   }
   function move(id,direction) {
     const tasks=list(saved.tasks[id]?.date),index=tasks.findIndex(task=>task.id===id),other=tasks[index+direction];if(!other)return;
@@ -171,10 +179,11 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
     const position=direction<0 ? (before ? (before.order+other.order)/2 : other.order-1) : (after ? (other.order+after.order)/2 : other.order+1);
     update(id,{order:position});
   }
-  const awards=()=>Object.fromEntries(Object.entries(saved.tasks).filter(([,task])=>task.award?.xp===20).map(([id,task])=>['planner__'+id,task.award]));
+  const awards=()=>Object.fromEntries(Object.entries(db&&!localOnly?remote:saved.tasks).filter(([,task])=>task.award?.xp===20).map(([id,task])=>['planner__'+id,task.award]));
   if(db&&!localOnly) {
     db.ref(PLANNER_PATH).on('value',snapshot=>{
-      for(const [id,value] of Object.entries(snapshot.val()||{})) {remote[id]=value;overlay(id,value);}
+      const incoming=snapshot.val()||{};for(const id of Object.keys(remote))if(!Object.hasOwn(incoming,id))delete remote[id];for(const id of Object.keys(saved.tasks))if(!Object.hasOwn(incoming,id)&&!saved.pending[id]&&!saved.batch?.changes[id])delete saved.tasks[id];
+      for(const [id,value] of Object.entries(incoming)) {remote[id]=value;overlay(id,value);}
       changed();
     },failure=>{error=String(failure?.code||'PERMISSION_DENIED');onChange();});
     db.ref('.info/connected').on('value',snapshot=>{if(snapshot.val()===true)void retry();});
@@ -195,11 +204,11 @@ export function createPlanner({db=null,localOnly=false,storage=localStorage,even
       onChange();void retry();
     } catch {}
   });
-  return {add,update,list,move,retry,resolve,awards,batch,discardBatch,snapshot,all:()=>Object.entries(saved.tasks).map(([id,t])=>({id,...clone(t)})),
+  return {add,update,list,move,retry,resolve,awards,batch,discardBatch,snapshot,all:()=>Object.entries(saved.tasks).map(([id,t])=>effective({id,...clone(t)})),historicalAll:()=>Object.entries(saved.tasks).map(([id,t])=>({id,...clone(t)})),
     copy:(id,date=today())=>{const task=saved.tasks[id];if(!task)throw new Error('找不到任務。');return add({title:task.title,date,minutes:task.minutes??null,links:task.links||[]});},
     remove:id=>update(id,{deleted:true}),
     dates:()=>[...new Set(Object.values(saved.tasks).filter(task=>!task.deleted&&!task.planning?.waiting).map(task=>task.date))].sort().reverse(),
-    status:()=>({error,pending:Object.keys(saved.pending).length+(saved.batch?1:0),syncing,conflicts:clone(conflicts),batch:saved.batch?{conflict:saved.batch.conflict,committing:batchCommitting,count:Object.keys(saved.batch.changes).length,ids:Object.keys(saved.batch.changes)}:null}),
-    get:id=>saved.tasks[id]?{id,...clone(saved.tasks[id])}:null,
+    status:()=>({held:Object.keys(saved.pending).filter(held),error,pending:Object.keys(saved.pending).length+(saved.batch?1:0),syncing,conflicts:clone(conflicts),batch:saved.batch?{conflict:saved.batch.conflict,committing:batchCommitting,count:Object.keys(saved.batch.changes).length,ids:Object.keys(saved.batch.changes)}:null}),
+    get:id=>saved.tasks[id]?effective({id,...clone(saved.tasks[id])}):null,
     cloud:id=>clone(remote[id]||{})};
 }

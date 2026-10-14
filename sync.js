@@ -1,12 +1,13 @@
 // Keep unsent item-level edits separate from the legacy learning state.
 (() => {
+  const learningStorage=window.learningStorage;
   const key = 'med_exam_pending_writes_v1';
   let pending = {};
-  try { pending = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+  try { pending = JSON.parse(learningStorage.getItem(key) || '{}'); } catch {}
   let connected = false;
   let active = false;
   let failed = false;
-  const save = () => localStorage.setItem(key, JSON.stringify(pending));
+  const save = () => learningStorage.setItem(key, JSON.stringify(pending));
   const status = () => {
     const el = document.getElementById('sync-status');
     if (el) {
@@ -45,6 +46,7 @@
     }
   }
   window.persistProgress = (path, state, ids) => {
+    if(['videos','biochem','physiology','pharmacology'].includes(path))return window.persistCourseChanges(Object.fromEntries(ids.map(id=>[path+'/'+id,state[id]??null])));
     for (const id of ids) {
       if (!window.workspaceLocalOnly) pending[`${path}/${id}`] = state[id] ?? null;
       if (['videos','biochem','physiology','pharmacology'].includes(path)) {
@@ -56,7 +58,12 @@
     window.dispatchEvent(new Event('learning-change'));
     void flush();
   };
+  window.persistCourseChanges = changes => {
+    for(const [path,value] of Object.entries(changes)){if(!window.workspaceLocalOnly)pending[path]=value;const slash=path.indexOf('/');window.dispatchEvent(new CustomEvent('study-completed',{detail:{path:path.slice(0,slash),id:path.slice(slash+1),complete:value===true}}));}
+    if(!window.workspaceLocalOnly)save();status();window.dispatchEvent(new Event('learning-change'));void flush();
+  };
   window.attachLearningDB = database => {
+    if(window.i3Runtime)database=window.i3Runtime.wrap(database);
     window.learningDB = database;
     if (database) database.ref('.info/connected').on('value', snap => {
       connected = snap.val() === true;

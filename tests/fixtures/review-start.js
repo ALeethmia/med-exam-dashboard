@@ -1,0 +1,19 @@
+import{installKingdomRuntime}from'../../i3-runtime.js';import{createMockDatabase}from'./mock-database.js';import{fixturePackets}from'./fixture-packets.js';import{createAccountStorage,routeAccountStorageEvents}from'../../account-storage.js';import{preserveRewardCache}from'../../legacy-rewards.js';
+const names={initial:'初始王國 · Lv.1',middle:'中等發展',high:'高發展',full:'完全發展 · Lv.20',downgrade:'取消成果後降級','course-task':'課程型任務完成','general-task':'一般任務完成',loading:'資料尚未載入',error:'資料載入失敗',permission:'權限遭拒',signedOut:'登出狀態','legacy-pending':'舊待同步獎勵'};
+const params=new URL(location.href).searchParams,scenario=params.get('scenario')||'initial',current=Object.hasOwn(names,scenario)?scenario:'initial',uid=params.get('account')==='B'?'fixture-B':'fixture-A';
+window.becomingStorage=createAccountStorage(window.localStorage);routeAccountStorageEvents(window,window.becomingStorage);window.becomingStorage.bind(uid);window.learningStorage=window.becomingStorage.view();window.learningStorage.setItem('med_exam_active_tab','kingdom');window.SubjectUI?.bindStorage();
+const runtime=installKingdomRuntime(),user={uid,displayName:(uid==='fixture-A'?'驗收樣本甲':'驗收樣本乙')+'（Fixture）'};
+runtime.begin(user);window.authenticatedUser=user;const db=createMockDatabase({}, {hold:true});window.i3MockDatabase=db;window.i3ReviewDatabase=db;
+if(current==='legacy-pending'){
+ const task={title:'舊待同步獎勵（Fixture）',date:'2026-10-15',links:[],complete:true};window.learningStorage.setItem('med_exam_daily_planner_v3',JSON.stringify({tasks:{legacy:task},pending:{legacy:{patch:{complete:true},bases:{complete:null},tokens:{complete:'legacy-token'},awardDay:'2026-10-01'}}}));
+ window.learningStorage.setItem('med_exam_time_tasks_v1',JSON.stringify({days:{},pending:{'2026-10-01__morning':{complete:true,awarded:true}}}));
+}
+preserveRewardCache(window.learningStorage);
+await import('../../sync.js');
+const script=document.createElement('script');script.textContent=document.getElementById('learning-script').textContent;document.body.append(script);await import('../../workspace.js');
+const controls=document.createElement('section');controls.className='i3-review-controls';controls.setAttribute('aria-label','Fixtures 驗收控制');controls.innerHTML='<strong>Growth I1 · 去識別化 Fixtures · 僅本頁記憶體，不連線 Firebase</strong><label>驗收情境 <select data-scenario>'+Object.entries(names).map(([n,label])=>'<option value="'+n+'">'+label+'</option>').join('')+'</select></label><button data-disconnect>模擬斷線</button><button data-reconnect>恢復連線</button><button data-account>切換樣本帳號</button><p>切換情境會重新載入獨立樣本；不保留本頁操作。歷史 XP 只供回顧，不決定新領主等級。</p>';
+document.querySelector('.workspace-main').prepend(controls);controls.querySelector('select').value=current;
+const go=name=>{const url=new URL(location.href);url.searchParams.set('scenario',name);location.href=url.href;};controls.querySelector('select').onchange=e=>go(e.target.value);controls.querySelector('[data-disconnect]').onclick=()=>db.connection(false);controls.querySelector('[data-reconnect]').onclick=()=>db.connection(true);controls.querySelector('[data-account]').onclick=()=>{runtime.stop();window.becomingStorage.unbind();const url=new URL(location.href);url.searchParams.set('account',uid==='fixture-A'?'B':'A');url.searchParams.set('scenario','initial');location.href=url.href;};
+window.i3Review=Object.freeze({use:go,read:runtime.read,database:()=>db.inspect(),release:()=>{db.replace(fixturePackets('initial',window.studyData));runtime.retry();db.release();},logout:()=>{window.authenticatedUser=null;window.becomingStorage.unbind();runtime.stop();}});
+if(current==='signedOut'){window.i3Review.logout();}else if(current==='error'||current==='permission')db.reject(current==='permission'?'PERMISSION_DENIED':'NETWORK_ERROR');else if(current!=='loading'){db.replace(fixturePackets(current,window.studyData));db.release();}
+window.i3Ready=true;

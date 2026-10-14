@@ -1,6 +1,6 @@
 // Applied before paint. Local development never initializes the production database.
-window.workspaceLocalOnly = ['localhost', '127.0.0.1', '::1'].includes(location.hostname) ||
-  new URLSearchParams(location.search).get('mode') === 'local';
+window.workspaceLocalOnly = !window.i3FixtureOnly && (['localhost', '127.0.0.1', '::1'].includes(location.hostname) ||
+  new URLSearchParams(location.search).get('mode') === 'local');
 (() => {
   const media = matchMedia('(prefers-color-scheme: dark)');
   let choice = 'system';

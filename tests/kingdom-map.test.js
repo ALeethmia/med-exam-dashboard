@@ -27,13 +27,13 @@ test('拖曳、雙指與取消不選建築，解除綁定後沒有殘留輸入',
  const s=new Surface(),calls=[];const input=bindMapInput(s,{pan:p=>calls.push(['pan',p]),zoom:(f,p)=>calls.push(['zoom',f,p]),reset:()=>calls.push(['reset']),select:id=>calls.push(['select',id])});
  send(s,'pointerdown');send(s,'pointermove',{clientX:160});send(s,'pointerup');assert.ok(calls.some(c=>c[0]==='pan'));assert.ok(!calls.some(c=>c[0]==='select'));
  send(s,'pointerdown');send(s,'pointerdown',{pointerId:2,clientX:200});send(s,'pointermove',{pointerId:2,clientX:300});assert.ok(calls.some(c=>c[0]==='zoom'&&c[1]===2));send(s,'pointercancel');assert.equal(s.captured.size,0);
- assert.equal(send(s,'wheel',{deltaY:-100,deltaMode:1}).defaultPrevented,true);assert.equal(send(s,'keydown',{key:'Home'}).defaultPrevented,true);
+ assert.equal(send(s,'wheel',{deltaY:-100,deltaMode:1,ctrlKey:true}).defaultPrevented,true);assert.equal(send(s,'keydown',{key:'Home'}).defaultPrevented,true);
  s.closest=()=>({dataset:{building:"academy"}});send(s,"pointerdown");send(s,"pointerup");assert.equal(calls.at(-1)[0],"select");
  const count=calls.length;input.dispose();input.dispose();send(s,'wheel',{deltaY:100});send(s,'keydown',{key:'Home'});send(s,'pointerdown');assert.equal(calls.length,count);assert.equal(s.captured.size,0);
 });
 test('多次綁定與清理不累積 wheel 處理器',()=>{
  const s=new Surface();let count=0;
- for(let i=0;i<20;i++){const input=bindMapInput(s,{pan:()=>{},zoom:()=>count++,wheelMode:()=> 'zoom',reset:()=>{},select:()=>{}});send(s,'wheel',{deltaY:10,deltaMode:0});assert.equal(count,i+1);input.dispose();send(s,'wheel',{deltaY:10,deltaMode:0});assert.equal(count,i+1);}
+ for(let i=0;i<20;i++){const input=bindMapInput(s,{pan:()=>{},zoom:()=>count++,wheelMode:()=> 'zoom',reset:()=>{},select:()=>{}});send(s,'wheel',{deltaY:10,deltaMode:0,ctrlKey:true});assert.equal(count,i+1);input.dispose();send(s,'wheel',{deltaY:10,deltaMode:0,ctrlKey:true});assert.equal(count,i+1);}
 });
 test('地圖僅阻止主要滑鼠按鍵的原生選取與拖曳，清理後不攔截事件',()=>{
  const surface=new Surface();let focused=0;surface.focus=()=>focused++;
@@ -43,14 +43,13 @@ test('地圖僅阻止主要滑鼠按鍵的原生選取與拖曳，清理後不�
  assert.equal(send(surface,'pointerdown',{pointerType:'touch'}).defaultPrevented,false);send(surface,'pointercancel');assert.equal(send(surface,'dragstart').defaultPrevented,true);
  input.dispose();assert.equal(send(surface,'dragstart').defaultPrevented,false);assert.equal(send(surface,'pointerdown',{pointerType:'mouse'}).defaultPrevented,false);
 });
-test('wheel 使用事件語意與明確 fallback，不推測所有實體裝置',()=>{
- assert.equal(wheelIntent({deltaMode:0,deltaY:100,ctrlKey:false}),'pan');assert.equal(wheelIntent({deltaMode:0,deltaX:12,deltaY:3.5}),'pan');
- assert.equal(wheelIntent({deltaMode:1}),'zoom');assert.equal(wheelIntent({deltaMode:2}),'zoom');assert.equal(wheelIntent({deltaMode:0,ctrlKey:true},'pan'),'zoom');assert.equal(wheelIntent({deltaMode:0},'zoom'),'zoom');assert.equal(wheelIntent({deltaMode:1},'pan'),'pan');
- const surface=new Surface(),calls=[];let mode='auto';const input=bindMapInput(surface,{pan:d=>calls.push(['pan',d]),zoom:f=>calls.push(['zoom',f]),reset:()=>{},select:()=>{},wheelMode:()=>mode});
- send(surface,'wheel',{deltaX:20,deltaY:30,deltaMode:0});assert.deepEqual(calls.pop(),['pan',{x:-20,y:-30}]);
- send(surface,'wheel',{deltaY:-30,deltaMode:0,ctrlKey:true});assert.ok(calls.pop()[1]>1);
- send(surface,'wheel',{deltaY:3,deltaMode:1});assert.ok(calls.pop()[1]<1);
- mode='zoom';send(surface,'wheel',{deltaY:20,deltaMode:0});assert.equal(calls.pop()[0],'zoom');mode='pan';send(surface,'wheel',{deltaY:1,deltaMode:1});assert.deepEqual(calls.pop(),['pan',{x:-0,y:-16}]);input.dispose();
+test('一般 wheel 捲頁；僅 Command/Ctrl 明確縮放，模式名稱不覆蓋行為',()=>{
+ for(const event of [{deltaMode:0,deltaY:100},{deltaMode:1,deltaY:3},{deltaMode:0,deltaX:20,deltaY:0}])assert.equal(wheelIntent(event),'page');
+ assert.equal(wheelIntent({deltaY:20,ctrlKey:true}),'zoom');assert.equal(wheelIntent({deltaY:20,metaKey:true}),'zoom');
+ const surface=new Surface(),calls=[];const input=bindMapInput(surface,{pan:d=>calls.push(['pan',d]),zoom:f=>calls.push(['zoom',f]),reset(){},select(){}});
+ assert.equal(send(surface,'wheel',{deltaX:20,deltaY:30}).defaultPrevented,false);assert.equal(calls.length,0);
+ assert.equal(send(surface,'wheel',{deltaY:-30,ctrlKey:true}).defaultPrevented,true);assert.ok(calls.pop()[1]>1);
+ input.dispose();assert.equal(send(surface,'wheel',{deltaY:30,metaKey:true}).defaultPrevented,false);
 });
 test('建築方向導覽依世界座標，排序改變仍一致，邊界不跳相反方向',()=>{
  for(const buildings of [BUILDING_MANIFEST,[...BUILDING_MANIFEST].reverse()]){

@@ -1,10 +1,15 @@
+import {preserveRewardCache} from './legacy-rewards.js';
 import {OWNER_UID} from './owner-config.js';
+import {REQUIRED_PATHS} from './readiness.js';
 
 // Keep the existing classic-script globals intact; start learning only after authentication.
 let started = false;
+let activeUID=null,authEpoch=0;
 async function startLearning() {
   if (started) return;
   started = true;
+  window.learningStorage=window.becomingStorage.view();preserveRewardCache(window.learningStorage);window.SubjectUI?.bindStorage();
+  await import('./sync.js');
   const script = document.createElement('script');
   script.textContent = document.getElementById('learning-script').textContent;
   document.body.append(script);
@@ -49,6 +54,11 @@ function addAccount(auth, user) {
   button.className = 'account-button';
   button.textContent = '帳號與同步';
   document.querySelector('.sidebar-foot').append(button);
+  // The sidebar footer is hidden on phones; keep the existing account control reachable.
+  const mobile=matchMedia('(max-width:640px)');
+  const place=()=>{if(button.isConnected)(mobile.matches?document.querySelector('.workspace-controls'):document.querySelector('.sidebar-foot'))?.append(button);};
+  place();mobile.addEventListener('change',place);
+  const stop=window.i3Runtime?.subscribe(state=>{if(state.status==='signedOut'){mobile.removeEventListener('change',place);stop?.();}});
   const panel = dialog('<h2>帳號與同步</h2><p id="account-email"></p><label for="account-uid">Firebase UID</label><input id="account-uid" readonly><p class="account-help">資料庫規則須允許這個 UID，才能同步既有學習紀錄。</p><div class="account-actions"><button type="button" id="copy-uid">複製 UID</button><button type="button" id="sign-out">登出</button><button type="button" id="close-account">關閉</button></div><p id="account-status" role="status"></p>');
   panel.querySelector('#account-email').textContent = user.email || user.displayName || '已登入';
   panel.querySelector('#account-uid').value = user.uid;
@@ -63,7 +73,10 @@ function addAccount(auth, user) {
   };
 }
 if (window.workspaceLocalOnly) {
-  await startLearning();
+  window.becomingStorage.bind('local-demo');await startLearning();
+  // Explicit local Store initialization completed; this is not a Firebase ready signal.
+  const epoch=window.i3Runtime.begin({displayName:'本機示範（未連線）'});
+  for(const path of REQUIRED_PATHS)window.i3Runtime.lifecycle.success(path,epoch);
 } else {
   const login = dialog('<h2>登入 Becoming</h2><p>使用 Google 帳號，安全同步你的學習進度。</p><button type="button" id="google-sign-in" disabled>使用 Google 登入</button><p id="auth-status" role="status">正在連線至登入服務…</p><div id="owner-setup" hidden><label for="setup-uid">你的 Firebase UID</label><input id="setup-uid" readonly><p>請將此 UID 提供給網站維護者，完成個人帳號限制設定。</p></div>');
   login.addEventListener('cancel', event => event.preventDefault());
@@ -92,13 +105,16 @@ if (window.workspaceLocalOnly) {
       finally { button.disabled = false; }
     };
     auth.onAuthStateChanged(async user => {
+      const epoch=++authEpoch;
       if (!user) {
+        window.becomingStorage?.unbind();window.authenticatedUser=null;window.i3Runtime?.stop();
         if (started) { window.learningDB?.goOffline?.(); location.reload(); return; }
         status.textContent = accessMessage || '此工作台僅供擁有者使用，請登入你的 Google 帳號。';
         button.disabled = false;
         return;
       }
       if (!OWNER_UID || user.uid !== OWNER_UID) {
+        window.becomingStorage?.unbind();window.authenticatedUser=null;window.i3Runtime?.stop();
         accessMessage = OWNER_UID ? '此帳號沒有使用權限，請改用擁有者的 Google 帳號。' : '尚未設定擁有者 UID，學習介面與雲端同步均未啟動。';
         status.textContent = accessMessage;
         if (!OWNER_UID) {
@@ -110,11 +126,15 @@ if (window.workspaceLocalOnly) {
         catch { status.textContent = accessMessage + ' 無法登出，請重新整理後重試。'; }
         return;
       }
+      if(started&&activeUID!==user.uid){window.becomingStorage?.unbind();window.authenticatedUser=null;window.i3Runtime?.stop();location.reload();return;}
+      if(started&&window.i3Runtime?.read().status==='signedOut'){location.reload();return;}
+      if(started&&activeUID===user.uid)return;
+      activeUID=user.uid;window.becomingStorage.bind(user.uid);window.i3Runtime?.begin(user);
       window.authenticatedUser = user;
       login.close();
-      try { await startLearning(); addAccount(auth, user); }
+      try { await startLearning(); if(epoch!==authEpoch||activeUID!==user.uid)return;addAccount(auth, user); }
       catch { status.textContent = '介面載入失敗，請重新整理後重試。'; login.showModal(); }
-    }, error => { status.textContent = authMessage(error); button.disabled = false; });
+    }, error => { window.becomingStorage?.unbind();window.authenticatedUser=null;window.i3Runtime?.stop();status.textContent = authMessage(error); button.disabled = false; });
   } catch {
     status.textContent = '登入服務未載入，請檢查網路後重新整理。';
   }

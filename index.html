@@ -10,19 +10,19 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <script src="/theme.js"></script>
-  <script src="/sync.js"></script>
-  <link rel="stylesheet" href="/public/tailwind.css">
-  <script src="/public/lucide.min.js"></script>
+  <script src="./theme.js"></script>
+
+  <link rel="stylesheet" href="./public/tailwind.css">
+  <script src="./public/lucide.min.js"></script>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <!-- React & Recharts for Progress Trend Visualization -->
-  <script src="/public/react.min.js"></script>
-  <script src="/public/react-dom.min.js"></script>
-  <script src="/public/prop-types.min.js"></script>
-  <script src="/public/recharts.js"></script>
+  <script src="./public/react.min.js"></script>
+  <script src="./public/react-dom.min.js"></script>
+  <script src="./public/prop-types.min.js"></script>
+  <script src="./public/recharts.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0f172a; color: #f8fafc; }
     .calendar-day-exam { background-color: rgba(244, 63, 94, 0.25); color: #fb7185; font-weight: bold; border: 1px solid rgba(244, 63, 94, 0.5); }
@@ -69,8 +69,8 @@
       box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
     }
   </style>
-  <link rel="stylesheet" href="/workspace.css">
-  <link rel="stylesheet" href="/kingdom.css">
+  <link rel="stylesheet" href="./workspace.css">
+  <link rel="stylesheet" href="./kingdom.css"><link rel="stylesheet" href="./i2a-kingdom.css"><link rel="stylesheet" href="./i3.css">
 </head>
 <body class="p-4 md:p-6">
   <div class="max-w-6xl mx-auto space-y-6">
@@ -1103,7 +1103,7 @@
     </div>
   </div>
 
-  <script src="/subjects.js"></script>
+  <script src="./subjects.js"></script>
   <script>
     (() => {
       const main = document.querySelector('body > .max-w-6xl');
@@ -1152,6 +1152,9 @@
     })();
   </script>
   <script type="text/plain" id="learning-script">
+    const learningStorage=window.learningStorage;
+    window.confirmedCourseStates={};
+    window.readConfirmedStudyStates=()=>window.workspaceLocalOnly?(window.readStudyStates?.()||{}):window.confirmedCourseStates;
     window.lucide?.createIcons();
 
     // ==========================================
@@ -1172,7 +1175,7 @@
       {id:'exercise', title:'運動計畫', group:'calendar'},
       {id:'focus', title:'專注計時', group:'calendar'}
     ];
-    let currentActiveTab = localStorage.getItem('med_exam_active_tab') || 'home';
+    let currentActiveTab = learningStorage.getItem('med_exam_active_tab') || 'home';
     const chroniclesBookmark=()=>['#progression','#tab-content-progression','#kingdom-chronicles'].includes(location.hash)||new URLSearchParams(location.search).get('tab')==='progression';
     if(currentActiveTab==='progression'||chroniclesBookmark()){currentActiveTab='kingdom';window.openChroniclesRequested=true;}
     if (!defaultTabs.some(t=>t.id===currentActiveTab)) currentActiveTab='home';
@@ -1193,13 +1196,13 @@
     window.switchTab = function(tabName) {
       if(tabName==='progression'){tabName='kingdom';window.openChroniclesRequested=true;}
       if(tabName==='subjects') {
-        const saved=localStorage.getItem('med_exam_active_subject');
+        const saved=learningStorage.getItem('med_exam_active_subject');
         tabName=['physiology','anatomy','biochem','pharmacology'].includes(saved)?saved:'physiology';
       }
       const meta=defaultTabs.find(t=>t.id===tabName) || defaultTabs[0]; tabName=meta.id;
       const group=meta.group || meta.id;
-      currentActiveTab=tabName; localStorage.setItem('med_exam_active_tab',tabName);
-      if(group==='subjects') localStorage.setItem('med_exam_active_subject',tabName);
+      currentActiveTab=tabName; learningStorage.setItem('med_exam_active_tab',tabName);
+      if(group==='subjects') learningStorage.setItem('med_exam_active_subject',tabName);
       for(const el of document.querySelectorAll('[id^="tab-content-"]')) el.classList.toggle('hidden',el.id!=='tab-content-'+tabName);
       for(const button of document.querySelectorAll('#main-tabs-header-container button')) {
         const selected=button.id==='tab-btn-'+group; button.classList.toggle('active',selected); button.setAttribute('aria-current',selected?'page':'false');
@@ -1300,7 +1303,7 @@
     } catch {
       db = null;
     }
-    window.attachLearningDB(db);
+    window.attachLearningDB(db);db=window.learningDB;
 
     // 1. 即時時鐘與考試倒數
     const examDate = new Date('2027-01-16T08:30:00+08:00');
@@ -1320,7 +1323,7 @@
     const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
     const habits = ['daily-sport', 'daily-exam', 'daily-game'];
     const habitStorageKey = `med_exam_habits_${todayStr}`;
-    let todayHabits = JSON.parse(localStorage.getItem(habitStorageKey) || '{}');
+    let todayHabits = JSON.parse(learningStorage.getItem(habitStorageKey) || '{}');
 
     function calculateStreak() {
       let streak = 0;
@@ -1332,7 +1335,7 @@
         let prev = new Date();
         prev.setDate(checkDate.getDate() - i);
         let prevStr = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(prev.getDate()).padStart(2, '0')}`;
-        let prevData = JSON.parse(localStorage.getItem(`med_exam_habits_${prevStr}`) || '{}');
+        let prevData = JSON.parse(learningStorage.getItem(`med_exam_habits_${prevStr}`) || '{}');
         if (habits.every(h => prevData[h])) {
           streak++;
         } else {
@@ -1351,7 +1354,7 @@
           return;
         }
         todayHabits[id] = el.checked;
-        localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
+        learningStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
         persistProgress(`habits/${todayStr}`, todayHabits, [id]);
         window.dispatchEvent(new CustomEvent('legacy-habit-change', {detail:{day:todayStr,id,value:el.checked}}));
         calculateStreak();
@@ -1366,7 +1369,7 @@
     window.applyLifeHabits = (day, value) => {
       if (day !== todayStr) return;
       todayHabits = {...value};
-      if (!window.workspaceLocalOnly) localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
+      if (!window.workspaceLocalOnly) learningStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
       habits.forEach(id => { document.getElementById(id).checked = !!todayHabits[id]; });
       calculateStreak();
       window.updateProgressTrendChart?.();
@@ -1377,7 +1380,7 @@
         {
           if (window.lifeHabits) return;
           todayHabits = mergeLearningSnapshot(`habits/${todayStr}`, val);
-          localStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
+          learningStorage.setItem(habitStorageKey, JSON.stringify(todayHabits));
           habits.forEach(id => {
             document.getElementById(id).checked = !!todayHabits[id];
           }, window.reportSyncError);
@@ -1627,7 +1630,7 @@
     ];
 
     let currentAnatomyWeekFilter = 'ALL';
-    let savedVideoState = JSON.parse(localStorage.getItem('med_exam_videos_cloud') || '{}');
+    let savedVideoState = JSON.parse(learningStorage.getItem('med_exam_videos_cloud') || '{}');
 
     function formatSecondsToHMS(totalSec) {
       const h = Math.floor(totalSec / 3600);
@@ -1704,7 +1707,7 @@
       lesson.lectures.forEach(lec => {
         savedVideoState[lec.id] = selectAll;
       });
-      localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
+      learningStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
       persistProgress('videos', savedVideoState, lesson.lectures.map(lec => lec.id));
       renderAnatomyLessons();
     };
@@ -1729,10 +1732,11 @@
 
     if (db) {
       db.ref('videos').on('value', snap => {
+        window.confirmedCourseStates['videos']=structuredClone(snap.val()||{});
         const val = snap.val();
         {
           savedVideoState = mergeLearningSnapshot('videos', val);
-          localStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
+          learningStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
           renderAnatomyLessons();
         }
       }, window.reportSyncError);
@@ -1840,7 +1844,7 @@
       }
     ];
 
-    let savedBiochemState = JSON.parse(localStorage.getItem('med_exam_biochem_cloud') || '{}');
+    let savedBiochemState = JSON.parse(learningStorage.getItem('med_exam_biochem_cloud') || '{}');
     let currentBiochemFilter = 'ALL';
 
     window.filterBiochemWeek = function(wKey) {
@@ -1901,10 +1905,11 @@
 
     if (db) {
       db.ref('biochem').on('value', snap => {
+        window.confirmedCourseStates['biochem']=structuredClone(snap.val()||{});
         const val = snap.val();
         {
           savedBiochemState = mergeLearningSnapshot('biochem', val);
-          localStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
+          learningStorage.setItem('med_exam_biochem_cloud', JSON.stringify(savedBiochemState));
           renderBiochemUnits();
         }
       }, window.reportSyncError);
@@ -2026,7 +2031,7 @@
     ];
 
     const physioContainer = document.getElementById('physio-chapters-container');
-    let savedPhysioState = JSON.parse(localStorage.getItem('med_exam_physio_cloud') || '{}');
+    let savedPhysioState = JSON.parse(learningStorage.getItem('med_exam_physio_cloud') || '{}');
     let currentPhysioFilter = 'ALL';
     let currentPhysioSearch = '';
 
@@ -2098,7 +2103,7 @@
       chap.sections.forEach(sec => {
         savedPhysioState[sec.id] = forceState;
       });
-      localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
+      learningStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
       persistProgress('physiology', savedPhysioState, chap.sections.map(sec => sec.id));
       renderPhysioChecklist();
     };
@@ -2132,10 +2137,11 @@
 
     if (db) {
       db.ref('physiology').on('value', snap => {
+        window.confirmedCourseStates['physiology']=structuredClone(snap.val()||{});
         const val = snap.val();
         {
           savedPhysioState = mergeLearningSnapshot('physiology', val);
-          localStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
+          learningStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
           renderPhysioChecklist();
         }
       }, window.reportSyncError);
@@ -2419,7 +2425,7 @@
 
     let currentPharmWeekFilter = 'ALL';
     let currentPharmSearch = '';
-    let savedPharmState = JSON.parse(localStorage.getItem('med_exam_pharm_cloud') || '{}');
+    let savedPharmState = JSON.parse(learningStorage.getItem('med_exam_pharm_cloud') || '{}');
 
     function updatePharmProgress() {
       let checkedCount = 0;
@@ -2483,7 +2489,7 @@
       unit.lectures.forEach(lec => {
         savedPharmState[lec.id] = selectAll;
       });
-      localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
+      learningStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
       persistProgress('pharmacology', savedPharmState, unit.lectures.map(lec => lec.id));
       renderPharmUnits();
     };
@@ -2512,10 +2518,11 @@
 
     if (db) {
       db.ref('pharmacology').on('value', snap => {
+        window.confirmedCourseStates['pharmacology']=structuredClone(snap.val()||{});
         const val = snap.val();
         {
           savedPharmState = mergeLearningSnapshot('pharmacology', val);
-          localStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
+          learningStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
           renderPharmUnits();
         }
       }, window.reportSyncError);
@@ -2531,7 +2538,7 @@
       '2026-10-11', '2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15'
     ];
     let currentCalDate = new Date(2026, 9, 1);
-    let customEvents = JSON.parse(localStorage.getItem('med_exam_custom_events') || '{}');
+    let customEvents = JSON.parse(learningStorage.getItem('med_exam_custom_events') || '{}');
     let selectedModalDate = '';
 
     function updateExamCountdownBadges() {
@@ -2708,7 +2715,7 @@
         cur.setUTCDate(cur.getUTCDate() + 1);
       }
 
-      localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
+      learningStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
       persistProgress('custom_events', customEvents, affectedDates);
 
       input.value = '';
@@ -2731,7 +2738,7 @@
         }
       }
 
-      localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
+      learningStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
       persistProgress('custom_events', customEvents, affectedDates);
       renderModalEventsList();
       renderCalendar();
@@ -2742,7 +2749,7 @@
         const val = snap.val();
         {
           customEvents = mergeLearningSnapshot('custom_events', val);
-          localStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
+          learningStorage.setItem('med_exam_custom_events', JSON.stringify(customEvents));
           renderCalendar();
         }
       }, window.reportSyncError);
@@ -2771,7 +2778,7 @@
     ];
 
     const container = document.getElementById('checklist-container');
-    let savedState = JSON.parse(localStorage.getItem('med_exam_checklist_cloud') || '{}');
+    let savedState = JSON.parse(learningStorage.getItem('med_exam_checklist_cloud') || '{}');
 
     function updateProgress() {
       const checkedCount = Object.values(savedState).filter(Boolean).length;
@@ -2972,7 +2979,7 @@
         if (chk) {
           chk.addEventListener('change', (e) => {
             savedState[item.w] = e.target.checked;
-            localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
+            learningStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
             persistProgress('checklist', savedState, [item.w]);
             renderChecklist();
             updateProgress();
@@ -2992,7 +2999,7 @@
         const val = snap.val();
         {
           savedState = mergeLearningSnapshot('checklist', val);
-          localStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
+          learningStorage.setItem('med_exam_checklist_cloud', JSON.stringify(savedState));
           renderChecklist();
         }
       }, window.reportSyncError);
@@ -3032,13 +3039,13 @@
     };
 
     function getWeekTaskCompletion(wNum) {
-      const checklistCloud = JSON.parse(localStorage.getItem('med_exam_checklist_cloud') || '{}');
+      const checklistCloud = JSON.parse(learningStorage.getItem('med_exam_checklist_cloud') || '{}');
       if (checklistCloud[wNum]) return 100;
 
-      const physioCloud = JSON.parse(localStorage.getItem('med_exam_physio_cloud') || '{}');
-      const videosCloud = JSON.parse(localStorage.getItem('med_exam_videos_cloud') || '{}');
-      const pharmCloud = JSON.parse(localStorage.getItem('med_exam_pharm_cloud') || '{}');
-      const biochemCloud = JSON.parse(localStorage.getItem('med_exam_biochem_cloud') || '{}');
+      const physioCloud = JSON.parse(learningStorage.getItem('med_exam_physio_cloud') || '{}');
+      const videosCloud = JSON.parse(learningStorage.getItem('med_exam_videos_cloud') || '{}');
+      const pharmCloud = JSON.parse(learningStorage.getItem('med_exam_pharm_cloud') || '{}');
+      const biochemCloud = JSON.parse(learningStorage.getItem('med_exam_biochem_cloud') || '{}');
 
       let totalTasks = 0;
       let doneTasks = 0;
@@ -3186,7 +3193,7 @@
           const dayKey = `${y}-${m}-${d}`;
           const dayHabits = window.readLifeHabits ? window.readLifeHabits(dayKey) : (dayKey === todayStr && typeof todayHabits !== 'undefined')
             ? todayHabits
-            : JSON.parse(localStorage.getItem(`med_exam_habits_${dayKey}`) || '{}');
+            : JSON.parse(learningStorage.getItem(`med_exam_habits_${dayKey}`) || '{}');
           const eligible = window.eligibleLifeHabits ? window.eligibleLifeHabits(dayKey, dayHabits) : habits;
           eligibleCount += eligible.length;
           habitDoneCount += eligible.filter(id => dayHabits[id]).length;
@@ -3598,7 +3605,7 @@
 
     // Load today's pomodoro count
     const pomoTodayKey = `med_exam_pomo_${todayStr}`;
-    let pomoTodayData = JSON.parse(localStorage.getItem(pomoTodayKey) || '{"count": 0, "minutes": 0}');
+    let pomoTodayData = JSON.parse(learningStorage.getItem(pomoTodayKey) || '{"count": 0, "minutes": 0}');
 
     function updatePomodoroStatsUI() {
       const elCount = document.getElementById('pomo-count-today');
@@ -3684,7 +3691,7 @@
       if (pomoModeType === 'work') {
         pomoTodayData.count = (pomoTodayData.count || 0) + 1;
         pomoTodayData.minutes = (pomoTodayData.minutes || 0) + pomoDurationMinutes;
-        localStorage.setItem(pomoTodayKey, JSON.stringify(pomoTodayData));
+        learningStorage.setItem(pomoTodayKey, JSON.stringify(pomoTodayData));
         updatePomodoroStatsUI();
 
         // Auto prompt next break
@@ -3780,21 +3787,18 @@
     window.readWeekCompletion = week => getWeekTaskCompletion(week);
     window.readCalendarEvents = () => customEvents;
     window.readStudyStates = () => ({videos:savedVideoState,biochem:savedBiochemState,physiology:savedPhysioState,pharmacology:savedPharmState});
-    window.setStudyCompletion = (path, id, complete) => {
-      const bindings = {
-        videos: [savedVideoState, 'med_exam_videos_cloud', renderAnatomyLessons],
-        biochem: [savedBiochemState, 'med_exam_biochem_cloud', renderBiochemUnits],
-        physiology: [savedPhysioState, 'med_exam_physio_cloud', renderPhysioChecklist],
-        pharmacology: [savedPharmState, 'med_exam_pharm_cloud', renderPharmUnits]
-      };
-      const binding = bindings[path]; if (!binding) return;
-      binding[0][id] = complete;
-      localStorage.setItem(binding[1], JSON.stringify(binding[0]));
-      persistProgress(path, binding[0], [id]);
-      binding[2]();
+    window.setStudyCompletions = (links, complete) => {
+      if(window.i3Runtime?.read().status!=='ready')throw new Error('課程資料尚未就緒，未更動進度。');
+      const bindings={videos:[savedVideoState,'med_exam_videos_cloud',renderAnatomyLessons],biochem:[savedBiochemState,'med_exam_biochem_cloud',renderBiochemUnits],physiology:[savedPhysioState,'med_exam_physio_cloud',renderPhysioChecklist],pharmacology:[savedPharmState,'med_exam_pharm_cloud',renderPharmUnits]};
+      if(!Array.isArray(links)||!links.length||typeof complete!=='boolean')throw new Error('課程操作無效');
+      const unique=new Map();for(const link of links){const key=link?.path+'__'+link?.id;if(!window.courseCatalogKeys?.has(key))throw new Error('課程連結待確認');unique.set(key,{path:link.path,id:String(link.id)});}
+      const changes={},touched=new Set();for(const link of unique.values()){bindings[link.path][0][link.id]=complete;changes[link.path+'/'+link.id]=complete;touched.add(link.path);}
+      for(const path of touched)learningStorage.setItem(bindings[path][1],JSON.stringify(bindings[path][0]));
+      window.persistCourseChanges(changes);for(const path of touched)bindings[path][2]();
     };
+    window.setStudyCompletion=(path,id,complete)=>window.setStudyCompletions([{path,id}],complete);
     window.refreshStudyStates = () => {
-      const read = key => { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; } };
+      const read = key => { try { return JSON.parse(learningStorage.getItem(key) || '{}'); } catch { return {}; } };
       savedVideoState = read('med_exam_videos_cloud'); savedBiochemState = read('med_exam_biochem_cloud');
       savedPhysioState = read('med_exam_physio_cloud'); savedPharmState = read('med_exam_pharm_cloud');
       renderAnatomyLessons(); renderBiochemUnits(); renderPhysioChecklist(); renderPharmUnits();
@@ -3813,7 +3817,7 @@
     };
     window.studyData = { physio: physioChaptersData, anatomy: anatomyLessonsData, biochem: biochemData, pharm: pharmacologyData, weeks: weeksData };
   </script>
-  <script src="/firebase-config.js"></script>
-  <script type="module" src="/auth.js"></script>
+  <script src="./firebase-config.js"></script>
+  <script type="module" src="./firebase-entry.js"></script>
 </body>
 </html>

@@ -45,7 +45,7 @@ export function dailyCapacity(day,settings,classes,tasks,events={}) {
   const timed=scheduled.filter(t=>interval(t.planning?.start,t.planning?.end));
   for(const task of timed){const [a,b]=interval(task.planning.start,task.planning.end);for(const item of busy.items)if(a<item.range[1]&&item.range[0]<b)timedConflicts.push([task.title,item.title]);}
   for(let i=0;i<timed.length;i++)for(let j=i+1;j<timed.length;j++){const [a,b]=interval(timed[i].planning.start,timed[i].planning.end),[c,d]=interval(timed[j].planning.start,timed[j].planning.end);if(a<d&&c<b)timedConflicts.push([timed[i].title,timed[j].title]);}
-  return {day,total,fixedMinutes:busy.minutes,buffer,flexible,assigned,remaining:flexible-assigned,shortfall:Math.max(0,busy.minutes-total),taskCount:scheduled.filter(t=>!t.complete).length,unknown:unknown.length,timeDemandKnown:scheduled.every(t=>!!interval(t.planning?.start,t.planning?.end)),unknownEvents:busy.unknown.length,timedConflicts,fixed:busy.fixed};
+  return {day,total,fixedMinutes:busy.minutes,buffer,flexible,assigned,remaining:flexible-assigned,shortfall:Math.max(0,busy.minutes-total),taskCount:scheduled.filter(t=>!t.complete&&t.completionKnown!==false).length,unknownCompletionCount:scheduled.filter(t=>t.completionKnown===false).length,unknown:unknown.length,timeDemandKnown:scheduled.every(t=>!!interval(t.planning?.start,t.planning?.end)),unknownEvents:busy.unknown.length,timedConflicts,fixed:busy.fixed};
 }
 export function studyWeek(day,settings,classes,tasks,events={}) {
   const days=Array.from({length:7},(_,i)=>dailyCapacity(addDays(weekKey(day),i),settings,classes,tasks,events));
@@ -57,19 +57,19 @@ export function proposeSchedule({data,settings,tasks,events={},ids,start=dateKey
   if(new Date(end)-new Date(start)>366*86400000)throw new Error('第一版一次最多預覽一年。');
   if(mode==='date'&&(!validDate(target)||target<start||target>end))throw new Error('指定日期必須在預覽範圍內且早於考試。');
   const classes=fixedClasses(data,settings),chosen=new Set(ids),candidates=tasks.filter(t=>chosen.has(t.id));
-  const base=tasks.filter(t=>!chosen.has(t.id)||t.complete||taskLocked(t));
+  const base=tasks.filter(t=>!chosen.has(t.id)||t.complete||t.completionKnown===false||taskLocked(t));
   const days=Array.from({length:Math.round((new Date(end)-new Date(start))/86400000)+1},(_,i)=>addDays(start,i));
   const moves=[],unplaced=[];
   candidates.sort((a,b)=>['core','normal','flexible'].indexOf(a.planning?.priority||'normal')-['core','normal','flexible'].indexOf(b.planning?.priority||'normal')||a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
   const assigned=[...base];
   for(const task of candidates) {
-    if(task.deleted||task.complete||taskLocked(task)){unplaced.push({task,reason:'已完成、刪除或鎖定，保持不變'});continue;}
+    if(task.deleted||task.complete||task.completionKnown===false||taskLocked(task)){unplaced.push({task,reason:'已完成、刪除或鎖定，保持不變'});continue;}
     const planning=taskPlanning(task,data);
     if(mode==='waiting'){moves.push({id:task.id,title:task.title,from:task.date,to:task.date,minutes:task.minutes,patch:{planning:{...planning,waiting:true}}});continue;}
     const estimate=taskMinutes(task);
     const eligible=(mode==='date'?[target]:days).filter(day=>canPlace(task,day,settings,classes,assigned,events));
     // Count balancing is a date suggestion, never an estimate of equal unit difficulty.
-    eligible.sort((a,b)=>dailyCapacity(a,settings,classes,assigned,events).taskCount-dailyCapacity(b,settings,classes,assigned,events).taskCount||a.localeCompare(b));
+    eligible.sort((a,b)=>{const ca=dailyCapacity(a,settings,classes,assigned,events),cb=dailyCapacity(b,settings,classes,assigned,events);return ca.taskCount+ca.unknownCompletionCount-cb.taskCount-cb.unknownCompletionCount||a.localeCompare(b);});
     const date=eligible[0];
     if(!date){unplaced.push({task,reason:'沒有可安排日期：休息日、無自主時間、任務數上限或已知時段衝突'});assigned.push(originalTasks.find(t=>t.id===task.id)||task);continue;}
     const patch={date,planning:{...planning,waiting:false}};moves.push({id:task.id,title:task.title,from:task.date,to:date,minutes:estimate,patch});assigned.push({...task,...patch});
@@ -82,7 +82,7 @@ export function proposeSchedule({data,settings,tasks,events={},ids,start=dateKey
 export function canPlace(task,day,settings,classes,assigned,events={}) {
   const capacity=dailyCapacity(day,settings,classes,assigned,events);
   if(capacity.flexible<=0||capacity.shortfall||capacity.timedConflicts.length)return false;
-  if(settings.dailyTaskLimit!=null&&capacity.taskCount>=settings.dailyTaskLimit)return false;
+  if(settings.dailyTaskLimit!=null&&capacity.taskCount+capacity.unknownCompletionCount>=settings.dailyTaskLimit)return false;
   const range=interval(task.planning?.start,task.planning?.end);
   if(range){
     if(range[1]-range[0]>capacity.flexible)return false;
@@ -98,7 +98,7 @@ export function reviseSchedule(result,{data,settings,tasks,events={},dates={},st
   const classes=fixedClasses(data,settings),ids=new Set(result.moves.map(m=>m.id)),assigned=tasks.filter(t=>!ids.has(t.id));
   const moves=result.moves.map(move=>({...move,patch:{...move.patch,planning:{...move.patch.planning}}}));
   for(const move of moves){
-    const task=tasks.find(t=>t.id===move.id);if(!task||task.complete||task.deleted||taskLocked(task))throw Error('任務狀態已變更，請重新預覽。');
+    const task=tasks.find(t=>t.id===move.id);if(!task||task.complete||task.completionKnown===false||task.deleted||taskLocked(task))throw Error('任務狀態已變更，請重新預覽。');
     if(!move.patch.planning.waiting){const day=Object.hasOwn(dates,move.id)?dates[move.id]:move.to;if(!validDate(day)||day<today||day<start||day>end||day>=settings.examDate)throw Error('請選擇預覽範圍內的考前日期。');if(!canPlace(task,day,settings,classes,assigned,events))throw Error('該日期為休息日、無自主時間、超過任務數上限或有已知時段衝突。');move.to=day;move.patch.date=day;assigned.push({...task,...move.patch});}
   }
   const loads=result.loads.map(d=>dailyCapacity(d.day,settings,classes,assigned,events));
@@ -108,7 +108,7 @@ export function progressSummary(data,states,tasks,courseAwards={},today=dateKey(
   const units=flattenSubjects(data),week=weekKey(today),recent=addDays(today,-13);
   const courses=units.filter(u=>states[u.path]?.[u.id]);
   const courseDates=courses.map(u=>courseAwards[u.path+'__'+u.id]?.day).filter(day=>validDate(day)&&day<=today);
-  const taskDates=tasks.filter(t=>!t.deleted&&t.complete).map(t=>t.award?.day).filter(day=>validDate(day)&&day<=today);
+  const taskDates=tasks.filter(t=>!t.deleted&&(Object.hasOwn(t,'storedComplete')?t.storedComplete:t.complete)).map(t=>t.award?.day).filter(day=>validDate(day)&&day<=today);
   return {subjects:[...new Set(units.map(u=>u.subject))].map(subject=>({subject,done:courses.filter(u=>u.subject===subject).length,remaining:units.filter(u=>u.subject===subject).length-courses.filter(u=>u.subject===subject).length})),weekCourses:courseDates.filter(d=>d>=week).length,weekTasks:taskDates.filter(d=>d>=week).length,recentCourses:courseDates.filter(d=>d>=recent).length,recentTasks:taskDates.filter(d=>d>=recent).length,undatedCourses:courses.length-courseDates.length};
 }
 

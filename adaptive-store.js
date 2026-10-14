@@ -13,7 +13,7 @@ export function validateSettings(value) {
   for(const [id,slot] of Object.entries(c.fixedOverrides))if(!/^biochem-class-[1-8]$/.test(id)||!validDate(slot.date)||!interval(slot.start,slot.end))throw new Error('固定課程日期或時段無效。');
   return c;
 }
-export function createStudySettings({db=null,localOnly=false,storage=localStorage,events=window,onChange=()=>{},newId=()=>crypto.randomUUID()}={}) {
+export function createStudySettings({db=null,localOnly=false,storage=learningStorage,events=window,onChange=()=>{},newId=()=>crypto.randomUUID()}={}) {
   const key=STUDY_SETTINGS_KEY+(localOnly?'_local':'');let saved={config:null,pending:null},cloud=null,syncing=false,error='',conflict=false;
   try{saved={...saved,...JSON.parse(storage.getItem(key)||'{}')};}catch{}
   const config=()=>normalizeSettings(saved.config||{});

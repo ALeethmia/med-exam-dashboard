@@ -1,0 +1,60 @@
+/* Scope Lite presentation to the existing kingdom region; retain Dashboard tokens. */
+.demo-banner{font-size:12px;line-height:1.7;color:#536653;background:#edf2e8;border:1px solid #d7e1cc;border-radius:10px;padding:10px 14px;margin-bottom:18px;overflow-wrap:anywhere}
+.i2a-map-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;padding:20px;align-items:start}
+.i2a-map-pane{min-width:0;position:static;align-self:start}
+.i2a-map-card{position:relative;overflow:hidden;border:1px solid #d5ddcf;border-radius:16px;background:#eaf0e4;color:#34483f}
+#kingdom-lite-map{display:block;width:100%;height:455px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+#kingdom-lite-map:active{cursor:grabbing}#kingdom-lite-map [data-building]{cursor:pointer}
+#kingdom-lite-map .structure,.i2a-preview-controls .structure,.i2a-gallery .structure{stroke:currentColor;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+#kingdom-lite-map text{font-family:system-ui,sans-serif}
+#kingdom-lite-map [aria-pressed=true] .ground{stroke:currentColor;stroke-width:3;fill:#fffaf0}
+#kingdom-lite-map:focus,#kingdom-lite-map [data-building]:focus{outline:none}
+#kingdom-lite-map:not([data-pointer-focus]):focus-visible{outline:3px solid #80619e;outline-offset:-4px}
+#kingdom-lite-map:not([data-pointer-focus]) [data-building]:focus-visible .ground{stroke:#754c91;stroke-width:5;stroke-dasharray:6 4}
+.i2a-map-tools{position:absolute;bottom:40px;right:12px;z-index:1;display:flex;gap:5px;align-items:center}
+.i2a-map-tools output{font-size:10px;margin-right:5px}.i2a-map-tools button{border:1px solid #ccd7c4;border-radius:9px;background:#fffdf7;color:#34483f;min-width:40px;min-height:40px;padding:5px 8px}
+.i2a-map-hint{font-size:11px;text-align:center;padding:10px;margin:0;color:#718570}
+.i2a-wheel{font-size:11px;line-height:1.8;margin:8px 0}.i2a-wheel summary{cursor:pointer;color:var(--muted)}.i2a-wheel select{max-width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--surface);min-height:44px}.i2a-wheel p{margin:8px 0;color:var(--muted)}
+.i2a-gallery{border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:12px;min-width:0;background:var(--surface)}.i2a-gallery h4{font-size:15px;margin:0}.i2a-gallery button{font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:44px;padding:8px 12px;margin-top:12px;text-align:left}
+.i2a-gallery-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;align-items:center;margin-top:12px}.i2a-gallery-row>strong{grid-column:1/-1;font-size:11px}.i2a-gallery-row>div{text-align:center;min-width:0}.i2a-gallery-row svg{display:block;width:100%;height:78px}.i2a-gallery-row small{font-size:10px;color:var(--muted)}
+#i2a-gallery-content[hidden]{display:none}
+.kingdom-page .i2a-map-layout .kingdom-buildings{display:flex;flex-direction:column;gap:12px;padding:0;min-width:0}
+.i2a-map-layout .kingdom-building{width:100%;min-width:0}.i2a-map-layout .building-details>summary{padding:14px 16px}.i2a-map-layout .building-details .workspace-meter{margin:8px 0}.i2a-map-layout .building-stage{font-size:14px;margin-bottom:4px}.i2a-map-layout .building-next-target{font-size:11px}.i2a-map-layout .building-open-hint{font-size:10px;margin-top:8px}.i2a-map-layout .building-detail-body{padding:16px}.i2a-map-layout .building-detail-body p,.i2a-map-layout .building-detail-body li{overflow-wrap:anywhere}
+.i2a-map-layout .building-details>summary [data-current-stage]{font-size:11px;margin:6px 0}
+.i2a-preview-controls{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px}.i2a-preview-controls label{display:block}.i2a-preview-controls select{width:100%;min-height:44px;margin-top:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px;font-size:12px}.i2a-preview-controls [data-preview-icon]{height:80px;text-align:center}.i2a-preview-controls svg{width:100px;height:80px}
+.kingdom-page article[data-building=barracks]{--kingdom-rune:#46617f;--kingdom-stone:#e4ebf1}.kingdom-page article[data-building=keep]{--kingdom-rune:#b47557;--kingdom-stone:#f3e6d9}.kingdom-page article[data-building=academy]{--kingdom-rune:#80619e;--kingdom-stone:#ece3f3}
+@media(max-width:1000px){.i2a-map-layout{grid-template-columns:minmax(0,1fr)}.i2a-map-pane{position:static}}
+@media(max-width:700px){.i2a-map-layout{padding:8px;gap:16px}#kingdom-lite-map{height:280px}#kingdom-lite-map .building-glyph{transform:scale(1.4)}#kingdom-lite-map [data-building] text{font-size:25px}.i2a-map-tools button{min-width:44px;min-height:44px}.i2a-gallery{padding:12px}.i2a-gallery-row svg{height:66px}.i2a-gallery button{width:100%}.kingdom-territory>.panel-heading{padding:16px 12px 0}.i2a-map-layout .building-details>summary{min-height:44px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Keep preview controls compact while preserving independent details. */
+.i2a-preview-controls{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px 12px;align-items:center}
+.i2a-preview-controls [data-preview-icon]{height:64px}
+.i2a-preview-controls svg{width:64px;height:64px}
+.i2a-preview-controls [data-preview-description]{grid-column:1/-1;margin:0}
+/* Map above; cards follow world x-coordinate order in the DOM. */
+.kingdom-page .i2a-map-layout .kingdom-buildings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;overflow:visible;max-height:none}
+.i2a-detail-hint{grid-column:1/-1;font-size:12px;color:var(--muted);margin:0;line-height:1.7}
+@media(max-width:1000px){.kingdom-page .i2a-map-layout .kingdom-buildings{grid-template-columns:minmax(0,1fr)}}
+
+
+/* The original building summaries become floating headers while reading. */
+.i2a-building-section{min-width:0}
+.kingdom-page .kingdom-territory{overflow:visible}
+.i2a-map-layout .building-details>summary.i2a-floating-summary{position:fixed;top:max(8px,env(safe-area-inset-top,0px));z-index:20;box-sizing:border-box;min-height:80px;padding:10px 12px;border:1px solid var(--line);border-top:3px solid var(--kingdom-rune);border-radius:10px;background:var(--surface);box-shadow:0 5px 18px #253c3220;cursor:pointer}
+.i2a-floating-summary>:not(.building-heading):not([data-current-stage]){display:none!important}
+.i2a-floating-summary .building-heading{margin:0;gap:8px}
+.i2a-floating-summary .building-heading h4{font-size:14px;margin:0}
+.i2a-map-layout .i2a-floating-summary [data-current-stage]{font-size:10px;margin:6px 0 0}
+.i2a-floating-summary .building-sigil{width:24px;height:24px}
+@media(max-width:700px){.i2a-map-layout .building-details>summary.i2a-floating-summary{padding:10px 3px;min-height:72px}.i2a-floating-summary .building-heading{justify-content:center}.i2a-floating-summary .building-heading h4{font-size:12px}.i2a-floating-summary .building-sigil{display:none}.i2a-floating-summary [data-current-stage]{text-align:center;font-size:9px!important}}
+
+.i2a-stage-info{margin:0 0 16px}.i2a-stage-info .building-open-hint{display:none}
+
+/* Reserve a clear reading band below the original floating titles. */
+.i2a-headers-floating::before{content:"";position:fixed;top:0;left:var(--header-left);width:var(--header-width);height:var(--header-bottom);background:var(--surface);z-index:19;pointer-events:none}
+.i2a-headers-floating .building-detail-body{clip-path:inset(var(--header-clip,0px) 0 0 0)}
+.i2a-building-section .building-details,.i2a-building-section .building-detail-body :is(button,select,a,input,summary){scroll-margin-top:112px}
+.i2b-fixture-controls{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px;margin-bottom:18px;font-size:12px}
+.i2b-fixture-controls select{max-width:100%;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);margin-left:8px}
+.i2b-fixture-controls p{margin:8px 0 0;overflow-wrap:anywhere}

@@ -1,3 +1,6 @@
+import {projectTask} from './task-projection.js';
+import {preserveRewardCache} from './legacy-rewards.js';
+const learningStorage=window.learningStorage;
 import {showVersion} from './version-ui.js';
 import {createCourseDates} from './course-dates.js';
 import {createGrowthUI} from './growth-ui.js';
@@ -13,20 +16,21 @@ import {createLifeStore} from './life-store.js';
 import {createLifeUI} from './life-ui.js';
 import {GAME_KEY, GAME_PATH, COURSE_PROGRESS_NOTE, dateKey, awardKey, flattenSubjects, subjectStats, gameStats} from './study-core.js';
 
+const preservedRewards=preserveRewardCache(learningStorage);
 const data = window.studyData;
 if (!data) throw new Error('課程資料未能載入');
 const allItems = flattenSubjects(data);
 const validItems = new Map(allItems.map(t => [awardKey(t), t]));
 let game = {days:{}, awards:{}};
 try {
-  const saved = JSON.parse(localStorage.getItem(GAME_KEY) || '{}');
+  const saved = JSON.parse(learningStorage.getItem(GAME_KEY) || '{}');
   game = {days:saved.days || {}, awards:saved.awards || {}};
 } catch {}
 let day = dateKey();
 let gameSyncing = false;
 let gameDirty = false;
 let gameFailed = false;
-const save = () => localStorage.setItem(GAME_KEY, JSON.stringify(game));
+const save = () => learningStorage.setItem(GAME_KEY, JSON.stringify(game));
 const db = window.learningDB;
 const states = () => window.readStudyStates();
 const courseDates=createCourseDates({keys:new Set(validItems.keys()),db,localOnly:window.workspaceLocalOnly,onChange:()=>{window.SubjectUI?.refreshDates?.();window.updateWorkspace?.();}});
@@ -36,13 +40,13 @@ window.addEventListener('study-completed',event=>{const {path,id,complete}=event
 
 const timeTasks=createTimeTasks({db,localOnly:window.workspaceLocalOnly,day,onChange:()=>window.updateWorkspace?.()});
 let studySettings;
-function studyContext(){return {settings:studySettings?.config()||normalizeSettings(),events:window.readCalendarEvents()||{}};}
+function studyContext(){return {settings:studySettings?.config()||normalizeSettings(),events:window.readCalendarEvents()||{},courses:window.readConfirmedStudyStates?.()||states()};}
 async function readStudyContext(){
   if(!db||window.workspaceLocalOnly)return studyContext();
   await studySettings.retry();
   if(studySettings.status().pending)throw {code:'SETTINGS_PENDING'};
-  const [config,events]=await Promise.all([db.ref(STUDY_SETTINGS_PATH).once('value'),db.ref('custom_events').once('value')]);
-  return {settings:normalizeSettings(config.val()||{}),events:events.val()||{}};
+  const [config,events,...courses]=await Promise.all([db.ref(STUDY_SETTINGS_PATH).once('value'),db.ref('custom_events').once('value'),...['videos','biochem','physiology','pharmacology'].map(path=>db.ref(path).once('value'))]);
+  return {settings:normalizeSettings(config.val()||{}),events:events.val()||{},courses:Object.fromEntries(['videos','biochem','physiology','pharmacology'].map((path,i)=>[path,courses[i].val()||{}]))};
 }
 function validateStudyTask(task,{batch=false}={}){
   if(task.deleted)return;
@@ -51,7 +55,7 @@ function validateStudyTask(task,{batch=false}={}){
   if(busy.items.some(e=>range[0]<e.range[1]&&e.range[0]<range[1]))throw new Error('任務時段與固定課程／定時行程衝突，請調整時段。');
   if(!batch&&planner.all().some(other=>{if(other.id===task.id||other.deleted||other.planning?.waiting||other.date!==task.date)return false;const slot=interval(other.planning?.start,other.planning?.end);return slot&&range[0]<slot[1]&&slot[0]<range[1];}))throw new Error('任務時段與其他已安排任務衝突，請調整時段。');
 }
-const planner=createPlanner({db,localOnly:window.workspaceLocalOnly,onChange:()=>window.updateWorkspace?.(),batchContext:studyContext,readBatchContext:readStudyContext,validateTask:validateStudyTask});
+const planner=createPlanner({db,localOnly:window.workspaceLocalOnly,onChange:()=>window.updateWorkspace?.(),batchContext:studyContext,readBatchContext:readStudyContext,validateTask:validateStudyTask,projectTask:task=>projectTask(task,{data,states:states(),status:window.i3Runtime?.read().status||'loading'}),canOperate:()=>window.i3Runtime?.read().status==='ready'});
 studySettings=createStudySettings({db,localOnly:window.workspaceLocalOnly,onChange:()=>{window.updateWorkspace?.();window.renderCalendar?.();window.renderBiochemUnits?.();if(studySettings&&!studySettings.status().pending)void planner.retry();}});
 window.fixedStudySchedule=()=>fixedClasses(data,studySettings.config());
 window.studyExamDate=()=>studySettings.config().examDate;
@@ -85,7 +89,7 @@ content.innerHTML = `
         <div class="panel-heading"><h2 id="tasks-title">今日任務</h2><span id="task-count"></span></div>
         <div class="workspace-meter" role="progressbar" aria-label="今日任務完成率" aria-valuemin="0" aria-valuemax="100" id="daily-meter"><span></span></div>
         <div id="task-list"></div>
-        <p class="workspace-note">自主安排每天的學習；課程完成請在科目頁另行勾選。</p>
+        <p class="workspace-note">自主安排每天的學習；課程任務依課程進度；一般任務獨立勾選。完成任務不再新增 XP。</p>
       </section>
       <section class="workspace-panel" aria-labelledby="week-title">
         <div class="panel-heading"><h2 id="week-title">本週計畫</h2><button class="workspace-link" data-go="plan">全部週次 →</button></div>
@@ -112,11 +116,14 @@ content.innerHTML = `
 home.prepend(content);
 const brandNote=document.createElement('p');brandNote.className='workspace-note becoming-home-brand';brandNote.textContent='Becoming · Your life. Your story. Your world.';home.append(brandNote);
 const readAwards=()=>({...game.awards,...timeTasks.awards(),...planner.awards()});
+window.growthPlanner=planner;
+window.courseCatalogKeys=new Set(validItems.keys());
+const legacyNotice=document.createElement('p');legacyNotice.className='workspace-note';legacyNotice.dataset.legacyRewards='';legacyNotice.textContent='歷史 XP 僅供回顧，不影響領主等級。舊待同步獎勵不自動補發。';document.querySelector('.workspace-main').prepend(legacyNotice);
 const plannerUI=createPlannerUI({data,planner,states});
 const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
 const adaptiveUI=createAdaptiveUI({data,planner,settings:studySettings,context:studyContext,states,courseAwards:()=>game.awards,events:()=>window.readCalendarEvents()||{}});
-const kingdomUI=createKingdomUI({data,states,planner,settings:studySettings,life,awards:readAwards,courseDates:()=>courseDates.records()});
+const kingdomUI=createKingdomUI({data,states:()=>window.readConfirmedStudyStates?.()||states(),planner,settings:studySettings,life,awards:readAwards,courseDates:()=>courseDates.records()});
 const growthUI=createGrowthUI({data,states,planner,life,awards:readAwards,courseAwards:()=>game.awards,courseDates:()=>courseDates.records()});
 window.renderBiochemUnits?.();window.renderCalendar?.();
 document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>window.switchTab(button.dataset.go)));
@@ -168,6 +175,7 @@ function renderPlanningSummary() {
 }
 
 function render() {
+  if(typeof planner!=='undefined'){const held=planner.status().held.length+(timeTasks.held?.().length||0);const el=document.querySelector('[data-legacy-rewards]');if(el)el.textContent='歷史 XP 僅供回顧，不影響領主等級。'+(held||preservedRewards||window.becomingStorage?.legacyKeys().length?'偵測到舊獎勵／快取，已隔離保留，未自動補發；需人工核對。':'新任務不再發放 XP。');}
   window.SubjectUI?.refreshDates?.();
   const current=states();
   document.getElementById('today-label').textContent=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
@@ -193,35 +201,13 @@ function render() {
   }
   renderPlanningSummary();
   const stats=gameStats(readAwards(),day);
-  document.getElementById('xp-detail').textContent=`${stats.xp} XP`;
-  document.getElementById('game-sync-status').textContent=(gameFailed||timeTasks.failed()||planner.status().error)?'成就雲端同步失敗，本機紀錄已保留；可使用重試同步。':db?'成就獨立同步，不影響原有學習紀錄。':'XP 與成就保存在此瀏覽器。';
-  const achievements=document.getElementById('achievements'); achievements.replaceChildren();
-  for(const a of stats.achievements) {
-    const el=document.createElement('div'); el.className='achievement'+(a.unlocked?' unlocked':'');
-    const title=document.createElement('strong'); title.textContent=a.title; el.append(title);
-    const status=document.createElement('small'); status.className='achievement-status'; status.textContent=a.unlocked?'已解鎖':'待解鎖'; el.append(status);
-    const detail=document.createElement('small'); detail.textContent=a.detail; el.append(detail); achievements.append(el);
-  }
+  document.getElementById('xp-detail').textContent=`歷史 ${stats.xp} XP（不決定目前等級）`;
+  document.getElementById('game-sync-status').textContent=(gameFailed||timeTasks.failed()||planner.status().error)?'成就雲端同步失敗，本機紀錄已保留；可使用重試同步。':db?'歷史獎勵唯讀；新任務不再發放 XP。':'XP 與成就保存在此瀏覽器。';
+
 }
 window.updateWorkspace = render;
 
-async function syncGame() {
-  if (!db || window.workspaceLocalOnly) return;
-  if (gameSyncing) { gameDirty=true; return; }
-  gameDirty=false;
-  gameSyncing=true;
-  try {
-    // Each subject ID can award XP once, including across devices and retries.
-    for(const [key, award] of Object.entries(game.awards)) {
-      if (!validItems.has(key) || award.xp !== 20 || !/^\d{4}-\d{2}-\d{2}$/.test(award.day || '')) continue;
-      const result=await db.ref(`${GAME_PATH}/awards/${key}`).transaction(existing=>existing || award);
-      if (result.snapshot.val()) game.awards[key]=result.snapshot.val();
-    }
-    gameFailed=false;
-    save();
-  } catch { gameFailed=true; }
-  finally { gameSyncing=false; render(); if(gameDirty && !gameFailed) void syncGame();void timeTasks.retry();void planner.retry(); }
-}
+async function syncGame() { /* Historical ledger is read-only; no cached reward replay. */ }
 window.addEventListener('learning-change', render);
 window.addEventListener('storage', event => {
   if (event.key===GAME_KEY) {
@@ -231,7 +217,7 @@ window.addEventListener('storage', event => {
 });
 if (db && !window.workspaceLocalOnly) {
   db.ref(`${GAME_PATH}/awards`).on('value', snap => {
-    game.awards={...game.awards,...(snap.val() || {})}; save(); render();
+    game.awards={...(snap.val() || {})}; save(); render();
   },()=>{gameFailed=true; render();});
 
 }
@@ -245,3 +231,5 @@ void syncGame();
 void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();
 
 void showVersion();
+
+window.addEventListener('learning-read-ready',()=>{void planner.retry();void timeTasks.retry();void courseDates.retry();void life.retry();void studySettings.retry();window.retryLearningSync();window.updateWorkspace?.();});

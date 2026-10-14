@@ -1,11 +1,9 @@
 // 輸入只發送鏡頭與選取意圖；不持有業務 store 或 Firebase。
-// wheel 沒有可靠的硬體 ID；像素事件優先平移，歧義由使用者選擇模式。
-export function wheelIntent(event,mode='auto'){
- if(event.ctrlKey)return 'zoom';
- if(mode==='zoom'||mode==='pan')return mode;
- return event.deltaMode===1||event.deltaMode===2?'zoom':'pan';
+// Ordinary wheel scrolling belongs to the page. Ctrl may also represent a trackpad pinch.
+export function wheelIntent(event){
+ return (event.ctrlKey||event.metaKey)&&Number.isFinite(event.deltaY)&&event.deltaY!==0?'zoom':'page';
 }
-export function bindMapInput(surface,{pan,zoom,reset,select,wheelMode=()=> 'auto',navigate=()=>{}}){
+export function bindMapInput(surface,{pan,zoom,reset,select,navigate=()=>{}}){
  const listeners=[],pointers=new Map();let gesture=null,disposed=false;
  const listen=(type,fn,options)=>{surface.addEventListener(type,fn,options);listeners.push(()=>surface.removeEventListener(type,fn,options));};
  const local=event=>{const r=surface.getBoundingClientRect();return {x:event.clientX-r.left,y:event.clientY-r.top};};
@@ -39,10 +37,10 @@ export function bindMapInput(surface,{pan,zoom,reset,select,wheelMode=()=> 'auto
  listen('dragstart',event=>event.preventDefault());
  listen('pointercancel',clear);listen('lostpointercapture',event=>{if(pointers.has(event.pointerId))clear();});
  listen('wheel',event=>{
+  if(wheelIntent(event)!=='zoom')return;
+  if(!event.cancelable)return;
   event.preventDefault();clear();const unit=event.deltaMode===1?16:event.deltaMode===2?surface.clientHeight:1;
-  if(wheelIntent(event,wheelMode())==='pan')pan({x:-event.deltaX*unit,y:-event.deltaY*unit});
-  // Chrome 捏合與 Ctrl＋滾輪共用訊號；僅此路徑提高為 1.5 倍。
-  else zoom(Math.exp(-Math.max(-300,Math.min(300,event.deltaY*unit))*.002*(event.ctrlKey?1.5:1)),local(event));
+  zoom(Math.exp(-Math.max(-300,Math.min(300,event.deltaY*unit))*.002*(event.ctrlKey?1.5:1)),local(event));
  },{passive:false});
  listen('keydown',event=>{
   surface.removeAttribute?.('data-pointer-focus');
