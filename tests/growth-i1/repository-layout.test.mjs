@@ -51,6 +51,17 @@ test('HTML bootstrap and script order are unchanged except canonical stylesheet/
 });
 test('CSS bytes and initialization/storage/deployment essentials remain unchanged',()=>{
  for(const f of old.files.filter(f=>f.from.endsWith('.css')||['theme.js','subjects.js','sync.js','firebase-config.js','owner-config.js','package.json','package-lock.json','metadata.json'].includes(f.from))){
-  assert.equal(hash(readFileSync(path.join(root,aliases[f.from]||f.from))),f.originalSHA256,f.from);
+  let content=readFileSync(path.join(root,aliases[f.from]||f.from));
+  if(['package.json','package-lock.json'].includes(f.from)){
+   const metadata=JSON.parse(content);
+   assert.equal(metadata.version,'1.0.0',f.from+' release version');
+   metadata.version='0.2.0'; // Normalize only the authorized version fields to the frozen baseline.
+   if(f.from==='package-lock.json'){
+    assert.equal(metadata.packages[''].version,'1.0.0','lock root release version');
+    metadata.packages[''].version='0.2.0';
+   }
+   content=JSON.stringify(metadata,null,2)+'\n';
+  }
+  assert.equal(hash(content),f.originalSHA256,f.from);
  }
 });
