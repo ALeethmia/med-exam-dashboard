@@ -16,7 +16,7 @@ export function applyDay(current,field,value,token) {
   if(field==='leisure')next['daily-game']=value.status==='complete';
   return next;
 }
-export function createLifeStore({db=null,localOnly=false,storage=localStorage,events=window,onChange=()=>{},onHabits=()=>{},mergeLegacy=(day,value)=>value,today=()=>dateKey(),newId=()=>crypto.randomUUID(),readLegacy=day=>{try{return JSON.parse(storage.getItem('med_exam_habits_'+day)||'{}');}catch{return {};}}}={}) {
+export function createLifeStore({db=null,localOnly=false,storage=learningStorage,events=window,onChange=()=>{},onHabits=()=>{},mergeLegacy=(day,value)=>value,today=()=>dateKey(),newId=()=>crypto.randomUUID(),readLegacy=day=>{try{return JSON.parse(storage.getItem('med_exam_habits_'+day)||'{}');}catch{return {};}}}={}) {
   const key=LIFE_KEY+(localOnly?'_local':'');
   let saved={days:{},training:null,pending:{}};
   try {const value=JSON.parse(storage.getItem(key)||'{}');saved={days:value.days||{},training:value.training||null,pending:value.pending||{}};}catch{}

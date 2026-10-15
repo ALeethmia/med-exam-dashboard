@@ -375,3 +375,10 @@ Phase 2B.1a UX 收尾：領主與同一份完整編年史整合為角色與故�
 `kingdom-map-core.js` 負責鏡頭純運算；`kingdom-map-input.js` 處理手勢意圖；renderer 提供 `update/setCamera/focusBuilding/dispose`，只接受不可變 Building View Model；manifest 定義固定區域，preview state 不接觸學習或 XP。離開頁面清理 listener 與 ResizeObserver，沒有常駐動畫迴圈。
 
 所有美術皆為臨時佔位；未實作正式素材、多面板、底部抽屜、日夜、升級演出、真實資料整合或 App 封裝。實機雙指手感與效能仍需人工驗收。完整檢查使用既有 build、lint、unit、browser 指令；所有測試資料使用本機／Mock，禁止寫入正式 Firebase。
+
+
+## Growth I1 整合候選（Draft／NO-GO）
+
+初始之地 Lite、40/40/20 領主進度及 Design A 的變更／安全阻擋，見 [整合審查](docs/growth-i1/RELEASE_REVIEW.md)。正式 Rules 未核對前不可合併或上線。
+
+`npm test` 包含 Growth I1 純函式／歷史相容測試；`npm run build`、`npm run lint` 保留。Mock 瀏覽器回歸及安全的本機 Fixtures 產生方式見審查文件與 `.github/workflows/growth-i1.yml`。產品入口不載入 Fixtures，不新增 Firebase Schema，沒有 I3.2 可信完成服務。

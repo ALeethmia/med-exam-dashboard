@@ -1,0 +1,47 @@
+name: Growth I1 safety checks
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  mock-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run lint
+      - run: npx playwright install --with-deps chromium
+      - name: Existing Dashboard regression subset
+        run: npx playwright test tests/browser/version.spec.js tests/browser/course-dates.spec.js --grep 'footer reads|Preview footer|first date can' --reporter=line
+      - name: Canonical auth and Fixtures integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run build:growth:review
+          python3 -m http.server 8811 --bind 127.0.0.1 --directory .growth-review > /tmp/growth-review-http.log 2>&1 &
+          review_pid=$!
+          PORT=8812 node server.js > /tmp/growth-host-http.log 2>&1 &
+          host_pid=$!
+          trap 'kill "$review_pid" "$host_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8811/growth-i1/ > /dev/null && curl --fail --silent http://127.0.0.1:8812/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/growth-i1/host-bridge.mjs
+          node tests/growth-i1/browser.mjs
+          node tests/growth-i1/failure-and-batch.mjs
+          node tests/growth-i1/learning-regression.mjs
+        env:
+          HOST_URL: http://127.0.0.1:8812
+          REVIEW_URL: http://127.0.0.1:8811/growth-i1/
+          REVIEW_WIDTHS: 1440,390

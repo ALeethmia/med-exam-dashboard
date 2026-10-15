@@ -1,9 +1,8 @@
 /* Shared course presentation. Learning state and writes remain in the legacy adapters. */
 (() => {
-  let selected={};
-  try { selected=JSON.parse(localStorage.getItem('med_exam_subject_selection_v1') || '{}'); } catch {}
-  if(!selected || typeof selected!=='object' || Array.isArray(selected)) selected={};
-  const saveSelection=()=>localStorage.setItem('med_exam_subject_selection_v1',JSON.stringify(selected));
+  let selected={},storage=null;
+  function bindStorage(){storage=window.learningStorage;try{selected=JSON.parse(storage.getItem('med_exam_subject_selection_v1')||'{}');}catch{selected={};}if(!selected||typeof selected!=='object'||Array.isArray(selected))selected={};}
+  const saveSelection=()=>storage?.setItem('med_exam_subject_selection_v1',JSON.stringify(selected));
   const node=(tag,className,text)=>{const el=document.createElement(tag);el.className=className;if(text!==undefined)el.textContent=text;return el;};
   function prepare() {
     for(const [tab,prefix,statPrefix,containerId] of [
@@ -128,5 +127,5 @@
     index.querySelector('select').value=selected[path];group.open=true;
     requestAnimationFrame(()=>{row.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});row.querySelector('input').focus({preventScroll:true});});
   }
-  window.SubjectUI={prepare,render,locate,refreshDates};
+  window.SubjectUI={prepare,render,locate,refreshDates,bindStorage};
 })();

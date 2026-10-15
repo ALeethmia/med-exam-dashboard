@@ -39,7 +39,7 @@ test('subject progress retains count and duration semantics',()=>{
 test('weekly trend reads the same numeric biochemistry IDs as checkboxes',()=>{
   const source=html.match(/function getWeekTaskCompletion\(wNum\) \{[\s\S]*?\n    \}/)[0];
   const localStorage={getItem:key=>JSON.stringify(key==='med_exam_biochem_cloud'?{1:true}:{})};
-  const result=vm.runInNewContext(source+'; getWeekTaskCompletion(6)',{localStorage,anatomyLessonsData:data.anatomy});
+  const result=vm.runInNewContext(source+'; getWeekTaskCompletion(6)',{localStorage,learningStorage:localStorage,anatomyLessonsData:data.anatomy});
   assert.equal(result,Math.round(1/7*100));
 });
 test('XP, levels, weekly challenge and achievements derive from award events',()=>{
@@ -52,6 +52,7 @@ function syncHarness(fail=false) {
   const el={};
   const window={workspaceLocalOnly:false,dispatchEvent(){}};
   const context={window,document:{getElementById:()=>el},localStorage:{getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v)},CustomEvent:class{},Event:class{}};
+  window.learningStorage=context.localStorage;
   vm.runInNewContext(readFileSync(new URL('../sync.js',import.meta.url),'utf8'),context);
   window.attachLearningDB({ref:path=>({on:(e,cb)=>listeners[path]=cb,update:async values=>{writes.push(JSON.parse(JSON.stringify(values)));if(fail)throw new Error('denied');}})});
   return {window,store,listeners,writes,el};
@@ -73,22 +74,22 @@ test('local mode never queues or sends Firebase learning writes',async()=>{
   await new Promise(r=>setImmediate(r));assert.equal(h.writes.length,0);assert.equal(h.el.textContent,'本機模式');
 });
 
-test('time goals keep denied writes for retry and preserve awarded XP when unchecked',async()=>{
+test('time goals keep denied writes for retry and never mint new XP when toggled',async()=>{
   const {createTimeTasks}=await import('../time-tasks.js');
   const previousWindow=globalThis.window,previousStorage=globalThis.localStorage;
   const store=new Map();let denied=true,remote={unrelated:'keep'},writes=0;
   globalThis.window={addEventListener(){}};
-  globalThis.localStorage={getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v)};
+  globalThis.localStorage={getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v)};globalThis.learningStorage=globalThis.localStorage;
   try {
     const db={ref:()=>({on(){},transaction:async updater=>{writes++;if(denied)throw new Error('denied');remote=updater(remote);return {snapshot:{val:()=>remote}};}})};
     const tasks=createTimeTasks({db,localOnly:false,day:'2026-10-11',onChange(){}});
     tasks.set('morning',true);await new Promise(resolve=>setImmediate(resolve));
     assert.equal(tasks.failed(),true);assert.equal(Object.keys(JSON.parse(store.get('med_exam_time_tasks_v1')).pending).length,1);
-    denied=false;await tasks.retry();assert.equal(remote.unrelated,'keep');assert.equal(remote.awarded,true);
+    denied=false;await tasks.retry();assert.equal(remote.unrelated,'keep');assert.equal(remote.awarded,undefined);
     tasks.set('morning',false);await new Promise(resolve=>setImmediate(resolve));
     tasks.set('morning',true);await new Promise(resolve=>setImmediate(resolve));
-    assert.equal(Object.values(tasks.awards()).reduce((n,a)=>n+a.xp,0),20);
+    assert.equal(Object.values(tasks.awards()).reduce((n,a)=>n+a.xp,0),0);
     assert.equal(Object.keys(JSON.parse(store.get('med_exam_time_tasks_v1')).pending).length,0);
     assert.ok(writes>=3);
-  } finally {globalThis.window=previousWindow;globalThis.localStorage=previousStorage;}
+  } finally {globalThis.window=previousWindow;globalThis.localStorage=previousStorage;delete globalThis.learningStorage;}
 });

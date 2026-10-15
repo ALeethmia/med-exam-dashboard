@@ -71,16 +71,16 @@ export function createTerritoryUI(page){
  const activity=node('details','workspace-panel realm-activity');activity.id='realm-activity';activity.append(node('summary','','領地紀事'),node('p','workspace-note','每一步都留下足跡。先看有日期的成果，再回顧未記日期的成果。'),node('ul','realm-events'));
  const note=node('details','realm-history-note');note.append(node('summary','workspace-note','關於紀事日期'),node('p','workspace-note','只使用已記錄的完成日期；未記日期的成果無法判定何時發生。紀事不把目前建築階段當作新事件，也不推測缺少的歷史紀錄。'));activity.append(note);
  page.querySelector('.kingdom-territory').after(activity);
- function render(input){
-  const buildings=buildingProgressSnapshot(input),groups=realmActivityGroups(buildings),e=buildings.evidence;
+ function render(input,projection=null){
+  const buildings=projection?.buildings||buildingProgressSnapshot(input),groups=projection?.activity||realmActivityGroups(buildings),e=buildings.evidence;
   for(const {id,title} of BUILDINGS){
-   const b=buildings[id],details=container.querySelector('#building-'+id),view=targetView(id,b,e);
+   const b=buildings[id],details=container.querySelector('#building-'+id);if(b.available===false){for(const cls of ['building-stage','building-next-target','building-number','building-unit','building-progress-label','building-metric','building-fastest-label','building-source']){const el=details.querySelector('.'+cls);if(el)el.textContent=cls==='building-stage'?'尚未取得':cls==='building-source'?b.reason:'';}details.querySelector('.workspace-meter').hidden=true;for(const cls of ['building-events','building-next','keep-route-overview','keep-current-paths'])details.querySelector('.'+cls)?.replaceChildren();continue;}details.querySelector('.workspace-meter').hidden=false;const view=targetView(id,b,e);
    details.querySelector('.building-stage').textContent=b.name;
    details.querySelector('.building-next-target').textContent=b.stage===5?view.next:'下一階段 · '+view.next;
    details.querySelector('.building-number').textContent=view.number;
    details.querySelector('.building-unit').textContent=view.unit;
    details.querySelector('.building-progress-label').textContent=view.remaining;
-   const meter=details.querySelector('summary [role=progressbar]');meter.setAttribute('aria-valuenow',String(Math.floor(view.progress)));meter.setAttribute('aria-valuetext',view.number+' '+view.unit+'；'+view.remaining);meter.firstChild.style.width=view.progress+'%';
+   const meter=details.querySelector('[role=progressbar]');meter.setAttribute('aria-valuenow',String(Math.floor(view.progress)));meter.setAttribute('aria-valuetext',view.number+' '+view.unit+'；'+view.remaining);meter.firstChild.style.width=view.progress+'%';
    details.querySelector('.building-metric').textContent=id==='academy'?'總進度 '+e.courses.done+' / '+e.courses.total+' 單元':id==='barracks'?'累積有效訓練 '+e.training+' 次':'';
    const events=recentEvents(groups,id,3);details.querySelector('.building-events').replaceChildren(...(events.length?events.map(eventNode):[node('li','workspace-note','尚無成果，從下一次現實中的行動開始。')]));
    details.querySelector('.building-source').textContent=sourceText(id,e);
@@ -91,7 +91,7 @@ export function createTerritoryUI(page){
     next.append(...(b.nextPaths.length?b.nextPaths.map(pathNode):[node('li','workspace-note','已達最高階段。')]));
    }else next.append(node('li','workspace-note',b.stage===5?'已達最高階段。':title+' → '+view.next+'：'+(id==='academy'?(e.courses.total?'完成 '+Math.ceil(e.courses.total*COURSE_THRESHOLDS[b.stage]/100)+' 單元（總課程的 '+COURSE_THRESHOLDS[b.stage]+'%）':'等待課程資料載入'):'完成 '+TRAINING_THRESHOLDS[b.stage]+' 次有效訓練')));
   }
-  const history=recentEvents(groups,'keep',12);activity.querySelector('.realm-events').replaceChildren(...(history.length?history.map(eventNode):[node('li','workspace-note','尚無成果，從下一次現實中的行動開始。')]));
+  if(projection&&!projection.activity){activity.querySelector('.realm-events').replaceChildren(node('li','workspace-note','歷程資料尚未取得'));return;}const history=recentEvents(groups,'keep',12);activity.querySelector('.realm-events').replaceChildren(...(history.length?history.map(eventNode):[node('li','workspace-note','尚無成果，從下一次現實中的行動開始。')]));
  }
  return {render};
 }

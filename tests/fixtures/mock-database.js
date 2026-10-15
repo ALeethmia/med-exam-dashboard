@@ -1,0 +1,12 @@
+// Compat contract test double. RAM only; no transport, SDK or persistence.
+const copy=v=>v==null?v:structuredClone(v);
+export function createMockDatabase(initial={}, {delay=10,hold=false}={}){
+ let tree=copy(initial),connected=true,paused=hold;const listeners=new Set(),writes=[];
+ const value=path=>path==='.info/connected'?connected:path.split('/').filter(Boolean).reduce((v,k)=>v?.[k],tree)??null;
+ const snapshot=path=>{const v=copy(value(path));return Object.freeze({val:()=>copy(v),exists:()=>v!=null});};
+ const deliver=e=>{if(paused)return;const snap=snapshot(e.path);setTimeout(()=>{if(e.active&&!paused)e.callback(snap);},delay);};
+ function emit(changed=null){for(const e of listeners)if(e.active&&(!changed||changed.some(path=>path===e.path||path.startsWith(e.path+'/')||e.path.startsWith(path+'/'))))deliver(e);}
+ function put(path,v){const keys=path.split('/').filter(Boolean);if(!keys.length){tree=copy(v)||{};return;}let node=tree;for(const key of keys.slice(0,-1))node=node[key]||={};if(v===null)delete node[keys.at(-1)];else node[keys.at(-1)]=copy(v);}
+ function ref(path=''){return {on(event,callback,cancel){const e={path,event,callback,cancel,active:true};listeners.add(e);deliver(e);return callback;},off(event,callback){for(const e of listeners)if(e.path===path&&(!event||event===e.event)&&(!callback||callback===e.callback)){e.active=false;listeners.delete(e);}},async once(){return snapshot(path);},async transaction(fn){const next=fn(copy(value(path)));if(next!==undefined){writes.push({method:'transaction',path});put(path,next);emit([path]);}return {committed:next!==undefined,snapshot:snapshot(path)};},async update(patch){writes.push({method:'update',path});for(const [key,v] of Object.entries(patch))put([path,key].filter(Boolean).join('/'),v);emit(Object.keys(patch).map(key=>[path,key].filter(Boolean).join('/')));},async set(v){writes.push({method:'set',path});put(path,v);emit([path]);}};}
+ return Object.freeze({ref,replace(next){tree=copy(next);emit();},release(){paused=false;emit();},reject(code='PERMISSION_DENIED',path=null){for(const e of [...listeners])if(e.path!=='.info/connected'&&(!path||e.path===path))e.cancel?.({code});},connection(next){connected=next;for(const e of listeners)if(e.path==='.info/connected')deliver(e);},inspect:()=>({listeners:listeners.size,writes:copy(writes),tree:copy(tree)}),captureCallbacks:()=>[...listeners].map(e=>({path:e.path,callback:e.callback,snapshot:snapshot(e.path)})),goOffline(){connected=false;for(const e of listeners)e.active=false;listeners.clear();}});
+}

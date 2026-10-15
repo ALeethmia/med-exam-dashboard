@@ -22,23 +22,23 @@ function server() {
   }
   return {client,records,writes,get,put};
 }
-test('local planner keeps history, optional time, order and XP without changing legacy records',()=>{
+test('local planner keeps history, optional time, order without minting XP or changing changing legacy records',()=>{
   const local=storage();local.setItem('med_exam_physio_cloud','{"fc_p_3_a":true}');
   let count=0;const options={storage:local,events:events(),localOnly:true,newId:()=> 'id'+(++count),today:()=> '2026-10-12',now:()=>100};
   const planner=createPlanner(options);
   assert.equal(planner.list('2026-10-12').length,0);
-  const id=planner.add({title:'心血管閱讀',links:[{path:'physiology',id:'fc_p_3_a'}]});
+  const id=planner.add({title:'心血管閱讀'});
   const second=planner.add({title:'考古題 50 題'});
   planner.move(second,-1);assert.equal(planner.list('2026-10-12')[0].id,second);
   planner.update(id,{complete:true});planner.update(id,{complete:false});planner.update(id,{title:'再讀心血管',date:'2026-10-13',minutes:60,complete:true});
-  planner.remove(id);assert.equal(Object.values(planner.awards()).reduce((sum,award)=>sum+award.xp,0),20);
+  planner.remove(id);assert.equal(Object.values(planner.awards()).reduce((sum,award)=>sum+award.xp,0),0);
   planner.update(id,{deleted:false});assert.equal(planner.list('2026-10-13')[0].id,id);
   assert.equal(planner.list('2026-10-13')[0].minutes,60);
   assert.equal(local.getItem('med_exam_physio_cloud'),'{"fc_p_3_a":true}');
   const restored=createPlanner(options);assert.equal(restored.list('2026-10-13')[0].id,id);assert.deepEqual(restored.awards(),planner.awards());
   assert.equal(local.getItem(PLANNER_KEY),null);assert.equal(planner.status().pending,0);
 });
-test('two devices merge different fields and retain stable task ID and one XP award',async()=>{
+test('two devices merge different fields and retain stable task ID and zero new XP awards',async()=>{
   const backend=server(),a=backend.client('a'),b=backend.client('b');await settle(a.planner,b.planner);
   const id=a.planner.add({title:'讀生理',minutes:60});await settle(a.planner,b.planner);
   b.connection.online=false;b.planner.update(id,{date:'2026-10-13',complete:true});await settle(b.planner);
@@ -46,11 +46,11 @@ test('two devices merge different fields and retain stable task ID and one XP aw
   a.planner.update(id,{title:'生理 60 分鐘',complete:true});await settle(a.planner);
   b.connection.online=true;await b.planner.retry();await settle(a.planner,b.planner);
   assert.equal(backend.get(PLANNER_PATH+'/'+id).title,'生理 60 分鐘');assert.equal(backend.get(PLANNER_PATH+'/'+id).date,'2026-10-13');
-  assert.equal(Object.values(a.planner.awards()).reduce((sum,award)=>sum+award.xp,0),20);
+  assert.equal(Object.values(a.planner.awards()).reduce((sum,award)=>sum+award.xp,0),0);
   assert.deepEqual(a.planner.awards(),b.planner.awards());assert.equal(b.planner.status().pending,0);
   a.planner.update(id,{complete:false});await settle(a.planner,b.planner);a.planner.update(id,{complete:true});await settle(a.planner,b.planner);
   a.planner.remove(id);await settle(a.planner,b.planner);a.planner.update(id,{deleted:false});await settle(a.planner,b.planner);
-  assert.equal(Object.values(a.planner.awards()).length,1);
+  assert.equal(Object.values(a.planner.awards()).length,0);
   assert.ok(backend.writes.every(path=>path.startsWith(PLANNER_PATH+'/')));
 });
 test('same-field offline conflicts preserve both choices until explicitly resolved',async()=>{
@@ -73,7 +73,7 @@ test('offline intents survive reload and deletion preserves the remote award led
   const restored=createPlanner({storage:a.local,events:events(),db:null,newId:()=> 'restored',today:()=> '2026-10-12'});
   assert.equal(restored.list('2026-10-12')[0].complete,true);assert.equal(restored.status().pending,1);
   a.connection.online=true;await a.planner.retry();await settle(a.planner);a.planner.remove(id);await settle(a.planner);
-  const remote=backend.get(PLANNER_PATH+'/'+id);assert.equal(remote.deleted,true);assert.equal(remote.award.xp,20);
+  const remote=backend.get(PLANNER_PATH+'/'+id);assert.equal(remote.deleted,true);assert.equal(remote.award,undefined);
 });
 test('invalid task input never creates a half-saved task',()=>{
   const local=storage();const planner=createPlanner({storage:local,events:events(),localOnly:true,newId:()=> 'id'});
@@ -87,5 +87,5 @@ test('edits during an in-flight creation are rebased and not dropped on acknowle
   a.planner.update(id,{title:'最新任務',complete:true,minutes:30});
   await settle(a.planner);
   const task=backend.get(PLANNER_PATH+'/'+id);
-  assert.equal(task.title,'最新任務');assert.equal(task.minutes,30);assert.equal(task.complete,true);assert.equal(task.award.xp,20);assert.equal(a.planner.status().pending,0);
+  assert.equal(task.title,'最新任務');assert.equal(task.minutes,30);assert.equal(task.complete,true);assert.equal(task.award,undefined);assert.equal(a.planner.status().pending,0);
 });

@@ -1,0 +1,5 @@
+.i3-review-controls{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px}.i3-review-controls strong,.i3-review-controls p{flex-basis:100%}.i3-review-controls p{margin:0;color:var(--muted)}.i3-review-controls select{max-width:100%}.i3-review-controls button,.i3-load-status button{border:1px solid var(--line);padding:7px 10px;border-radius:8px;background:var(--surface);color:var(--ink)}.i3-load-status{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px;font-size:13px;color:var(--muted)}
+
+html[data-read-status]:not([data-read-status="ready"]) [id^="tab-content-"]:not(#tab-content-kingdom){visibility:hidden;pointer-events:none}html[data-read-status]:not([data-read-status="ready"]) #chronicle-detailed-history{display:none}
+
+#lord-realm-meter{width:100%;max-width:100%}.i3-review-controls select{min-width:0}.task-copy small{overflow-wrap:anywhere}

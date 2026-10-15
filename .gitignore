@@ -4,3 +4,8 @@ test-results/
 .env
 .env.local
 *.log
+
+.growth-review/
+.growth-evidence/
+
+/node_modules
