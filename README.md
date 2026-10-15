@@ -382,3 +382,10 @@ Phase 2B.1a UX 收尾：領主與同一份完整編年史整合為角色與故�
 初始之地 Lite、40/40/20 領主進度及 Design A 的變更／安全阻擋，見 [整合審查](docs/growth-i1/RELEASE_REVIEW.md)。正式 Rules 未核對前不可合併或上線。
 
 `npm test` 包含 Growth I1 純函式／歷史相容測試；`npm run build`、`npm run lint` 保留。Mock 瀏覽器回歸及安全的本機 Fixtures 產生方式見審查文件與 `.github/workflows/growth-i1.yml`。產品入口不載入 Fixtures，不新增 Firebase Schema，沒有 I3.2 可信完成服務。
+
+
+## Repository B：實作檔案分類
+
+14 個純計算／映射模組的實作已分類至 `src/study/`、`src/planner/`、`src/kingdom/`。原根目錄 JS URL 保留單行 re-export，相容入口與新路徑共用相同匯出實例。Classic Script、登入／同步初始化、Store、HTML、CSS 與主機設定保留原位；`styles/tailwind.css` 及 `public/` 建置契約不變。
+
+詳見 [整理範圍與驗證](docs/REPOSITORY_LAYOUT_B.md) 及 [完整原路徑 → 新路徑對照](docs/REPOSITORY_LAYOUT_B_MAP.json)。本輪不變更使用者功能、資料或成長公式，不加入新框架。
