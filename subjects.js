@@ -54,7 +54,8 @@
     const message=node('span','workspace-note');message.setAttribute('role','status');
     input.addEventListener('change',()=>{try{service.set(key,input.value||null);input.blur();dateControls(row);}catch(e){message.textContent=e.message;input.value=day||'';}});label.append(input);tools.append(label);
     const remove=node('button','course-date-remove','移除日期');remove.type='button';remove.disabled=!day;remove.addEventListener('click',()=>service.set(key,null));tools.append(remove);
-    message.textContent=status.conflict?'日期已在其他裝置變更，請選擇保留哪份紀錄。':status.error|| (status.pending?'日期待同步':'');tools.append(message);
+    const completion=window.learningSyncStatus?.(key.replace('__','/'));
+    message.textContent=(completion?.pending?'課程完成狀態'+(completion.review?'待確認':'待同步')+'；日期另行同步。 ':'')+(status.conflict?'日期已在其他裝置變更，請選擇保留哪份紀錄。':status.error|| (status.pending?'日期待同步；不代表課程完成狀態已同步。':''));tools.append(message);
     if(status.conflict)for(const [text,keep] of [['採用雲端日期',false],['保留本機日期',true]]){const button=node('button','workspace-link',text);button.type='button';button.addEventListener('click',()=>service.resolve(key,keep));tools.append(button);}
   }
   function refreshDates(){document.querySelectorAll('[data-study-key]').forEach(dateControls);}
