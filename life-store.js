@@ -1,6 +1,6 @@
-import {dateKey} from './study-core.js';
+import {dateKey} from './src/study/study-core.js';
 import {validDate} from './daily-planner.js';
-import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise,isStrength,hasTrainingMenu,modeExercise,menuConfig,scheduleNeedsConfirmation} from './life-core.js';
+import {defaultTraining,exerciseForDay,exerciseMenu,leisureForDay,TYPES,STATUS,STAGES,MENU_VERSION,stageExercise,untouchedExercise,isStrength,hasTrainingMenu,modeExercise,menuConfig,scheduleNeedsConfirmation} from './src/study/life-core.js';
 export const LIFE_KEY='med_exam_life_v1';
 export const TRAINING_PATH='questOS/v1/training';
 const clone=value=>JSON.parse(JSON.stringify(value));

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import vm from 'node:vm';
-import {dateKey, weekKey, selectTasks, subjectStats, gameStats, flattenSubjects} from '../study-core.js';
+import {dateKey, weekKey, selectTasks, subjectStats, gameStats, flattenSubjects} from '../src/study/study-core.js';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const names={physio:'physioChaptersData', anatomy:'anatomyLessonsData', biochem:'biochemData', pharm:'pharmacologyData', weeks:'weeksData'};
 const data=Object.fromEntries(Object.entries(names).map(([key,name])=>{

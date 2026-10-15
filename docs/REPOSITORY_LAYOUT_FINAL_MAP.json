@@ -1,0 +1,223 @@
+{
+  "base": "84c8c1e8cdbd161d54964e8d230973db45ab12d3",
+  "legacyURLs": {
+    "adaptive-core.js": "src/planner/adaptive-core.js",
+    "chapters.js": "src/kingdom/chapters.js",
+    "growth-core.js": "src/study/growth-core.js",
+    "kingdom-building-manifest.js": "src/kingdom/kingdom-building-manifest.js",
+    "kingdom-core.js": "src/kingdom/kingdom-core.js",
+    "kingdom-lite-art.js": "src/kingdom/kingdom-lite-art.js",
+    "kingdom-map-core.js": "src/kingdom/kingdom-map-core.js",
+    "kingdom-preview-state.js": "src/kingdom/kingdom-preview-state.js",
+    "life-core.js": "src/study/life-core.js",
+    "readonly-mapping.js": "src/kingdom/readonly-mapping.js",
+    "realm-growth.js": "src/kingdom/realm-growth.js",
+    "study-core.js": "src/study/study-core.js",
+    "task-projection.js": "src/planner/task-projection.js",
+    "territory-core.js": "src/kingdom/territory-core.js",
+    "kingdom-ui.js": "src/kingdom/kingdom-ui.js",
+    "chronicles-ui.js": "src/kingdom/chronicles-ui.js",
+    "territory-ui.js": "src/kingdom/territory-ui.js",
+    "kingdom-map-renderer.js": "src/kingdom/kingdom-map-renderer.js",
+    "kingdom-map-input.js": "src/kingdom/kingdom-map-input.js",
+    "kingdom-preview.js": "src/kingdom/kingdom-preview.js",
+    "i2a-map.js": "src/kingdom/i2a-map.js",
+    "planner-ui.js": "src/planner/planner-ui.js",
+    "week-plan-ui.js": "src/planner/week-plan-ui.js",
+    "adaptive-ui.js": "src/planner/adaptive-ui.js",
+    "growth-ui.js": "src/study/growth-ui.js",
+    "life-ui.js": "src/study/life-ui.js",
+    "version-ui.js": "src/ui/version-ui.js",
+    "kingdom-map.css": "styles/kingdom-map.css",
+    "workspace.css": "styles/workspace.css",
+    "kingdom.css": "styles/kingdom.css",
+    "i2a-kingdom.css": "styles/i2a-kingdom.css",
+    "i3.css": "styles/i3.css"
+  },
+  "productSources": [
+    {
+      "path": "playwright.config.js",
+      "sha256": "93c3b6d0692e7a54bec18dd69242fdcc38195f02eda447c255ebf556c4d95ed2"
+    },
+    {
+      "path": "src/planner/week-plan-ui.js",
+      "sha256": "92d3a9cbc409463e9ce684c43f617db10251719c6730725638c7aba6cb381e59"
+    },
+    {
+      "path": "daily-planner.js",
+      "sha256": "89c7512781559e970186b364891f858d0013f4697dbf83166176afec9f4bb924"
+    },
+    {
+      "path": "src/kingdom/kingdom-preview.js",
+      "sha256": "81c5dae8392fa1203a9674af929be0c5e920a6b7ba370e4e3c023f7efde4a2ed"
+    },
+    {
+      "path": "server.js",
+      "sha256": "aa6ae4796074749bb1caf2d707caf4c3626785e75ac21265b27ee3cfc7ab9254"
+    },
+    {
+      "path": "src/planner/adaptive-ui.js",
+      "sha256": "1a4ce1b599bface6f8097cd83f890db558a5e69027a2421273948a7db621cb56"
+    },
+    {
+      "path": "src/planner/planner-ui.js",
+      "sha256": "9d2242be5fbfba8bf67937c4a497122fe13a466f59199d4bb99cd11fa1410423"
+    },
+    {
+      "path": "legacy-rewards.js",
+      "sha256": "484a44f8bc9cfdb4711035cae41a57fa0ab1934c5dd838943e40e033d5a21c6e"
+    },
+    {
+      "path": "src/ui/version-ui.js",
+      "sha256": "f27172cc3513b86373aaa357293a620f8d922fc7ee1161a9c683418d9ba9575c"
+    },
+    {
+      "path": "time-tasks.js",
+      "sha256": "46e33981c38ff6a3a93ff8e612b4d898a65d0b7f1e3c4d7d847a93c69bba7352"
+    },
+    {
+      "path": "account-storage.js",
+      "sha256": "8fb9b5e4803487b5084e2eed5256ccf0c70c653e16727343307c061161eb11d5"
+    },
+    {
+      "path": "src/study/growth-ui.js",
+      "sha256": "31132ffa17017297ac7cbe47406da689d16e195af3fcb77e5b3971ce80df975c"
+    },
+    {
+      "path": "subjects.js",
+      "sha256": "8bbe92b42f6529182f9a7f29d101ff8f99e2e96da4ffc26d54d26bcb13ba8129"
+    },
+    {
+      "path": "course-dates.js",
+      "sha256": "98004bb94485e7b5cd6cfafd7e31bed45f4b2a24c5d0a89e263a5941a7faae13"
+    },
+    {
+      "path": "auth.js",
+      "sha256": "932fdbc1d2a010eeb96d0cda7c81086e58f681ecc736e2a21ca63485c1fa4e63"
+    },
+    {
+      "path": "firebase-entry.js",
+      "sha256": "e39d26ec0aff586b48cc8301f61c32a98af1c5479f53375f84188c12725a6455"
+    },
+    {
+      "path": "src/kingdom/kingdom-map-renderer.js",
+      "sha256": "41a9b7d79dd53e705a9d5b4d78c666ea3f9f68015369cce2cf82279e9386a8eb"
+    },
+    {
+      "path": "owner-config.js",
+      "sha256": "f001e0db089291f5521c26a70d15f34123d7b4b0eb9c3349c43e469c6c2dd874"
+    },
+    {
+      "path": "life-store.js",
+      "sha256": "67fcf5429cf51d4a499de8e981461e013240d0ae5b1a975987a9a36eb493b884"
+    },
+    {
+      "path": "src/kingdom/chronicles-ui.js",
+      "sha256": "47b111c5df51d3cb44db7e53e79207998b93b429bc76c46974ed858a9c3946a9"
+    },
+    {
+      "path": "src/kingdom/kingdom-ui.js",
+      "sha256": "cf3ac4d562faf31040b864958cf0c17b61969cb171a1777ed3641ca0f22bc799"
+    },
+    {
+      "path": "src/study/life-ui.js",
+      "sha256": "7af8b03ed37bd2ca8df54c49678781a558b15ad7b0bb9371bff02ee9f81d08d6"
+    },
+    {
+      "path": "readiness.js",
+      "sha256": "28f99e89031a7536ae9e9a1bd0de0a24c3bf3c624a5e4422cbfd2631840716f6"
+    },
+    {
+      "path": "firebase-config.js",
+      "sha256": "cd8f5bd8318b4bd8bbf3e4f573950b36eb00253a475a47eee06d5e307f468bed"
+    },
+    {
+      "path": "src/kingdom/kingdom-map-input.js",
+      "sha256": "a4f6bb6bfd97787d6c4e00395e17daca3b04cecdeaa88d282f913d8f6f2498ed"
+    },
+    {
+      "path": "theme.js",
+      "sha256": "405f831d7a7df3a872150e8968755d5554f64b2f768e11e2e9dcdd76e969d73b"
+    },
+    {
+      "path": "workspace.js",
+      "sha256": "a680e62d068d35bf9a84cb34c51ba3123c0f709a3b8de8417e471abd05c74f3b"
+    },
+    {
+      "path": "sync.js",
+      "sha256": "7368a215eb7cf2720c87c9b039d1fdd4903af1243e6c75db596bcabe5bcd3c37"
+    },
+    {
+      "path": "i3-runtime.js",
+      "sha256": "8e5a3b8666cb5489cf5349e18f4aa3727f38c6e42aee7de9c009cc1bb4bef985"
+    },
+    {
+      "path": "src/kingdom/territory-ui.js",
+      "sha256": "36b32c2e56bc39e8ba97c34d89a54687b460536d30abb2d5e64393cda448c9df"
+    },
+    {
+      "path": "adaptive-store.js",
+      "sha256": "3943a09baaccc71be050a319888db221d3cf7beb3d412774505fe1284044d497"
+    },
+    {
+      "path": "src/kingdom/i2a-map.js",
+      "sha256": "473c5f4ebe26ae6267a5c284036c98605926d3c914ad78e69c50d1609fa7d35b"
+    },
+    {
+      "path": "src/planner/task-projection.js",
+      "sha256": "e749b4579d0ad8c4496cbfb043ef06fd7a5f882b4f3c49d9fcfe068201cd0627"
+    },
+    {
+      "path": "src/planner/adaptive-core.js",
+      "sha256": "4dbac86be78f013778c1567c2ec8626b6803ce6c1299a12a82913070495491bc"
+    },
+    {
+      "path": "src/study/life-core.js",
+      "sha256": "09a57d1aa27b4a400be777a156f4119e271f22a9507902bdcbb526cce8436402"
+    },
+    {
+      "path": "src/study/study-core.js",
+      "sha256": "c5cdbe33e424c880b46297c652ec90deb532ccde83ffedae59e2b2a84cbb68b0"
+    },
+    {
+      "path": "src/study/growth-core.js",
+      "sha256": "43ae672b110cb624157e5f6a8f0882abc135ae741d96064122ffe760f7e168c7"
+    },
+    {
+      "path": "src/kingdom/chapters.js",
+      "sha256": "c0d0aa03484f48681251c48e36248387a26e8ca6903d0b542d348e9da3c1018e"
+    },
+    {
+      "path": "src/kingdom/kingdom-preview-state.js",
+      "sha256": "2a5215c0658250bfc2f31a11fbcb8a6dfd68ae5bb4a3b452e00f8029127035ae"
+    },
+    {
+      "path": "src/kingdom/kingdom-lite-art.js",
+      "sha256": "98f25406184bada6ab782eb1bac3815f4a93a78cb42852e2056fdb5bf3ad3d1a"
+    },
+    {
+      "path": "src/kingdom/kingdom-building-manifest.js",
+      "sha256": "f183a0fc9eccf270cbfb3163c025f0e12a43c2cd5aa3abad6691bd416c859dcf"
+    },
+    {
+      "path": "src/kingdom/territory-core.js",
+      "sha256": "a60679f0929b96e3c750d3c1135109114015d3d294f834a326a6e0d7d7b07106"
+    },
+    {
+      "path": "src/kingdom/kingdom-core.js",
+      "sha256": "e6e96aeab96a91c8aaa51b2ab5cfe517e9950f0380c85cb8501fc3f0c66431c4"
+    },
+    {
+      "path": "src/kingdom/kingdom-map-core.js",
+      "sha256": "e2a4086c56809b492cdd2d0756236e4a0cc9e58ff60f6f594343e4b6374122a7"
+    },
+    {
+      "path": "src/kingdom/readonly-mapping.js",
+      "sha256": "2623fd5c760b113f51cf5e30d74476cc4079b24bcf1382e5474adab7b579cfde"
+    },
+    {
+      "path": "src/kingdom/realm-growth.js",
+      "sha256": "bc9ae995db1638cd774628ce99d5a5d05239940da503a9071ffbac32b75ecd40"
+    }
+  ]
+}

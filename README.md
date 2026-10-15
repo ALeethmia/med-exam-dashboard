@@ -384,8 +384,10 @@ Phase 2B.1a UX 收尾：領主與同一份完整編年史整合為角色與故�
 `npm test` 包含 Growth I1 純函式／歷史相容測試；`npm run build`、`npm run lint` 保留。Mock 瀏覽器回歸及安全的本機 Fixtures 產生方式見審查文件與 `.github/workflows/growth-i1.yml`。產品入口不載入 Fixtures，不新增 Firebase Schema，沒有 I3.2 可信完成服務。
 
 
-## Repository B：實作檔案分類
+## Repository B：檔案分類
 
-14 個純計算／映射模組的實作已分類至 `src/study/`、`src/planner/`、`src/kingdom/`。原根目錄 JS URL 保留單行 re-export，相容入口與新路徑共用相同匯出實例。Classic Script、登入／同步初始化、Store、HTML、CSS 與主機設定保留原位；`styles/tailwind.css` 及 `public/` 建置契約不變。
+純計算、UI 與地圖模組位於 `src/study/`、`src/planner/`、`src/kingdom/`、`src/ui/`；五個原根目錄 CSS 已移入 `styles/`。根目錄 JS 從 46 個降為 19 個，保留登入、同步、Store、Classic Script 與主機入口。
 
-詳見 [整理範圍與驗證](docs/REPOSITORY_LAYOUT_B.md) 及 [完整原路徑 → 新路徑對照](docs/REPOSITORY_LAYOUT_B_MAP.json)。本輪不變更使用者功能、資料或成長公式，不加入新框架。
+舊公開 JS／CSS URL 由 `config/legacy-assets.json`、Express 與 Vercel 的同一組對照維持。舊 JS 回應 `compat/` 的 re-export，所有內部 import 使用 canonical `src/` 路徑；不重新導向或建立第二份模組實例。新增檔案對照時須同步更新 Vercel rewrites，測試會核對。
+
+詳見 [分類與驗證](docs/REPOSITORY_LAYOUT_FINAL.md) 及 [完整機器可讀對照](docs/REPOSITORY_LAYOUT_FINAL_MAP.json)。[第一輪紀錄](docs/REPOSITORY_LAYOUT_B.md) 僅為歷史基準。開發仍使用 `npm ci`、`npm run build`、`npm start`；瀏覽器開啟 http://localhost:3000/ ，不以 file:// 執行。

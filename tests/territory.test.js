@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildingProgressSnapshot,realmEvidenceSnapshot,realmActivitySnapshot,realmActivityGroups,COURSE_THRESHOLDS,territoryMilestoneSnapshot} from '../territory-core.js';
+import {buildingProgressSnapshot,realmEvidenceSnapshot,realmActivitySnapshot,realmActivityGroups,COURSE_THRESHOLDS,territoryMilestoneSnapshot} from '../src/kingdom/territory-core.js';
 import {createLifeStore} from '../life-store.js';
 import {memoryStorage,mockEvents,planningBackend,settle} from './helpers/planning-mock.js';
 const data={physio:[{sections:Array.from({length:100},(_,i)=>({id:'p'+i,title:'單元'+i}))}],anatomy:[],biochem:[],pharm:[]};

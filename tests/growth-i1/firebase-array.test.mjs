@@ -1,4 +1,4 @@
-import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import vm from'node:vm';import{mapKingdomReadOnly}from'../../readonly-mapping.js';import{makeFixture}from'../fixtures/fixtures.js';import{projectTask}from'../../task-projection.js';import{flattenSubjects}from'../../study-core.js';
+import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import vm from'node:vm';import{mapKingdomReadOnly}from'../../src/kingdom/readonly-mapping.js';import{makeFixture}from'../fixtures/fixtures.js';import{projectTask}from'../../src/planner/task-projection.js';import{flattenSubjects}from'../../src/study/study-core.js';
 const html=readFileSync(new URL('../../index.html',import.meta.url),'utf8'),names={physio:'physioChaptersData',anatomy:'anatomyLessonsData',biochem:'biochemData',pharm:'pharmacologyData',weeks:'weeksData'};
 const data=Object.fromEntries(Object.entries(names).map(([key,name])=>[key,JSON.parse(JSON.stringify(vm.runInNewContext('('+html.match(new RegExp('const '+name+' = (\\[.*?\\n    \\]);','s'))[1]+')')))]));
 const catalogItems=flattenSubjects(data);

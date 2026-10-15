@@ -5,50 +5,52 @@ import {createHash} from 'node:crypto';
 import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 const root=fileURLToPath(new URL('../../',import.meta.url));
-const map=JSON.parse(readFileSync(path.join(root,'docs/REPOSITORY_LAYOUT_B_MAP.json'),'utf8'));
-const moved=map.files.filter(file=>file.action==='move-with-compatibility-export');
-const reverse=new Map(moved.map(file=>[file.implementation,file.from]));
-const hash=value=>createHash('sha256').update(value).digest('hex');
+const map=JSON.parse(readFileSync(path.join(root,'docs/REPOSITORY_LAYOUT_FINAL_MAP.json'),'utf8'));
+const aliases=JSON.parse(readFileSync(path.join(root,'config/legacy-assets.json'),'utf8'));
+const old=JSON.parse(readFileSync(path.join(root,'docs/REPOSITORY_LAYOUT_B_MAP.json'),'utf8'));
 const specifiers=/(\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)(['"])([^'"\n]+)\2/g;
+const hash=v=>createHash('sha256').update(v).digest('hex');
 function tree(directory){return readdirSync(directory,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?tree(path.join(directory,entry.name)):[path.join(directory,entry.name)]);}
-test('mapping covers every original root JS/CSS/JSON/HTML/config file',()=>{
- const actual=readdirSync(root,{withFileTypes:true}).filter(entry=>entry.isFile()&&/\.(js|css|json|html|cjs)$/.test(entry.name)).map(entry=>entry.name).sort();
- assert.deepEqual(map.files.map(file=>file.from).sort(),actual);assert.equal(moved.length,14);
+test('root compatibility files are removed and every former URL has one canonical target',()=>{
+ assert.deepEqual(aliases,map.legacyURLs);assert.equal(Object.keys(aliases).length,32);
+ for(const [a,b] of Object.entries(aliases)){assert(!existsSync(path.join(root,a)),a);assert(existsSync(path.join(root,b)),b);assert(!aliases[b],b+' must not chain');}
+ assert.equal(readdirSync(root).filter(f=>f.endsWith('.js')).length,19);
+ assert.equal(readdirSync(root).filter(f=>f.endsWith('.css')).length,0);
 });
-test('entry points, Classic scripts, stores, CSS, cache and deployment configuration remain byte identical',()=>{
- for(const file of map.files.filter(file=>file.action==='keep'))assert.equal(hash(readFileSync(path.join(root,file.from))),file.originalSHA256,file.from);
-});
-test('relocated implementation source is identical after reversing only import paths',()=>{
- for(const file of moved){
-  const source=readFileSync(path.join(root,file.implementation),'utf8');
-  const normalized=source.replace(specifiers,(match,prefix,quote,specifier)=>{
-   if(!specifier.startsWith('.'))return match;
-   const current=path.posix.normalize(path.posix.join(path.posix.dirname(file.implementation),specifier));
-   const old=reverse.get(current)||current;let relative=path.posix.relative(path.posix.dirname(file.from)||'.',old);
-   if(!relative.startsWith('.'))relative='./'+relative;
-   return prefix+quote+relative+quote;
-  });
-  assert.equal(hash(normalized),file.originalSHA256,file.implementation);
+test('every product module is identical after normalizing only import paths',()=>{
+ for(const entry of map.productSources){
+  if(entry.path==='server.js')continue; // Hosting-only compatibility adapter checked separately.
+  const normalized=readFileSync(path.join(root,entry.path),'utf8').replace(specifiers,(match,prefix,quote,spec)=>{
+   if(!spec.startsWith('.'))return match;
+   const [name,...query]=spec.split('?');
+   const target=path.posix.normalize(path.posix.join(path.posix.dirname(entry.path),name));
+   return prefix+quote+'@/'+(aliases[target]||target)+(query.length?'?'+query.join('?'):'')+quote;
+  });assert.equal(hash(normalized),entry.sha256,entry.path);
  }
 });
-test('legacy URL modules forward every export to the same canonical implementation instance',async()=>{
- for(const file of moved){
-  const bridge=readFileSync(path.join(root,file.from),'utf8');
-  assert.equal(bridge,"// Compatibility URL: implementation moved without changing its exports.\nexport * from './"+file.implementation+"';\n");
-  const legacy=await import(pathToFileURL(path.join(root,file.from))),canonical=await import(pathToFileURL(path.join(root,file.implementation)));
-  assert.deepEqual(Object.keys(legacy),Object.keys(canonical),file.from);
-  for(const key of Object.keys(legacy))assert.equal(legacy[key],canonical[key],file.from+' export '+key);
- }
+test('server and Vercel serve legacy bridges/CSS without redirects or duplicate implementations',()=>{
+ const v=JSON.parse(readFileSync(path.join(root,'vercel.json')));
+ assert.deepEqual(v.rewrites,Object.entries(aliases).map(([a,b])=>({source:'/'+a,destination:a.endsWith('.js')?'/compat/'+a:'/'+b})));
+ for(const [a,b] of Object.entries(aliases))if(a.endsWith('.js'))assert.equal(readFileSync(path.join(root,'compat',a),'utf8'),"// Served at the legacy URL; use the canonical module instance.\nexport * from '/"+b+"';\n");
+ const source=readFileSync(path.join(root,'server.js'),'utf8');assert.match(source,/res\.sendFile/);assert.match(source,/etag:false, lastModified:false/);assert.match(source,/config\/legacy-assets\.json/);
+ assert.deepEqual(v.git,JSON.parse('{"deploymentEnabled":{"codex/growth-i1-integration":false}}'));
 });
-test('all relative ES imports, dynamic imports and re-exports resolve to real files',()=>{
- const files=[...tree(path.join(root,'src')),...readdirSync(root).filter(name=>name.endsWith('.js')).map(name=>path.join(root,name))];let checked=0;
- for(const file of files){const source=readFileSync(file,'utf8');for(const match of source.matchAll(specifiers)){const specifier=match[3];if(!specifier.startsWith('.'))continue;const target=new URL(specifier,pathToFileURL(file));assert(existsSync(target),file+' → '+specifier);checked++;}}
- assert(checked>60);
+test('all relative ES imports, dynamic imports and re-exports resolve to canonical real files',()=>{
+ const files=[...tree(path.join(root,'src')),...readdirSync(root).filter(n=>n.endsWith('.js')).map(n=>path.join(root,n))];let checked=0;
+ for(const file of files)for(const match of readFileSync(file,'utf8').matchAll(specifiers)){
+  if(!match[3].startsWith('.'))continue;
+  const target=new URL(match[3],pathToFileURL(file));assert(existsSync(target),file+' → '+match[3]);checked++;
+ }assert(checked>60);
 });
-test('HTML script/stylesheet order, inline bootstrap and existing resource URLs remain unchanged',()=>{
+test('HTML bootstrap and script order are unchanged except canonical stylesheet/module URLs',()=>{
  for(const name of ['index.html','kingdom-preview.html']){
-  const original=map.files.find(file=>file.from===name);const html=readFileSync(path.join(root,name));assert.equal(hash(html),original.originalSHA256,name);
-  const assets=[...html.toString().matchAll(/(?:src|href)=["'](\.\/[^"']+)["']/g)].map(match=>match[1]);
-  for(const asset of assets){const target=new URL(asset,pathToFileURL(path.join(root,name)));assert(existsSync(target),asset);}
+  let html=readFileSync(path.join(root,name),'utf8');
+  for(const [a,b] of Object.entries(aliases))html=html.replaceAll('src="./'+b+'"','src="./'+a+'"').replaceAll('href="./'+b+'"','href="./'+a+'"');
+  assert.equal(hash(html),old.files.find(f=>f.from===name).originalSHA256,name);
+ }
+});
+test('CSS bytes and initialization/storage/deployment essentials remain unchanged',()=>{
+ for(const f of old.files.filter(f=>f.from.endsWith('.css')||['theme.js','subjects.js','sync.js','firebase-config.js','owner-config.js','package.json','package-lock.json','metadata.json'].includes(f.from))){
+  assert.equal(hash(readFileSync(path.join(root,aliases[f.from]||f.from))),f.originalSHA256,f.from);
  }
 });

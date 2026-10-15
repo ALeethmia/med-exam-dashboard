@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createReadiness,observeDatabase,REQUIRED_PATHS} from '../../readiness.js';
 import {createMockDatabase} from '../fixtures/mock-database.js';
-import {mapKingdomReadOnly,createStagePresentation} from '../../readonly-mapping.js';
+import {mapKingdomReadOnly,createStagePresentation} from '../../src/kingdom/readonly-mapping.js';
 import {makeFixture} from '../fixtures/fixtures.js';
 const tick=()=>new Promise(r=>setTimeout(r,20));
 const user=n=>({displayName:n,uid:'not-exported',token:'not-exported'});

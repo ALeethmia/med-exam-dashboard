@@ -37,6 +37,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:8811/growth-i1/ > /dev/null && curl --fail --silent http://127.0.0.1:8812/ > /dev/null; then break; fi
             sleep 1
           done
+          node tests/growth-i1/repository-layout-http.mjs
           node tests/growth-i1/host-bridge.mjs
           node tests/growth-i1/browser.mjs
           node tests/growth-i1/failure-and-batch.mjs

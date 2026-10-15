@@ -1,4 +1,4 @@
-import {flattenSubjects,dateKey} from'../../study-core.js';
+import {flattenSubjects,dateKey} from'../../src/study/study-core.js';
 export function fixturePackets(name,data){
  const all=flattenSubjects(data),N=all.length,D={initial:0,middle:35,high:80,full:Math.ceil(N*.85),downgrade:Math.ceil(N*.85)-1,'course-task':0,'general-task':0,'legacy-pending':0}[name]??0;
  const T={middle:8,high:20,full:30,downgrade:30}[name]??0,states={videos:{},biochem:{},physiology:{},pharmacology:{}},habits={},dates={};

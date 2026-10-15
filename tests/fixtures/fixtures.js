@@ -1,5 +1,5 @@
-import {flattenSubjects,awardKey} from'../../study-core.js';
-import {freeze,clone} from'../../readonly-mapping.js';
+import {flattenSubjects,awardKey} from'../../src/study/study-core.js';
+import {freeze,clone} from'../../src/kingdom/readonly-mapping.js';
 export const FIXTURE_DAY='2026-10-14';
 // Synthetic catalog for deterministic boundary tests. UI uses the retained public curriculum.
 export function fixtureCatalog(total=100){return {physio:[{chapterId:'甲',sections:Array.from({length:total},(_,i)=>({id:'fixture-'+i,title:'Fixture 課程 '+i}))}],anatomy:[],biochem:[],pharm:[],weeks:[]};}

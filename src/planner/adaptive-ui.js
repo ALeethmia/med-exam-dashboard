@@ -1,4 +1,4 @@
-import {dateKey,weekKey} from './study-core.js';
+import {dateKey,weekKey} from '../study/study-core.js';
 import {PRIORITIES,addDays,fixedClasses,dailyCapacity,studyWeek,proposeSchedule,taskLocked,taskPlanning,taskMinutes,reviseSchedule,progressSummary} from './adaptive-core.js';
 const node=(tag,cls='',text)=>{const e=document.createElement(tag);e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const button=(text,action,cls='workspace-button')=>{const e=node('button',cls,text);e.type='button';e.onclick=action;return e;};

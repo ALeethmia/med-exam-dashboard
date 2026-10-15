@@ -1,6 +1,6 @@
-import {planningLocked} from './daily-planner.js';
+import {planningLocked} from '../../daily-planner.js';
 import {PRIORITIES,taskPlanning} from './adaptive-core.js';
-import {flattenSubjects, dateKey} from './study-core.js';
+import {flattenSubjects, dateKey} from '../study/study-core.js';
 const node=(tag,className,text)=>{const element=document.createElement(tag);element.className=className;if(text!==undefined)element.textContent=text;return element;};
 const button=(text,action,className='workspace-button')=>{const element=node('button',className,text);element.type='button';element.onclick=action;return element;};
 export function courseCatalog(data) {

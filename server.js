@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import {readFileSync} from 'node:fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,6 +16,14 @@ app.use((req, res, next) => {
   res.setHeader('Expires', '0');
   next();
 });
+
+const legacyAssets = JSON.parse(readFileSync(path.join(__dirname, 'config/legacy-assets.json'), 'utf8'));
+for (const [oldPath, newPath] of Object.entries(legacyAssets)) {
+  const target = oldPath.endsWith('.js') ? 'compat/'+oldPath : newPath;
+  app.get('/'+oldPath, (req, res) => {
+    res.sendFile(path.join(__dirname, target), {etag:false, lastModified:false});
+  });
+}
 
 app.use(express.static(__dirname, {
   etag: false,
