@@ -35,8 +35,10 @@ test('same-course parallel writers serialize generations; true-false-true cannot
  const b=await pair(context,page,prefix+test.info().testId);
  const rows=await Promise.all([page.evaluate(()=>session.put('physiology/fc_p_1_a',true)),b.evaluate(()=>session.put('physiology/fc_p_1_a',false))]);
  expect(rows.map(r=>r.generation).sort()).toEqual([1,2]);
- const current=await page.evaluate(()=>session.put('physiology/fc_p_1_a',true));expect(current.generation).toBe(3);
- for(const old of rows)expect(await b.evaluate(r=>session.removeIfCurrent(r),old)).toBe(false);
+ const firstTrue=await page.evaluate(()=>session.put('physiology/fc_p_1_a',true));
+ const middleFalse=await b.evaluate(()=>session.put('physiology/fc_p_1_a',false));
+ const current=await page.evaluate(()=>session.put('physiology/fc_p_1_a',true));expect([firstTrue.generation,middleFalse.generation,current.generation]).toEqual([3,4,5]);
+ for(const old of [...rows,firstTrue,middleFalse])expect(await b.evaluate(r=>session.removeIfCurrent(r),old)).toBe(false);
  expect((await b.evaluate(()=>session.list()))[0].intentId).toBe(current.intentId);
 });
 test('conditional deletion checks expected state and retains revision tombstone after success',async({context,page})=>{
