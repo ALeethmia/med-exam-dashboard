@@ -74,3 +74,8 @@ test('rapid complete/cancel while the first acknowledgement is delayed coalesces
  h.window.learningDB={ref(path){const ref=real.ref(path);return path?ref:{update:patch=>{if(first){first=false;return new Promise(resolve=>{release=async()=>{await ref.update(patch);resolve();};});}return ref.update(patch);}};}};
  h.window.persistCourseChanges({'videos/1':true});h.window.persistCourseChanges({'videos/1':false});h.window.retryLearningSync();h.window.retryLearningSync();await release();await tick();assert.equal(h.database.inspect().tree.videos[1],false);assert.equal(h.database.inspect().writes.length,2);assert.deepEqual(h.saved(),{});assert.equal(h.window.learningSyncStatus('videos/1').review,false);h.dispose();
 });
+test('explicit local demo dates remain operable when its runtime begins after Store initialization',()=>{
+ const lifecycle=createReadiness({paths:['videos'],timeoutMs:0}),storage=memory();let writes=0;
+ const store=createCourseDates({keys:new Set(['videos__1']),localOnly:true,lifecycle,db:{ref(){writes++;throw Error('Local mode must not connect');}},storage,events:new EventTarget(),today:()=> '2026-10-15',newId:()=> 'local-date'});
+ lifecycle.start({displayName:'Local demo'});lifecycle.success('videos');store.set('videos__1','2026-10-15');assert.equal(store.records().videos__1.day,'2026-10-15');assert.equal(store.status('videos__1').pending,false);assert.equal(writes,0);store.dispose();lifecycle.dispose();
+});

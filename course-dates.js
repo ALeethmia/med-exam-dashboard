@@ -4,6 +4,8 @@ export const COURSE_DATES_PATH='questOS/v1/courseFirstCompletion';
 export const COURSE_DATES_KEY='med_exam_course_dates_v1';
 // Null day is a persistent removal marker, so old awards cannot resurrect a date.
 export function createCourseDates({keys,db=null,localOnly=false,storage=learningStorage,events=window,today=()=>dateKey(),onChange=()=>{},newId=()=>crypto.randomUUID(),lifecycle=null}={}) {
+ // Explicit local mode initializes its Store before the Firebase-style runtime begins.
+ if(localOnly)lifecycle=null;
  const storageKey=COURSE_DATES_KEY+(localOnly?'_local':'');let saved={records:{},pending:{}},busy=false;const cloud={},conflicts={};let error='',requested=false,disposed=false;const epoch=lifecycle?.read().epoch,cleanups=[];
  const valid=()=>!disposed&&(!lifecycle||lifecycle.valid(epoch));
  const ready=()=>valid()&&(!lifecycle||lifecycle.read().status==='ready');
