@@ -36,6 +36,10 @@ const states = () => window.readStudyStates();
 const courseDates=createCourseDates({keys:new Set(validItems.keys()),db,lifecycle:window.i3Runtime?.lifecycle,localOnly:window.workspaceLocalOnly,onChange:()=>{window.SubjectUI?.refreshDates?.();window.updateWorkspace?.();}});
 window.courseDates={...courseDates,today:()=>dateKey(),day:key=>Object.hasOwn(courseDates.records(),key)?courseDates.records()[key]?.day||null:game.awards[key]?.day||null};
 const initiallyCompleted=new Set(allItems.filter(item=>states()[item.path]?.[item.id]).map(awardKey));
+// A durable course request owns its original day; replaying this handoff is first-only.
+window.prepareCourseDates=changes=>Object.fromEntries(Object.entries(changes).filter(([path,complete])=>complete&&!initiallyCompleted.has(path.replace('/','__'))&&!game.awards[path.replace('/','__')]).map(([path])=>[path.replace('/','__'),dateKey()]));
+window.acceptCourseDates=dates=>{for(const [key,day] of Object.entries(dates))courseDates.set(key,day,{firstOnly:true});return true;};
+void window.courseSync?.pump();
 window.addEventListener('study-completed',event=>{const {path,id,complete}=event.detail,key=path+'__'+id;if(complete&&validItems.has(key)&&!initiallyCompleted.has(key)&&!game.awards[key])courseDates.set(key,dateKey(),{firstOnly:true});});
 
 const timeTasks=createTimeTasks({db,localOnly:window.workspaceLocalOnly,day,onChange:()=>window.updateWorkspace?.()});

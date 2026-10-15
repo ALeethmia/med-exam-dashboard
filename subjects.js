@@ -53,7 +53,7 @@
     const label=node('label','','首次完成');const input=node('input','');input.type='date';input.value=day||'';input.max=service.today();input.setAttribute('aria-label','首次完成日期');
     const message=node('span','workspace-note');message.setAttribute('role','status');
     input.addEventListener('change',()=>{try{service.set(key,input.value||null);input.blur();dateControls(row);}catch(e){message.textContent=e.message;input.value=day||'';}});label.append(input);tools.append(label);
-    const remove=node('button','course-date-remove','移除日期');remove.type='button';remove.disabled=!day;remove.addEventListener('click',()=>service.set(key,null));tools.append(remove);
+    const remove=node('button','course-date-remove','移除日期');remove.type='button';remove.disabled=!day;remove.addEventListener('click',()=>{try{service.set(key,null);}catch{message.textContent='日期保存失敗，請重試。';}});tools.append(remove);
     const completion=window.learningSyncStatus?.(key.replace('__','/'));
     message.textContent=(completion?.pending?'課程完成狀態'+(completion.review?'待確認':'待同步')+'；日期另行同步。 ':'')+(status.conflict?'日期已在其他裝置變更，請選擇保留哪份紀錄。':status.error|| (status.pending?'日期待同步；不代表課程完成狀態已同步。':''));tools.append(message);
     if(status.conflict)for(const [text,keep] of [['採用雲端日期',false],['保留本機日期',true]]){const button=node('button','workspace-link',text);button.type='button';button.addEventListener('click',()=>service.resolve(key,keep));tools.append(button);}
@@ -101,14 +101,14 @@
         const actions=node('div','course-batch');
         for(const [label,complete] of [['全選',true],['取消全選',false]]) {
           const button=node('button','',label);button.type='button';button.dataset.focusId=key+'__'+complete;
-          button.setAttribute('aria-label',label+'：'+group.title);button.addEventListener('click',()=>onBatch(group.id,complete));actions.append(button);
+          button.setAttribute('aria-label',label+'：'+group.title);button.addEventListener('click',()=>{try{onBatch(group.id,complete);}catch(error){window.alert(error.message||'本機保存失敗，請重新操作。');}});actions.append(button);
         }body.append(actions);
       }
       for(const item of group.items) {
         const row=node('div','course-row '+rowClass+(state[item.id]?' completed':''));row.dataset.id=item.id;row.dataset.studyKey=path+'__'+item.id;
         const label=node('label','course-row-label');const cb=node('input','');cb.type='checkbox';cb.checked=!!state[item.id];cb.dataset.id=item.id;cb.dataset.focusId=row.dataset.studyKey;
         if(path==='physiology')cb.id=item.id;
-        cb.addEventListener('change',()=>onChange(item.id,cb.checked));
+        cb.addEventListener('change',()=>{try{onChange(item.id,cb.checked);}catch(error){cb.checked=!!state[item.id];window.alert(error.message||'本機保存失敗，請重新操作。');}});
         const copy=node('span','course-row-copy');copy.append(node('strong','title-text',item.title),node('small','',item.meta));label.append(cb,copy);row.append(label);
         dateControls(row);body.append(row);
       }details.append(body);container.append(details);

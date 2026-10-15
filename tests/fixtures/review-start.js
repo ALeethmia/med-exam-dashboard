@@ -9,6 +9,7 @@ if(current==='legacy-pending'){
  window.learningStorage.setItem('med_exam_time_tasks_v1',JSON.stringify({days:{},pending:{'2026-10-01__morning':{complete:true,awarded:true}}}));
 }
 preserveRewardCache(window.learningStorage);
+await import('../../src/study/course-sync.js');
 await import('../../sync.js');
 const script=document.createElement('script');script.textContent=document.getElementById('learning-script').textContent;document.body.append(script);await import('../../workspace.js');
 const controls=document.createElement('section');controls.className='i3-review-controls';controls.setAttribute('aria-label','Fixtures 驗收控制');controls.innerHTML='<strong>Growth I1 · 去識別化 Fixtures · 僅本頁記憶體，不連線 Firebase</strong><label>驗收情境 <select data-scenario>'+Object.entries(names).map(([n,label])=>'<option value="'+n+'">'+label+'</option>').join('')+'</select></label><button data-disconnect>模擬斷線</button><button data-reconnect>恢復連線</button><button data-account>切換樣本帳號</button><p>切換情境會重新載入獨立樣本；不保留本頁操作。歷史 XP 只供回顧，不決定新領主等級。</p>';

@@ -1636,7 +1636,7 @@
     ];
 
     let currentAnatomyWeekFilter = 'ALL';
-    let savedVideoState = JSON.parse(learningStorage.getItem('med_exam_videos_cloud') || '{}');
+    let savedVideoState = mergeLearningSnapshot('videos',JSON.parse(learningStorage.getItem('med_exam_videos_cloud') || '{}'));
 
     function formatSecondsToHMS(totalSec) {
       const h = Math.floor(totalSec / 3600);
@@ -1710,12 +1710,7 @@
     window.toggleAnatomyLesson = function(lessonId, selectAll) {
       const lesson = anatomyLessonsData.find(l => l.lessonId === lessonId);
       if (!lesson) return;
-      lesson.lectures.forEach(lec => {
-        savedVideoState[lec.id] = selectAll;
-      });
-      learningStorage.setItem('med_exam_videos_cloud', JSON.stringify(savedVideoState));
-      persistProgress('videos', savedVideoState, lesson.lectures.map(lec => lec.id));
-      renderAnatomyLessons();
+      window.setStudyCompletions(lesson.lectures.map(item=>({path:'videos',id:item.id})), selectAll);
     };
 
     function renderAnatomyLessons() {
@@ -1850,7 +1845,7 @@
       }
     ];
 
-    let savedBiochemState = JSON.parse(learningStorage.getItem('med_exam_biochem_cloud') || '{}');
+    let savedBiochemState = mergeLearningSnapshot('biochem',JSON.parse(learningStorage.getItem('med_exam_biochem_cloud') || '{}'));
     let currentBiochemFilter = 'ALL';
 
     window.filterBiochemWeek = function(wKey) {
@@ -2037,7 +2032,7 @@
     ];
 
     const physioContainer = document.getElementById('physio-chapters-container');
-    let savedPhysioState = JSON.parse(learningStorage.getItem('med_exam_physio_cloud') || '{}');
+    let savedPhysioState = mergeLearningSnapshot('physiology',JSON.parse(learningStorage.getItem('med_exam_physio_cloud') || '{}'));
     let currentPhysioFilter = 'ALL';
     let currentPhysioSearch = '';
 
@@ -2106,12 +2101,7 @@
     window.toggleAllChapter = function(chapterId, forceState) {
       const chap = physioChaptersData.find(c => c.chapterId === chapterId);
       if (!chap) return;
-      chap.sections.forEach(sec => {
-        savedPhysioState[sec.id] = forceState;
-      });
-      learningStorage.setItem('med_exam_physio_cloud', JSON.stringify(savedPhysioState));
-      persistProgress('physiology', savedPhysioState, chap.sections.map(sec => sec.id));
-      renderPhysioChecklist();
+      window.setStudyCompletions(chap.sections.map(item=>({path:'physiology',id:item.id})), forceState);
     };
 
     // 篩選章節標籤切換
@@ -2431,7 +2421,7 @@
 
     let currentPharmWeekFilter = 'ALL';
     let currentPharmSearch = '';
-    let savedPharmState = JSON.parse(learningStorage.getItem('med_exam_pharm_cloud') || '{}');
+    let savedPharmState = mergeLearningSnapshot('pharmacology',JSON.parse(learningStorage.getItem('med_exam_pharm_cloud') || '{}'));
 
     function updatePharmProgress() {
       let checkedCount = 0;
@@ -2492,12 +2482,7 @@
     window.togglePharmUnit = function(unitId, selectAll) {
       const unit = pharmacologyData.find(u => u.unitId === unitId);
       if (!unit) return;
-      unit.lectures.forEach(lec => {
-        savedPharmState[lec.id] = selectAll;
-      });
-      learningStorage.setItem('med_exam_pharm_cloud', JSON.stringify(savedPharmState));
-      persistProgress('pharmacology', savedPharmState, unit.lectures.map(lec => lec.id));
-      renderPharmUnits();
+      window.setStudyCompletions(unit.lectures.map(item=>({path:'pharmacology',id:item.id})), selectAll);
     };
 
     function renderPharmUnits() {
@@ -3798,15 +3783,21 @@
       const bindings={videos:[savedVideoState,'med_exam_videos_cloud',renderAnatomyLessons],biochem:[savedBiochemState,'med_exam_biochem_cloud',renderBiochemUnits],physiology:[savedPhysioState,'med_exam_physio_cloud',renderPhysioChecklist],pharmacology:[savedPharmState,'med_exam_pharm_cloud',renderPharmUnits]};
       if(!Array.isArray(links)||!links.length||typeof complete!=='boolean')throw new Error('課程操作無效');
       const unique=new Map();for(const link of links){const key=link?.path+'__'+link?.id;if(!window.courseCatalogKeys?.has(key))throw new Error('課程連結待確認');unique.set(key,{path:link.path,id:String(link.id)});}
-      const changes={},touched=new Set();for(const link of unique.values()){bindings[link.path][0][link.id]=complete;changes[link.path+'/'+link.id]=complete;touched.add(link.path);}
-      for(const path of touched)learningStorage.setItem(bindings[path][1],JSON.stringify(bindings[path][0]));
-      window.persistCourseChanges(changes);for(const path of touched)bindings[path][2]();
+      const changes={},touched=new Set();for(const link of unique.values()){changes[link.path+'/'+link.id]=complete;touched.add(link.path);}
+      // The journal is authoritative. No visible state or date event precedes its commit.
+      const receipt=window.persistCourseChanges(changes);
+      if(!receipt?.saved)throw new Error('本機保存失敗，進度未變更，請重新操作。');
+      for(const link of unique.values())bindings[link.path][0][link.id]=complete;
+      // Projection caches are recoverable from the journal; a cache failure cannot lose intent.
+      for(const path of touched){try{learningStorage.setItem(bindings[path][1],JSON.stringify(bindings[path][0]));}catch{}}
+      for(const path of touched)bindings[path][2]();
+      void window.courseSync?.pump();
     };
     window.setStudyCompletion=(path,id,complete)=>window.setStudyCompletions([{path,id}],complete);
     window.refreshStudyStates = () => {
       const read = key => { try { return JSON.parse(learningStorage.getItem(key) || '{}'); } catch { return {}; } };
-      savedVideoState = read('med_exam_videos_cloud'); savedBiochemState = read('med_exam_biochem_cloud');
-      savedPhysioState = read('med_exam_physio_cloud'); savedPharmState = read('med_exam_pharm_cloud');
+      savedVideoState = mergeLearningSnapshot('videos',read('med_exam_videos_cloud')); savedBiochemState = mergeLearningSnapshot('biochem',read('med_exam_biochem_cloud'));
+      savedPhysioState = mergeLearningSnapshot('physiology',read('med_exam_physio_cloud')); savedPharmState = mergeLearningSnapshot('pharmacology',read('med_exam_pharm_cloud'));
       renderAnatomyLessons(); renderBiochemUnits(); renderPhysioChecklist(); renderPharmUnits();
     };
     window.showStudyItem = (path, id) => {

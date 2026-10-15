@@ -25,7 +25,7 @@ jobs:
         run: npx playwright test tests/browser/version.spec.js tests/browser/course-dates.spec.js --grep 'footer reads|Preview footer|first date can' --reporter=line
       - name: Sync UX and isolated B1 decision model
         run: |
-          npx playwright test tests/browser/sync-ux.spec.js --reporter=line
+          npx playwright test tests/browser/sync-ux.spec.js tests/browser/durable-course-sync.spec.js --reporter=line
           node --test tests/sync-b1/reconcile-model.test.mjs
       - name: Isolated B2-A queue contract and Chromium multi-tab tests
         run: |
@@ -45,6 +45,7 @@ jobs:
           curl --fail --silent --show-error --retry 2 https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js -o "$fixture_dir/firebase-app-compat.js"
           curl --fail --silent --show-error --retry 2 https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js -o "$fixture_dir/firebase-database-compat.js"
           B2B1_EMULATOR_JAR="$fixture_dir/database.jar" FIREBASE_SDK_DIR="$fixture_dir" node tests/sync-queue/adapter-emulator.mjs
+          B2B1_EMULATOR_JAR="$fixture_dir/database.jar" FIREBASE_SDK_DIR="$fixture_dir" node tests/sync-queue/durable-course-emulator.mjs
       - name: Canonical auth and Fixtures integration
         shell: bash
         run: |

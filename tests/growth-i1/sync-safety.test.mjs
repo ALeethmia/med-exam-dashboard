@@ -38,7 +38,7 @@ test('ready notification while a rejected write is settling is not lost',async()
  h.window.persistCourseChanges({'videos/1':true});await tick();h.database.replace({videos:{1:true}});h.lifecycle.reload();h.lifecycle.success('videos');h.window.learningDB=real;reject({code:'write/not-ready'});await tick();assert.equal(h.window.learningSyncStatus('videos/1').review,true);assert.equal(h.saved()['videos/1'],true);assert.match(h.status.textContent,/待確認/);assert.equal(h.database.inspect().writes.length,0);h.dispose();
 });
 test('UID switch stops old callbacks, queues and writes; local demo never connects',async()=>{
- const h=setup({seed:{videos:{1:false}},pending:{'videos/1':true}}),old=h.database.captureCallbacks();h.attach();await tick();h.account.unbind();h.lifecycle.start(null);for(const entry of old)entry.callback(entry.snapshot);h.account.bind('fixture-B');h.window.retryLearningSync();h.window.persistCourseChanges({'videos/1':false});await tick();assert.equal(h.database.inspect().writes.length,0);assert.equal(h.database.inspect().listeners,0);assert.equal(h.account.getItem('med_exam_pending_writes_v1'),null);h.account.bind('fixture-A');assert.equal(JSON.parse(h.account.getItem('med_exam_pending_writes_v1'))['videos/1'],true);h.dispose();
+ const h=setup({seed:{videos:{1:false}},pending:{'videos/1':true}}),old=h.database.captureCallbacks();h.attach();await tick();h.account.unbind();h.lifecycle.start(null);for(const entry of old)entry.callback(entry.snapshot);h.account.bind('fixture-B');h.window.retryLearningSync();assert.throws(()=>h.window.persistCourseChanges({'videos/1':false}),/登入狀態/);await tick();assert.equal(h.database.inspect().writes.length,0);assert.equal(h.database.inspect().listeners,0);assert.equal(h.account.getItem('med_exam_pending_writes_v1'),null);h.account.bind('fixture-A');assert.equal(JSON.parse(h.account.getItem('med_exam_pending_writes_v1'))['videos/1'],true);h.dispose();
  const demo=setup();demo.window.workspaceLocalOnly=true;demo.window.persistCourseChanges({'videos/1':true});await tick();assert.equal(demo.database.inspect().writes.length,0);assert.deepEqual(demo.saved(),{});demo.dispose();
 });
 test('confirmed online complete/cancel intents submit once each and preserve historical XP',async()=>{
@@ -65,7 +65,7 @@ test('synchronous reconnect marks connection before ready callbacks may write',a
 });
 test('signout during the async auth bootstrap never appends the stale learning script',async()=>{
  const auth=readFileSync(new URL('../../auth.js',import.meta.url),'utf8');let resolve,appended=0,current=true;
- const code=auth.slice(auth.indexOf('async function startLearning('),auth.indexOf('\nfunction dialog(')).replace("await import('./sync.js')",'await barrier').replace("await import('./workspace.js')",'await Promise.resolve()');
+ const code=auth.slice(auth.indexOf('async function startLearning('),auth.indexOf('\nfunction dialog(')).replace("await import('./src/study/course-sync.js')",'await barrier').replace("await import('./sync.js')",'await Promise.resolve()').replace("await import('./workspace.js')",'await Promise.resolve()');
  const context={window:{becomingStorage:{view:()=>({})},SubjectUI:{bindStorage(){}}},document:{createElement:()=>({}),getElementById:()=>({textContent:''}),body:{append(){appended++;}}},preserveRewardCache(){},barrier:new Promise(r=>{resolve=r;})};
  vm.runInNewContext('let started=false;'+code+';globalThis.bootstrap=startLearning;',context);const pending=context.bootstrap(()=>current);current=false;resolve();await pending;assert.equal(appended,0);
 });

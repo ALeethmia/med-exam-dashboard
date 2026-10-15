@@ -16,8 +16,10 @@ export function createCourseDates({keys,db=null,localOnly=false,storage=learning
   if(!keys.has(key)||day!==null&&(!validDate(day)||day>today()))throw new Error('請選擇有效且不晚於今天的日期。');
   if(firstOnly&&Object.hasOwn(saved.records,key))return;
   const previous=saved.pending[key],base=previous?previous.base:saved.records[key]?._version||null;
-  const value={day,_version:newId()};saved.records[key]=value;saved.pending[key]={value,base,firstOnly};delete conflicts[key];
-  if(localOnly)delete saved.pending[key];notify();void retry();
+  const value={day,_version:newId()},next={records:{...saved.records,[key]:value},pending:{...saved.pending,[key]:{value,base,firstOnly}}};
+  if(localOnly)delete next.pending[key];
+  // Commit before exposing the date in memory or sending its transaction.
+  storage.setItem(storageKey,JSON.stringify(next));saved=next;delete conflicts[key];onChange();void retry();
  }
  async function retry(){if(!db||localOnly||!ready())return;if(busy){requested=true;return;}busy=true;requested=false;
   try{for(const [key,intent] of Object.entries({...saved.pending})){
