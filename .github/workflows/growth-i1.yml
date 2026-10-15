@@ -45,6 +45,10 @@ jobs:
           curl --fail --silent --show-error --retry 2 https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js -o "$fixture_dir/firebase-app-compat.js"
           curl --fail --silent --show-error --retry 2 https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js -o "$fixture_dir/firebase-database-compat.js"
           B2B1_EMULATOR_JAR="$fixture_dir/database.jar" FIREBASE_SDK_DIR="$fixture_dir" node tests/sync-queue/adapter-emulator.mjs
+      - name: Isolated B2-B.2a persistence Facade
+        run: |
+          node --test tests/sync-queue/persistence.test.mjs
+          npx playwright test tests/browser/persistence-facade.spec.js --reporter=line
       - name: Canonical auth and Fixtures integration
         shell: bash
         run: |
