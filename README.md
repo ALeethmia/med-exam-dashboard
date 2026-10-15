@@ -2,11 +2,15 @@
 
 Your life. Your story. Your world. 每一步成長，都是人生的新篇章。
 
-Becoming 是現實生活目標管理平台；第一章「學者的試煉」以醫師第一階段國考為現實目標，奇幻世界 Aetheria（艾瑟利亞）提供唯讀的成長回饋。沿用 HTML / JavaScript / Express 學習工作台與原有課程、生活、同步功能；考試日期讀取現有 Adaptive Study Planner 設定，預設為 2027 年 1 月 16 日。
+Becoming 是現實生活目標管理平台；Chapter 1「初始之地」以醫師第一階段國考為現實目標，奇幻世界 Aetheria（艾瑟利亞）提供唯讀的成長回饋。沿用 HTML / JavaScript / Express 學習工作台與原有課程、生活、同步功能；考試日期讀取現有 Adaptive Study Planner 設定，預設為 2027 年 1 月 16 日。
 
 ## 版本管理
 
-產品版號以 package.json 為唯一來源，build 產生頁尾版本資訊；詳見 [VERSIONING.md](VERSIONING.md) 與 [CHANGELOG.md](CHANGELOG.md)。目前穩定版本候選為 **v0.2.0（待發布）**；v0.2.0-beta.1 已完成使用者回報的正式網站六項驗收，以及課程日期寫入、實際跨裝置與離線恢復同步驗收。未授權帳號的 Security Rules 拒絕存取、同一課程雙裝置同時修改衝突仍未人工驗證；Mock 測試不能代替正式驗收。本次 Release PR 不建立 Tag／GitHub Release，也不修改 Rules。產品版本與 Firebase Schema 版本分離。
+目前分支已準備 **v1.0.0 — Chapter 1：初始之地** 發布候選，尚未合併、部署 Production、建立 Tag 或發布 GitHub Release。候選版號為 **1.0.0**；正式站仍為已發布的 **v0.2.0**。產品版號以 package.json 為唯一來源，build 產生頁尾資訊；產品版本與 Firebase Schema 分離。
+
+既有 CI、PR #18 資源驗證與正式站唯讀 Smoke 已通過；使用者另外回報最新 Production 的六項真實帳號驗收全部通過，這不是 Codex 自行執行的端到端測試。詳見 [版本規則](VERSIONING.md)、[繁體中文發行紀錄](CHANGELOG.md) 與 [候選／驗收狀態](docs/V1_0_0_RELEASE_PROPOSAL.md)。本次版本 PR 的測試結果以 PR／CI 為準。
+
+本候選沿用 Lite 王國、Lv.1–20 的 40／40／20 成長、Design A 任務完成來源與停止新版任務 XP 的規則；保留全部歷史紀錄，不進行資料遷移。第二章、App 化及 C 方案尚未實作；[未來路線圖](docs/FUTURE_DEVELOPMENT_ROADMAP.md) 不是本版承諾。下方早期階段紀錄保留歷史上下文，不代表目前仍有相同發布阻擋。
 
 ## 開發
 
