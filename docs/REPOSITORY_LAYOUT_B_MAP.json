@@ -1,0 +1,597 @@
+{
+  "baseCommit": "d3e35b5d088db4b15a9d73646a720cee794dc6b6",
+  "policy": "Move pure implementations only; retain all original public paths and critical initialization files. No runtime API or logic changes.",
+  "files": [
+    {
+      "from": "account-storage.js",
+      "implementation": "account-storage.js",
+      "publicPath": "account-storage.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "8fb9b5e4803487b5084e2eed5256ccf0c70c653e16727343307c061161eb11d5"
+    },
+    {
+      "from": "adaptive-core.js",
+      "implementation": "src/planner/adaptive-core.js",
+      "publicPath": "adaptive-core.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "6a3578d9b585c659e4db630f69b7b955075afe54f9346c4a34a254d69fd0eb6a"
+    },
+    {
+      "from": "adaptive-store.js",
+      "implementation": "adaptive-store.js",
+      "publicPath": "adaptive-store.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "a7213d049f7d7ca0919e329ade8c5deacd56aa0977fbd422c708b5f006aadae1"
+    },
+    {
+      "from": "adaptive-ui.js",
+      "implementation": "adaptive-ui.js",
+      "publicPath": "adaptive-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "98acb28e1a87dbaa7cef488f54a15f6ab022f57c052137a546bb717e02353f5c"
+    },
+    {
+      "from": "auth.js",
+      "implementation": "auth.js",
+      "publicPath": "auth.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "72b05bdd9e0a4a066424922c7bfce4911f580d8284b0a64dc37925a0288c1713"
+    },
+    {
+      "from": "chapters.js",
+      "implementation": "src/kingdom/chapters.js",
+      "publicPath": "chapters.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "c0d0aa03484f48681251c48e36248387a26e8ca6903d0b542d348e9da3c1018e"
+    },
+    {
+      "from": "chronicles-ui.js",
+      "implementation": "chronicles-ui.js",
+      "publicPath": "chronicles-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "cd00aac233e045751fead845a80e2875499f5310e80e2153751f62aa0e0f1c85"
+    },
+    {
+      "from": "course-dates.js",
+      "implementation": "course-dates.js",
+      "publicPath": "course-dates.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "04c12ee40ddf9e9040a7bc6710730fd4ad6f61d0184002214db5042dc151fdd1"
+    },
+    {
+      "from": "daily-planner.js",
+      "implementation": "daily-planner.js",
+      "publicPath": "daily-planner.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "1b2a6e1b9593f9bcc24bb27a915becfa392abec3025fc0f9d7a60d6a44e1ee3a"
+    },
+    {
+      "from": "firebase-config.js",
+      "implementation": "firebase-config.js",
+      "publicPath": "firebase-config.js",
+      "action": "keep",
+      "reason": "Classic Script 全域／載入順序契約。",
+      "originalSHA256": "cd8f5bd8318b4bd8bbf3e4f573950b36eb00253a475a47eee06d5e307f468bed"
+    },
+    {
+      "from": "firebase-entry.js",
+      "implementation": "firebase-entry.js",
+      "publicPath": "firebase-entry.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "5f39697e0b392dd135cf5a766fac6110f342b9def3ec5bcd8c758e1878e249cb"
+    },
+    {
+      "from": "growth-core.js",
+      "implementation": "src/study/growth-core.js",
+      "publicPath": "growth-core.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "64ed8f1c24ecd0b59538f1a913f663577a74c70e8e0a1708a42fad8da059a5f4"
+    },
+    {
+      "from": "growth-ui.js",
+      "implementation": "growth-ui.js",
+      "publicPath": "growth-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "3a6311cb879ab8c7516312041f433db9cf62e9a6f042587d2989c392611ba2b5"
+    },
+    {
+      "from": "i2a-kingdom.css",
+      "implementation": "i2a-kingdom.css",
+      "publicPath": "i2a-kingdom.css",
+      "action": "keep",
+      "reason": "既有公開 CSS URL、樣式順序與快取契約，保留原位。",
+      "originalSHA256": "8d2c63d4206dc161a26c786a8307d09fe85e74faa6408672d0616966ea7f12b4"
+    },
+    {
+      "from": "i2a-map.js",
+      "implementation": "i2a-map.js",
+      "publicPath": "i2a-map.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "6c4c1b9ced09436fcccec572953ca70ce5921bc597ca376448384df07156d49d"
+    },
+    {
+      "from": "i3-runtime.js",
+      "implementation": "i3-runtime.js",
+      "publicPath": "i3-runtime.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "2f9db5ac98b9f1aedd94f43643d16b7547a90320ee26d25e9e8c3ab9a452f035"
+    },
+    {
+      "from": "i3.css",
+      "implementation": "i3.css",
+      "publicPath": "i3.css",
+      "action": "keep",
+      "reason": "既有公開 CSS URL、樣式順序與快取契約，保留原位。",
+      "originalSHA256": "475a71e7d8505f1927ddd1148545f08f4f4da38b288b469c862ad86b1657d1f8"
+    },
+    {
+      "from": "index.html",
+      "implementation": "index.html",
+      "publicPath": "index.html",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "e78b98318ee0c6e69fe7e998b9b781dde2707cf5704eaffe1b9b3e5396e1af69"
+    },
+    {
+      "from": "kingdom-building-manifest.js",
+      "implementation": "src/kingdom/kingdom-building-manifest.js",
+      "publicPath": "kingdom-building-manifest.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "f183a0fc9eccf270cbfb3163c025f0e12a43c2cd5aa3abad6691bd416c859dcf"
+    },
+    {
+      "from": "kingdom-core.js",
+      "implementation": "src/kingdom/kingdom-core.js",
+      "publicPath": "kingdom-core.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "8d0d00755851cc5eede8887989adcb883392054d770766d566219c5e7df6cd31"
+    },
+    {
+      "from": "kingdom-lite-art.js",
+      "implementation": "src/kingdom/kingdom-lite-art.js",
+      "publicPath": "kingdom-lite-art.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "98f25406184bada6ab782eb1bac3815f4a93a78cb42852e2056fdb5bf3ad3d1a"
+    },
+    {
+      "from": "kingdom-map-core.js",
+      "implementation": "src/kingdom/kingdom-map-core.js",
+      "publicPath": "kingdom-map-core.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "e2a4086c56809b492cdd2d0756236e4a0cc9e58ff60f6f594343e4b6374122a7"
+    },
+    {
+      "from": "kingdom-map-input.js",
+      "implementation": "kingdom-map-input.js",
+      "publicPath": "kingdom-map-input.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "a4f6bb6bfd97787d6c4e00395e17daca3b04cecdeaa88d282f913d8f6f2498ed"
+    },
+    {
+      "from": "kingdom-map-renderer.js",
+      "implementation": "kingdom-map-renderer.js",
+      "publicPath": "kingdom-map-renderer.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "a45103ce898846263fb4bdfe551aee937e08e1567f7e72f1af7f9472585e2949"
+    },
+    {
+      "from": "kingdom-map.css",
+      "implementation": "kingdom-map.css",
+      "publicPath": "kingdom-map.css",
+      "action": "keep",
+      "reason": "既有公開 CSS URL、樣式順序與快取契約，保留原位。",
+      "originalSHA256": "8352dc24fc770ac2885cac6a338c1b8b7a76f7c57e00ba91f539af589378e643"
+    },
+    {
+      "from": "kingdom-preview-state.js",
+      "implementation": "src/kingdom/kingdom-preview-state.js",
+      "publicPath": "kingdom-preview-state.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "2a5215c0658250bfc2f31a11fbcb8a6dfd68ae5bb4a3b452e00f8029127035ae"
+    },
+    {
+      "from": "kingdom-preview.html",
+      "implementation": "kingdom-preview.html",
+      "publicPath": "kingdom-preview.html",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "872f36fbff00b4afab390f5b80d22002f0fd04736d72f7190e27a8d7203c88ce"
+    },
+    {
+      "from": "kingdom-preview.js",
+      "implementation": "kingdom-preview.js",
+      "publicPath": "kingdom-preview.js",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "be69648c217cd6f43320413874d34ad8df8bfd980c4a474153ea5832eb6e8963"
+    },
+    {
+      "from": "kingdom-ui.js",
+      "implementation": "kingdom-ui.js",
+      "publicPath": "kingdom-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "8d14f86e2524590ea522c4fbe575342d5ab1add262bf99aa35b1c4b02988f492"
+    },
+    {
+      "from": "kingdom.css",
+      "implementation": "kingdom.css",
+      "publicPath": "kingdom.css",
+      "action": "keep",
+      "reason": "既有公開 CSS URL、樣式順序與快取契約，保留原位。",
+      "originalSHA256": "112d76a793ccab83625f22541a43b2bf7eca406e57d2fec360c2c2ffd4787041"
+    },
+    {
+      "from": "legacy-rewards.js",
+      "implementation": "legacy-rewards.js",
+      "publicPath": "legacy-rewards.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "484a44f8bc9cfdb4711035cae41a57fa0ab1934c5dd838943e40e033d5a21c6e"
+    },
+    {
+      "from": "life-core.js",
+      "implementation": "src/study/life-core.js",
+      "publicPath": "life-core.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "9440405029b2ee9676b100ef9a0391fc1f97e5569808e3476bf784e842a714db"
+    },
+    {
+      "from": "life-store.js",
+      "implementation": "life-store.js",
+      "publicPath": "life-store.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "301cd60e72a45ba8d2c7a8190f57717f98cdc27fa84a9039ff63ff684dac1f7f"
+    },
+    {
+      "from": "life-ui.js",
+      "implementation": "life-ui.js",
+      "publicPath": "life-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "f32caf729891af2d39ddc0eedcc774de2ea48c7b993498cc243a5dddf218c180"
+    },
+    {
+      "from": "metadata.json",
+      "implementation": "metadata.json",
+      "publicPath": "metadata.json",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "bf5d2125049f82e3c6549c7dd69fbd36adf18473a478542f537f5b1c33a32e9d"
+    },
+    {
+      "from": "owner-config.js",
+      "implementation": "owner-config.js",
+      "publicPath": "owner-config.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "f001e0db089291f5521c26a70d15f34123d7b4b0eb9c3349c43e469c6c2dd874"
+    },
+    {
+      "from": "package-lock.json",
+      "implementation": "package-lock.json",
+      "publicPath": "package-lock.json",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "3d383e37cc10188fec4906eb2650fdd0fe6fc1f6054e67abd76607e9fc019cf7"
+    },
+    {
+      "from": "package.json",
+      "implementation": "package.json",
+      "publicPath": "package.json",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "4c4fe6f9e612ef21d511cb27170f950bd093e308d190a016f2ef67937c14380a"
+    },
+    {
+      "from": "planner-ui.js",
+      "implementation": "planner-ui.js",
+      "publicPath": "planner-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "b12a833ae7f75cc598c70d7c5e2f3461ea159c8569ddb5a036d24fc4dfa56d8b"
+    },
+    {
+      "from": "playwright.config.js",
+      "implementation": "playwright.config.js",
+      "publicPath": "playwright.config.js",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "93c3b6d0692e7a54bec18dd69242fdcc38195f02eda447c255ebf556c4d95ed2"
+    },
+    {
+      "from": "readiness.js",
+      "implementation": "readiness.js",
+      "publicPath": "readiness.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "28f99e89031a7536ae9e9a1bd0de0a24c3bf3c624a5e4422cbfd2631840716f6"
+    },
+    {
+      "from": "readonly-mapping.js",
+      "implementation": "src/kingdom/readonly-mapping.js",
+      "publicPath": "readonly-mapping.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "7c699276fbd25e92d89b080accce1c487c99f667bc023500639ebdaf3af588e4"
+    },
+    {
+      "from": "realm-growth.js",
+      "implementation": "src/kingdom/realm-growth.js",
+      "publicPath": "realm-growth.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "f60f3e9e1fffa2e216debc05e3e27383d7be37dbe069e0f7a3a35252cd765531"
+    },
+    {
+      "from": "server.js",
+      "implementation": "server.js",
+      "publicPath": "server.js",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "aa6ae4796074749bb1caf2d707caf4c3626785e75ac21265b27ee3cfc7ab9254"
+    },
+    {
+      "from": "study-core.js",
+      "implementation": "src/study/study-core.js",
+      "publicPath": "study-core.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "c5cdbe33e424c880b46297c652ec90deb532ccde83ffedae59e2b2a84cbb68b0"
+    },
+    {
+      "from": "subjects.js",
+      "implementation": "subjects.js",
+      "publicPath": "subjects.js",
+      "action": "keep",
+      "reason": "Classic Script 全域／載入順序契約。",
+      "originalSHA256": "8bbe92b42f6529182f9a7f29d101ff8f99e2e96da4ffc26d54d26bcb13ba8129"
+    },
+    {
+      "from": "sync.js",
+      "implementation": "sync.js",
+      "publicPath": "sync.js",
+      "action": "keep",
+      "reason": "Classic Script 全域／載入順序契約。",
+      "originalSHA256": "7368a215eb7cf2720c87c9b039d1fdd4903af1243e6c75db596bcabe5bcd3c37"
+    },
+    {
+      "from": "tailwind.config.cjs",
+      "implementation": "tailwind.config.cjs",
+      "publicPath": "tailwind.config.cjs",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "32329de2c3c1bd82861b5651882b6fef47325e6ff91f4726ad57514e0a908a81"
+    },
+    {
+      "from": "task-projection.js",
+      "implementation": "src/planner/task-projection.js",
+      "publicPath": "task-projection.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "82edd0acd237a16cd5c4f28c5a974ace503757c22de6944d2c858858eb4c6236"
+    },
+    {
+      "from": "territory-core.js",
+      "implementation": "src/kingdom/territory-core.js",
+      "publicPath": "territory-core.js",
+      "action": "move-with-compatibility-export",
+      "reason": "無全域初始化的既有模組；僅改相對 import 路徑，原 URL 留單行 re-export。",
+      "originalSHA256": "b9774566c93d80ece1280e9d791f55161d09291438df78bbd08e2c49d8eefb78"
+    },
+    {
+      "from": "territory-ui.js",
+      "implementation": "territory-ui.js",
+      "publicPath": "territory-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "b66dabcd51e4148dfee8a28c7cabe6bd0061fd8131f9a9af9b699618d725765f"
+    },
+    {
+      "from": "theme.js",
+      "implementation": "theme.js",
+      "publicPath": "theme.js",
+      "action": "keep",
+      "reason": "Classic Script 全域／載入順序契約。",
+      "originalSHA256": "405f831d7a7df3a872150e8968755d5554f64b2f768e11e2e9dcdd76e969d73b"
+    },
+    {
+      "from": "time-tasks.js",
+      "implementation": "time-tasks.js",
+      "publicPath": "time-tasks.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "46e33981c38ff6a3a93ff8e612b4d898a65d0b7f1e3c4d7d847a93c69bba7352"
+    },
+    {
+      "from": "vercel.json",
+      "implementation": "vercel.json",
+      "publicPath": "vercel.json",
+      "action": "keep",
+      "reason": "根目錄入口／工具或主機設定契約。",
+      "originalSHA256": "506bd9e2d261697296b1600efc9cc267422a40401c408ca766b95948cb052445"
+    },
+    {
+      "from": "version-ui.js",
+      "implementation": "version-ui.js",
+      "publicPath": "version-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "f27172cc3513b86373aaa357293a620f8d922fc7ee1161a9c683418d9ba9575c"
+    },
+    {
+      "from": "week-plan-ui.js",
+      "implementation": "week-plan-ui.js",
+      "publicPath": "week-plan-ui.js",
+      "action": "keep",
+      "reason": "DOM 呈現／互動整合層，本輪不擴大搬移範圍。",
+      "originalSHA256": "5020dac604c40657473ea763b9fae20ae4f7f55ca0aa116a4e5abb4f339fe0f0"
+    },
+    {
+      "from": "workspace.css",
+      "implementation": "workspace.css",
+      "publicPath": "workspace.css",
+      "action": "keep",
+      "reason": "既有公開 CSS URL、樣式順序與快取契約，保留原位。",
+      "originalSHA256": "f22d025f4166709e765c221873590f61e52852d76826a6df86fa5737259ec21b"
+    },
+    {
+      "from": "workspace.js",
+      "implementation": "workspace.js",
+      "publicPath": "workspace.js",
+      "action": "keep",
+      "reason": "登入、UID、Store 或非同步初始化／資料安全契約，保留原位。",
+      "originalSHA256": "7e20312c9a0f4878cacf580f41043142db82c4ff6f7bc20ded43f8377ab7b782"
+    }
+  ],
+  "retainedDirectories": [
+    "styles/",
+    "public/",
+    "tests/",
+    "scripts/",
+    ".github/workflows/"
+  ],
+  "htmlLoadOrder": {
+    "index.html": [
+      {
+        "tag": "script",
+        "src": "./theme.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "link",
+        "href": "./public/tailwind.css"
+      },
+      {
+        "tag": "script",
+        "src": "./public/lucide.min.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": "https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": "./public/react.min.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": "./public/react-dom.min.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": "./public/prop-types.min.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": "./public/recharts.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "link",
+        "href": "./workspace.css"
+      },
+      {
+        "tag": "link",
+        "href": "./kingdom.css"
+      },
+      {
+        "tag": "link",
+        "href": "./i2a-kingdom.css"
+      },
+      {
+        "tag": "link",
+        "href": "./i3.css"
+      },
+      {
+        "tag": "script",
+        "src": "./subjects.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": null,
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": null,
+        "type": "text/plain",
+        "id": "learning-script"
+      },
+      {
+        "tag": "script",
+        "src": "./firebase-config.js",
+        "type": "classic",
+        "id": null
+      },
+      {
+        "tag": "script",
+        "src": "./firebase-entry.js",
+        "type": "module",
+        "id": null
+      }
+    ],
+    "kingdom-preview.html": [
+      {
+        "tag": "link",
+        "href": "./kingdom-map.css"
+      },
+      {
+        "tag": "script",
+        "src": "./kingdom-preview.js",
+        "type": "module",
+        "id": null
+      }
+    ]
+  }
+}
