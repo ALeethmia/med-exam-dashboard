@@ -1,4 +1,4 @@
-import test from'node:test';import assert from'node:assert/strict';import{realmGrowth,growthPercent}from'../../realm-growth.js';import{buildingProgressSnapshot,COURSE_THRESHOLDS,TRAINING_THRESHOLDS}from'../../territory-core.js';
+import test from'node:test';import assert from'node:assert/strict';import{realmGrowth,growthPercent}from'../../src/kingdom/realm-growth.js';import{buildingProgressSnapshot,COURSE_THRESHOLDS,TRAINING_THRESHOLDS}from'../../src/kingdom/territory-core.js';
 const ev=(D=0,T=0,E=T,N=115)=>({courses:{done:D,total:N},training:T,activityDays:E});
 test('known empty evidence is Lv.1; all V Lv.20; old XP never enters formula',()=>{assert.equal(realmGrowth(ev()).level,1);assert.equal(realmGrowth(ev(98,30)).level,20);assert.deepEqual(realmGrowth({...ev(),xp:999999}),realmGrowth(ev()));});
 test('40/40/20 exact weighting, no training means at most 60%',()=>{const x=realmGrowth(ev(115));assert.equal(x.academy,1);assert.equal(x.barracks,0);assert.equal(x.keep,1);assert(Math.abs(x.progress-.6)<1e-12);assert.equal(x.level,12);});

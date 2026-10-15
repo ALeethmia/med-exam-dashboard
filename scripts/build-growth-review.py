@@ -16,6 +16,6 @@ for p in list(app.iterdir())+list((root/'tests/fixtures').iterdir()):
    a=value.index('    const firebaseConfig =');b=value.index('    window.attachLearningDB(db);',a)
    value=value[:a]+"    let db=window.i3MockDatabase||null;\n"+value[b:]
   (dist/p.name).write_text(value)
- elif p.name=='src':shutil.copytree(p,dist/'src',dirs_exist_ok=True)
+ elif p.name in {'src','styles'}:shutil.copytree(p,dist/p.name,dirs_exist_ok=True)
  elif p.name=='public':shutil.copytree(p,dist/'public',dirs_exist_ok=True)
 print('Built .growth-review/growth-i1 (Fixtures only; never deploy automatically)')

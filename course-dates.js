@@ -1,5 +1,5 @@
 import {validDate} from './daily-planner.js';
-import {dateKey} from './study-core.js';
+import {dateKey} from './src/study/study-core.js';
 export const COURSE_DATES_PATH='questOS/v1/courseFirstCompletion';
 export const COURSE_DATES_KEY='med_exam_course_dates_v1';
 // Null day is a persistent removal marker, so old awards cannot resurrect a date.

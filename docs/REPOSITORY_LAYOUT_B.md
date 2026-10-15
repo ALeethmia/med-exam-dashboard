@@ -1,3 +1,5 @@
+> 歷史紀錄：本文件描述 PR #17。現行分類及舊 URL 處理請見 [第二輪分類](REPOSITORY_LAYOUT_FINAL.md)。
+
 # Repository B：分類整理審查
 
 基準 main：`d3e35b5d088db4b15a9d73646a720cee794dc6b6`。本輪只有分類搬移、必要路徑及測試／文件更新；不重構函式、API、資料流或 UI，不合併或部署 Production。

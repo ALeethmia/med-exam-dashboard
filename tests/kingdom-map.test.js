@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fitCamera,fitScale,constrainCamera,zoomCamera,worldPoint,createCamera,directionalBuilding} from '../kingdom-map-core.js';
-import {createPreviewState} from '../kingdom-preview-state.js';
-import {BUILDING_MANIFEST,WORLD} from '../kingdom-building-manifest.js';
-import {bindMapInput,wheelIntent} from '../kingdom-map-input.js';
+import {fitCamera,fitScale,constrainCamera,zoomCamera,worldPoint,createCamera,directionalBuilding} from '../src/kingdom/kingdom-map-core.js';
+import {createPreviewState} from '../src/kingdom/kingdom-preview-state.js';
+import {BUILDING_MANIFEST,WORLD} from '../src/kingdom/kingdom-building-manifest.js';
+import {bindMapInput,wheelIntent} from '../src/kingdom/kingdom-map-input.js';
 const view={width:960,height:600};
 test('全景在不同尺寸保留世界邊界，縮放不超出四倍',()=>{
  for(const width of [288,358,736,1136]){const v={width,height:320},c=fitCamera(v,WORLD);assert.ok(c.x>=0&&c.y>=0);assert.ok(c.x+WORLD.width*c.scale<=width);assert.ok(c.y+WORLD.height*c.scale<=320);const maximum=constrainCamera({scale:999,x:999,y:-999},v,WORLD);assert.equal(maximum.scale,fitScale(v,WORLD)*4);const minimum=constrainCamera({scale:0,x:0,y:0},v,WORLD);assert.equal(minimum.scale,fitScale(v,WORLD));}

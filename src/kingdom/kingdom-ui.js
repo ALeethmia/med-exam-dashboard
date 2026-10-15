@@ -6,8 +6,8 @@ import {buildingProgressSnapshot} from './territory-core.js';
 import {createTerritoryUI} from './territory-ui.js';
 import {BRAND} from './chapters.js';
 import {kingdomSnapshot} from './kingdom-core.js';
-import {lifeSummary} from './life-core.js';
-import {dateKey,gameStats,COURSE_PROGRESS_NOTE} from './study-core.js';
+import {lifeSummary} from '../study/life-core.js';
+import {dateKey,gameStats,COURSE_PROGRESS_NOTE} from '../study/study-core.js';
 const node=(tag,cls='',text)=>{const el=document.createElement(tag);el.className=cls;if(text!==undefined)el.textContent=text;return el;};
 export function createKingdomUI({data,states,planner,settings,life,awards=()=>({}),courseDates=()=>({}),today=()=>dateKey()}) {
   const page=document.getElementById('tab-content-kingdom');page.classList.add('kingdom-page');

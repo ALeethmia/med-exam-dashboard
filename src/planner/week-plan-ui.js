@@ -1,4 +1,4 @@
-import {dateKey} from './study-core.js';
+import {dateKey} from '../study/study-core.js';
 export function createWeekPlanUI({data,openPlanner,today=()=>dateKey()}) {
   const container=document.getElementById('checklist-container');
   container.classList.add('week-plan-list');

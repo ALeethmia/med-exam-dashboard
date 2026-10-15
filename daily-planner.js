@@ -1,5 +1,5 @@
-import {taskKind} from './task-projection.js';
-import {dateKey} from './study-core.js';
+import {taskKind} from './src/planner/task-projection.js';
+import {dateKey} from './src/study/study-core.js';
 export const PLANNER_PATH = 'gamification/v3/planner/tasks';
 export const PLANNER_KEY = 'med_exam_daily_planner_v3';
 const fields = ['title','date','minutes','links','complete','deleted','order','createdAt','planning'];

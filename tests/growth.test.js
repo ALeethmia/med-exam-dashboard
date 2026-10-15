@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {growthSnapshot} from '../growth-core.js';
-import {subjectStats} from '../study-core.js';
+import {growthSnapshot} from '../src/study/growth-core.js';
+import {subjectStats} from '../src/study/study-core.js';
 import {createPlanner} from '../daily-planner.js';
 import {memoryStorage,mockEvents} from './helpers/planning-mock.js';
 const data={physio:[{sections:[{id:'p'}]}],anatomy:[{lectures:[{id:1,durationSec:60},{id:2,durationSec:180}]}],biochem:[{id:1}],pharm:[{lectures:[{id:1,durationSec:120}]}]};

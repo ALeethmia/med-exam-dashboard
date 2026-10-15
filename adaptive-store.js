@@ -1,4 +1,4 @@
-import {defaultStudySettings,BIOCHEM_SLOTS,interval} from './adaptive-core.js';
+import {defaultStudySettings,BIOCHEM_SLOTS,interval} from './src/planner/adaptive-core.js';
 import {validDate} from './daily-planner.js';
 export const STUDY_SETTINGS_PATH='questOS/v1/adaptiveStudy/settings';
 export const STUDY_SETTINGS_KEY='med_exam_adaptive_study_v1';

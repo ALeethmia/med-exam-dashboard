@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {BRAND,CHAPTER_I,CHAPTERS,chapterSnapshot} from '../chapters.js';
-import {BUILDINGS,kingdomSnapshot,exerciseLabel} from '../kingdom-core.js';
-import {defaultTraining,lifeSummary} from '../life-core.js';
-import {defaultStudySettings} from '../adaptive-core.js';
+import {BRAND,CHAPTER_I,CHAPTERS,chapterSnapshot} from '../src/kingdom/chapters.js';
+import {BUILDINGS,kingdomSnapshot,exerciseLabel} from '../src/kingdom/kingdom-core.js';
+import {defaultTraining,lifeSummary} from '../src/study/life-core.js';
+import {defaultStudySettings} from '../src/planner/adaptive-core.js';
 import {createPlanner} from '../daily-planner.js';
 import {memoryStorage,mockEvents} from './helpers/planning-mock.js';
 const data={physio:[{sections:[{id:'p',title:'生理'}]}],anatomy:[{lectures:[{id:1,title:'解剖',durationSec:60}]}],biochem:[{id:1,title:'生化'}],pharm:[{lectures:[{id:1,title:'藥理',durationSec:120}]}]};
@@ -31,22 +31,22 @@ test('reading the kingdom with actual Planner and legacy habits never mutates ta
  const result=kingdomSnapshot({...input,training,goals:lifeSummary(planner,input.day,training,habits)});assert.equal(result.study.total,1);assert.equal(result.study.done,1);assert.equal(result.exercise.label,'已完成（舊紀錄）');assert.equal(result.leisure.label,'已完成');assert.equal(planner.get(b).planning.waiting,true);assert.equal(JSON.stringify({tasks:planner.snapshot(),awards:planner.awards(),habits}),before);
 });
 test('kingdom modules cannot initialize Firebase, storage, XP awards or resource transactions',()=>{
- for(const file of ['src/kingdom/chapters.js','src/kingdom/kingdom-core.js','kingdom-ui.js','chronicles-ui.js','src/kingdom/territory-core.js','territory-ui.js']){const source=readFileSync(new URL('../'+file,import.meta.url),'utf8');assert.ok(!/localStorage|sessionStorage|firebase|\.transaction\(|\.setItem\(|planner\.update\(|planner\.add\(/.test(source),file);}
+ for(const file of ['src/kingdom/chapters.js','src/kingdom/kingdom-core.js','src/kingdom/kingdom-ui.js','src/kingdom/chronicles-ui.js','src/kingdom/territory-core.js','src/kingdom/territory-ui.js']){const source=readFileSync(new URL('../'+file,import.meta.url),'utf8');assert.ok(!/localStorage|sessionStorage|firebase|\.transaction\(|\.setItem\(|planner\.update\(|planner\.add\(/.test(source),file);}
 });
 
 test('chronicles use original immutable XP and achievement calculations, never kingdom currencies',async()=>{
- const {gameStats}=await import('../study-core.js');const awards=Object.fromEntries(Array.from({length:10},(_,i)=>['historic-'+i,{xp:20,day:'2026-10-12'}]));const before=JSON.stringify(awards),current=gameStats(awards,'2026-10-12');assert.equal(current.xp,200);assert.equal(current.weekly,10);assert.equal(current.achievements.filter(a=>a.unlocked).length,3);assert.deepEqual(current.achievements.map(a=>a.title),['開始前進','今日專注','持續累積']);const later=gameStats(awards,'2026-10-19');assert.equal(later.xp,200);assert.equal(later.weekly,0);assert.ok(later.achievements.every(a=>a.unlocked));assert.equal(JSON.stringify(awards),before);assert.equal(later.resources,undefined);
+ const {gameStats}=await import('../src/study/study-core.js');const awards=Object.fromEntries(Array.from({length:10},(_,i)=>['historic-'+i,{xp:20,day:'2026-10-12'}]));const before=JSON.stringify(awards),current=gameStats(awards,'2026-10-12');assert.equal(current.xp,200);assert.equal(current.weekly,10);assert.equal(current.achievements.filter(a=>a.unlocked).length,3);assert.deepEqual(current.achievements.map(a=>a.title),['開始前進','今日專注','持續累積']);const later=gameStats(awards,'2026-10-19');assert.equal(later.xp,200);assert.equal(later.weekly,0);assert.ok(later.achievements.every(a=>a.unlocked));assert.equal(JSON.stringify(awards),before);assert.equal(later.resources,undefined);
 });
 
 test('chronicle display distinguishes dated course evidence from current progress without inventing unlock dates',async()=>{
- const {chronicleMilestones}=await import('../chronicles-ui.js');const {buildingProgressSnapshot}=await import('../territory-core.js');const {gameStats}=await import('../study-core.js');
+ const {chronicleMilestones}=await import('../src/kingdom/chronicles-ui.js');const {buildingProgressSnapshot}=await import('../src/kingdom/territory-core.js');const {gameStats}=await import('../src/study/study-core.js');
  const evidence={data,states:input.states,habits:{},courseDates:{},day:input.day},awards={legacy:{xp:20,day:'2026-10-01'}},before=JSON.stringify({evidence,awards});
  const current=chronicleMilestones(buildingProgressSnapshot(evidence),gameStats(awards,input.day).achievements);
  assert.deepEqual(current.history,[]);assert.equal(current.current.length,3);assert.ok(current.current.every(e=>!Object.hasOwn(e,'date')));assert.ok(current.current.find(e=>e.id==='achievement-progress').detail.includes('1 / 3'));
  assert.equal(JSON.stringify({evidence,awards}),before);
 });
 test('chronicles keep only one earliest valid recorded learning footprint, never daily microevents or stage events',async()=>{
- const {chronicleMilestones}=await import('../chronicles-ui.js');const {buildingProgressSnapshot}=await import('../territory-core.js');const {gameStats}=await import('../study-core.js');
+ const {chronicleMilestones}=await import('../src/kingdom/chronicles-ui.js');const {buildingProgressSnapshot}=await import('../src/kingdom/territory-core.js');const {gameStats}=await import('../src/study/study-core.js');
  const evidence={data,states:{},habits:{'2026-10-09':{'daily-sport':true}},courseDates:{physiology__p:{day:'2026-10-10'},videos__1:{day:'2026-10-08'},biochem__1:{day:'2026-10-13'},pharmacology__1:{day:'2026-02-30'},orphan:{day:'2026-01-01'}},day:input.day};
  const buildings=buildingProgressSnapshot(evidence),before=JSON.stringify(buildings),display=chronicleMilestones(buildings,gameStats({},input.day).achievements);
  assert.equal(display.history.length,1);assert.equal(display.history[0].date,'2026-10-08');assert.ok(display.history[0].title.includes('最早已記錄'));assert.ok(display.history[0].detail.includes('解剖學'));

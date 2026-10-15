@@ -1,7 +1,7 @@
 import {realmGrowth} from './realm-growth.js';
 import {gameStats,subjectStats} from '../study/study-core.js';
 import {buildingProgressSnapshot,realmActivityGroups} from './territory-core.js';
-import {chronicleMilestones} from '../../chronicles-ui.js';
+import {chronicleMilestones} from './chronicles-ui.js';
 import {chapterSnapshot,CHAPTER_I} from './chapters.js';
 import {validDate} from '../../daily-planner.js';
 export const BUILDING_IDS=Object.freeze(['academy','keep','barracks']);

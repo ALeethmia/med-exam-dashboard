@@ -4,5 +4,135 @@
     "deploymentEnabled": {
       "codex/growth-i1-integration": false
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/adaptive-core.js",
+      "destination": "/compat/adaptive-core.js"
+    },
+    {
+      "source": "/chapters.js",
+      "destination": "/compat/chapters.js"
+    },
+    {
+      "source": "/growth-core.js",
+      "destination": "/compat/growth-core.js"
+    },
+    {
+      "source": "/kingdom-building-manifest.js",
+      "destination": "/compat/kingdom-building-manifest.js"
+    },
+    {
+      "source": "/kingdom-core.js",
+      "destination": "/compat/kingdom-core.js"
+    },
+    {
+      "source": "/kingdom-lite-art.js",
+      "destination": "/compat/kingdom-lite-art.js"
+    },
+    {
+      "source": "/kingdom-map-core.js",
+      "destination": "/compat/kingdom-map-core.js"
+    },
+    {
+      "source": "/kingdom-preview-state.js",
+      "destination": "/compat/kingdom-preview-state.js"
+    },
+    {
+      "source": "/life-core.js",
+      "destination": "/compat/life-core.js"
+    },
+    {
+      "source": "/readonly-mapping.js",
+      "destination": "/compat/readonly-mapping.js"
+    },
+    {
+      "source": "/realm-growth.js",
+      "destination": "/compat/realm-growth.js"
+    },
+    {
+      "source": "/study-core.js",
+      "destination": "/compat/study-core.js"
+    },
+    {
+      "source": "/task-projection.js",
+      "destination": "/compat/task-projection.js"
+    },
+    {
+      "source": "/territory-core.js",
+      "destination": "/compat/territory-core.js"
+    },
+    {
+      "source": "/kingdom-ui.js",
+      "destination": "/compat/kingdom-ui.js"
+    },
+    {
+      "source": "/chronicles-ui.js",
+      "destination": "/compat/chronicles-ui.js"
+    },
+    {
+      "source": "/territory-ui.js",
+      "destination": "/compat/territory-ui.js"
+    },
+    {
+      "source": "/kingdom-map-renderer.js",
+      "destination": "/compat/kingdom-map-renderer.js"
+    },
+    {
+      "source": "/kingdom-map-input.js",
+      "destination": "/compat/kingdom-map-input.js"
+    },
+    {
+      "source": "/kingdom-preview.js",
+      "destination": "/compat/kingdom-preview.js"
+    },
+    {
+      "source": "/i2a-map.js",
+      "destination": "/compat/i2a-map.js"
+    },
+    {
+      "source": "/planner-ui.js",
+      "destination": "/compat/planner-ui.js"
+    },
+    {
+      "source": "/week-plan-ui.js",
+      "destination": "/compat/week-plan-ui.js"
+    },
+    {
+      "source": "/adaptive-ui.js",
+      "destination": "/compat/adaptive-ui.js"
+    },
+    {
+      "source": "/growth-ui.js",
+      "destination": "/compat/growth-ui.js"
+    },
+    {
+      "source": "/life-ui.js",
+      "destination": "/compat/life-ui.js"
+    },
+    {
+      "source": "/version-ui.js",
+      "destination": "/compat/version-ui.js"
+    },
+    {
+      "source": "/kingdom-map.css",
+      "destination": "/styles/kingdom-map.css"
+    },
+    {
+      "source": "/workspace.css",
+      "destination": "/styles/workspace.css"
+    },
+    {
+      "source": "/kingdom.css",
+      "destination": "/styles/kingdom.css"
+    },
+    {
+      "source": "/i2a-kingdom.css",
+      "destination": "/styles/i2a-kingdom.css"
+    },
+    {
+      "source": "/i3.css",
+      "destination": "/styles/i3.css"
+    }
+  ]
 }
