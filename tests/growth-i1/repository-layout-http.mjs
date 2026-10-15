@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {chromium} from 'playwright';
 const base=process.env.HOST_URL||'http://127.0.0.1:8812';
 const aliases=JSON.parse(readFileSync(new URL('../../config/legacy-assets.json',import.meta.url)));
@@ -15,7 +15,7 @@ for(const [oldPath,newPath] of Object.entries(aliases)){
  assert.match(current.headers.get('cache-control'),/no-store/);legacyURLs++;
 }
 const pure=JSON.parse(readFileSync(new URL('../../docs/REPOSITORY_LAYOUT_B_MAP.json',import.meta.url))).files.filter(f=>f.action==='move-with-compatibility-export').map(f=>[f.from,f.implementation]);
-const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']});let checks=0;
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||(existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});let checks=0;
 try{
  for(const width of [1440,390,320]){
   const c=await browser.newContext({viewport:{width,height:1000},reducedMotion:'reduce'});const p=await c.newPage(),errors=[],bad=[];
