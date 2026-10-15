@@ -1,0 +1,68 @@
+{
+  "sdk": "9.22.0 compat",
+  "environment": "RTDB Emulator 4.11.2; synthetic owner auth/rules, not Production Rules",
+  "results": [
+    {
+      "name": "matching true is confirmed only after successful server transaction completion",
+      "passed": true
+    },
+    {
+      "name": "once can return cached true while server is false",
+      "passed": true
+    },
+    {
+      "name": "SDK get may also use an active-query cache",
+      "passed": true
+    },
+    {
+      "name": "an updater returning undefined aborts locally without a server confirmation",
+      "passed": true
+    },
+    {
+      "name": "no-op transaction has no success acknowledgement while disconnected",
+      "passed": true
+    },
+    {
+      "name": "reconnect retries stale hash; no-op result is server false, never the cached true",
+      "passed": true
+    },
+    {
+      "name": "no-op still sends a write protocol request; unchanged leaf emits no value change in this scenario",
+      "passed": true
+    },
+    {
+      "name": "read-only permissions allow a read but deny the no-op write transaction",
+      "passed": true
+    },
+    {
+      "name": "synthetic owner-only rules reject another UID",
+      "passed": true
+    },
+    {
+      "name": "concurrent set/update can cancel or order a transaction; cannot assume independent operations",
+      "passed": true
+    },
+    {
+      "name": "historical date and XP stay unchanged by leaf probes",
+      "passed": true
+    },
+    {
+      "name": "REST ETag read is server-backed and conditional writes reject a stale baseline",
+      "passed": true
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "transaction overlaps SDK root update",
+      "outcome": "committed"
+    }
+  ],
+  "externalRequests": 0,
+  "production": false,
+  "limitations": [
+    "No Cloud Functions trigger/billing proof",
+    "No real Firebase Rules export",
+    "No browser multi-tab scheduler simulation",
+    "No production auto-resolution implementation"
+  ]
+}

@@ -13,20 +13,59 @@
   const save=()=>{if(valid())learningStorage.setItem(key,JSON.stringify(pending));};
   function status(){
     if(!valid())return;
-    const el=document.getElementById('sync-status');
-    if(el){el.textContent=window.workspaceLocalOnly?'本機模式':failed?'同步失敗 · 可重試':conflicts.size?'離線變更待確認':Object.keys(pending).length?'待同步':connected?'已連線':'離線 · 本機保存';el.title='課程完成與首次日期分別同步。離線或失敗的變更會先核對雲端，差異需確認後才套用。';}
+    const el=document.getElementById('sync-status'), count=Object.keys(pending).length;
+    const differing=[...conflicts.values()].filter(entry=>!same(entry.local,entry.remote)).length;
+    const awaiting=conflicts.size-differing;
+    const loading=window.i3Runtime?.read().status==='loading';
+    if(el){el.textContent=window.workspaceLocalOnly?'本機模式':failed?'同步失敗 · 本機已保存':conflicts.size?'同步操作待確認':count?'等待同步確認':loading?'正在載入':connected?'已連線':'離線 · 本機保存';el.title='連線狀態不代表每筆寫入已完成。課程完成狀態與首次日期分別同步；目前快照可能包含本機快取。';}
     window.SubjectUI?.refreshDates?.();
-    if(!document.createElement||!el?.parentElement)return;
-    let panel=document.getElementById('learning-sync-conflicts');
-    if(!panel){panel=document.createElement('details');panel.id='learning-sync-conflicts';panel.className='workspace-note';panel.style.maxWidth='100%';panel.style.overflowWrap='anywhere';el.parentElement.append(panel);}
-    panel.hidden=!conflicts.size;panel.replaceChildren();
-    if(!conflicts.size)return;
-    const summary=document.createElement('summary');summary.textContent=`${conflicts.size} 筆離線變更待確認`;panel.append(summary);
-    const note=document.createElement('p');note.textContent='雲端與本機不同，已暫停自動重播。課程只有完成狀態，無法確認哪份較新；快照也可能是快取，數值相同不等於已收到寫入確認。首次完成日期另行同步。';panel.append(note);
+    if(!document.createElement||!el?.closest)return;
+    const header=el.closest('.workspace-topbar'),toolbar=header?.querySelector('.workspace-toolbar');
+    if(!toolbar)return;
+    let region=document.getElementById('learning-sync-notice');
+    if(!region){
+      region=document.createElement('section');region.id='learning-sync-notice';region.className='learning-sync-notice';region.setAttribute('aria-label','學習紀錄同步');
+      const overview=document.createElement('p');overview.dataset.syncOverview='';overview.setAttribute('role','status');overview.setAttribute('aria-live','polite');region.append(overview);
+      const panel=document.createElement('details');panel.id='learning-sync-conflicts';
+      const summary=document.createElement('summary');panel.append(summary);
+      const note=document.createElement('p');note.className='workspace-note';note.textContent='目前快照可能來自本機快取，尚不能證明伺服器已確認寫入。以下選擇只處理課程狀態；首次完成日期另行同步。';panel.append(note);
+      const list=document.createElement('div');list.dataset.syncRows='';panel.append(list);region.append(panel);toolbar.after(region);
+    }
+    region.hidden=window.workspaceLocalOnly||(!count&&!failed);
+    const overview=region.querySelector('[data-sync-overview]');
+    const message=failed?'同步暫時失敗，未確認的操作仍保存在此裝置。可使用「重試同步」。':conflicts.size?`${[awaiting?awaiting+' 筆尚未取得可靠寫入確認':'',differing?differing+' 筆觀察到不同數值':''].filter(Boolean).join('，')}。請展開查看並選擇如何處理。`:!connected?'離線中，操作已保存在此裝置；連線後會核對同步狀態。':loading?'正在重新載入資料，未確認的操作仍保留。':'正在等待寫入確認，操作仍保存在此裝置。';
+    if(overview.textContent!==message)overview.textContent=message;
+    const panel=region.querySelector('details');panel.hidden=!conflicts.size;
+    const summary=panel.querySelector('summary'),label=`${conflicts.size} 筆同步操作待確認 · 查看詳細資料`;
+    if(summary.textContent!==label)summary.textContent=label;
+    const list=panel.querySelector('[data-sync-rows]');
+    const rows=panel.syncRows||(panel.syncRows=new Map());
+    for(const [path,row] of rows)if(!conflicts.has(path)){row.remove();rows.delete(path);}
+    const describe=value=>value===true?'已完成':value===false?'未完成':value===null?'沒有紀錄':JSON.stringify(value);
     for(const [path,entry] of conflicts){
-      const row=document.createElement('p');row.append(document.createTextNode(`${path} · 本機：${JSON.stringify(entry.local)} · 雲端：${JSON.stringify(entry.remote)} `));
-      for(const [label,keep] of [['採用雲端',false],['重新套用本機',true]]){const button=document.createElement('button');button.type='button';button.className='workspace-link';button.textContent=label;button.disabled=!ready();button.onclick=()=>{if(keep&&!window.confirm('這會以本機變更覆寫目前的雲端紀錄。無法自動判斷其他裝置的修改先後，確定重新套用？'))return;void window.resolveLearningSync(path,keep);};row.append(button);}
-      panel.append(row);
+      let row=rows.get(path);
+      if(!row){
+        row=document.createElement('article');row.className='learning-sync-item';row.dataset.syncPath=path;
+        const title=document.createElement('p');title.dataset.syncTitle='';row.append(title);
+        const detail=document.createElement('p');detail.dataset.syncDetail='';detail.className='workspace-note';row.append(detail);
+        const actions=document.createElement('div');actions.className='learning-sync-actions';
+        for(const [label,keep] of [['採用雲端',false],['重新套用本機',true]]){
+          const button=document.createElement('button');button.type='button';button.className='workspace-link';button.textContent=label;
+          button.onclick=()=>{if(keep&&!window.confirm('這會以本機變更覆寫目前的雲端紀錄。無法自動判斷其他裝置的修改先後，確定重新套用？'))return;void window.resolveLearningSync(path,keep);};actions.append(button);
+        }
+        row.append(actions);rows.set(path,row);list.append(row);
+      }
+      const equal=same(entry.local,entry.remote),title=row.querySelector('[data-sync-title]');
+      const text=equal?'尚未取得可靠寫入確認':'觀察到不同數值，先後尚待確認';
+      if(title.textContent!==text)title.textContent=text;
+      row.dataset.syncKind=equal?'unconfirmed':'observed-difference';
+      const detail=row.querySelector('[data-sync-detail]');
+      const [subject,id]=path.split('/'),data=window.studyData||{};
+      const courses={physiology:(data.physio||[]).flatMap(c=>c.sections),videos:(data.anatomy||[]).flatMap(c=>c.lectures),biochem:data.biochem||[],pharmacology:(data.pharm||[]).flatMap(c=>c.lectures)};
+      const course=courses[subject]?.find(c=>String(c.id)===id);
+      const description=`${course?.title?course.title+'（'+path+'）':path} · 本機操作：${describe(entry.local)}；目前快照：${describe(entry.remote)}（未驗證為伺服器最新值）。`;
+      if(detail.textContent!==description)detail.textContent=description;
+      for(const button of row.querySelectorAll('button'))button.disabled=!ready();
     }
   }
   window.mergeLearningSnapshot=(path,value)=>{

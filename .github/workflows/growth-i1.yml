@@ -23,6 +23,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Existing Dashboard regression subset
         run: npx playwright test tests/browser/version.spec.js tests/browser/course-dates.spec.js --grep 'footer reads|Preview footer|first date can' --reporter=line
+      - name: Sync UX and isolated B1 decision model
+        run: |
+          npx playwright test tests/browser/sync-ux.spec.js --reporter=line
+          node --test tests/sync-b1/reconcile-model.test.mjs
       - name: Canonical auth and Fixtures integration
         shell: bash
         run: |
