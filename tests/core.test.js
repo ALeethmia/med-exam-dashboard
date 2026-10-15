@@ -58,7 +58,7 @@ function syncHarness(fail=false) {
   return {window,store,listeners,writes,el};
 }
 test('single edits preserve unrelated database fields and pending snapshots',async()=>{
-  const h=syncHarness();h.window.persistProgress('videos',{1:true,2:true},[1]);
+  const h=syncHarness();h.listeners['.info/connected']({val:()=>true});h.window.persistProgress('videos',{1:true,2:true},[1]);
   assert.deepEqual(JSON.parse(JSON.stringify(h.window.mergeLearningSnapshot('videos',{3:true}))),{1:true,3:true});
   h.listeners['.info/connected']({val:()=>true}); await new Promise(r=>setImmediate(r));
   assert.deepEqual(h.writes,[{'videos/1':true}]);assert.deepEqual(JSON.parse(h.store.get('med_exam_pending_writes_v1')),{});

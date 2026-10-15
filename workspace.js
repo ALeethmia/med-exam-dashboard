@@ -33,7 +33,7 @@ let gameFailed = false;
 const save = () => learningStorage.setItem(GAME_KEY, JSON.stringify(game));
 const db = window.learningDB;
 const states = () => window.readStudyStates();
-const courseDates=createCourseDates({keys:new Set(validItems.keys()),db,localOnly:window.workspaceLocalOnly,onChange:()=>{window.SubjectUI?.refreshDates?.();window.updateWorkspace?.();}});
+const courseDates=createCourseDates({keys:new Set(validItems.keys()),db,lifecycle:window.i3Runtime?.lifecycle,localOnly:window.workspaceLocalOnly,onChange:()=>{window.SubjectUI?.refreshDates?.();window.updateWorkspace?.();}});
 window.courseDates={...courseDates,today:()=>dateKey(),day:key=>Object.hasOwn(courseDates.records(),key)?courseDates.records()[key]?.day||null:game.awards[key]?.day||null};
 const initiallyCompleted=new Set(allItems.filter(item=>states()[item.path]?.[item.id]).map(awardKey));
 window.addEventListener('study-completed',event=>{const {path,id,complete}=event.detail,key=path+'__'+id;if(complete&&validItems.has(key)&&!initiallyCompleted.has(key)&&!game.awards[key])courseDates.set(key,dateKey(),{firstOnly:true});});
@@ -139,7 +139,7 @@ document.getElementById('mobile-menu').addEventListener('click',()=>{
   const open=document.getElementById('workspace-nav').classList.toggle('mobile-open');
   document.getElementById('mobile-menu').setAttribute('aria-expanded',String(open));
 });
-document.getElementById('retry-sync').addEventListener('click',()=>{window.retryLearningSync();void courseDates.retry();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
+document.getElementById('retry-sync').addEventListener('click',()=>{if(window.i3Runtime?.read().status==='error'){window.i3Runtime.retry();return;}window.retryLearningSync();void courseDates.retry();void syncGame();void timeTasks.retry();void planner.retry();void life.retry();void studySettings.retry();});
 
 function setMeter(id, percent) {
   const meter = document.getElementById(id);

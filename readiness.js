@@ -24,7 +24,7 @@ export function observeDatabase(database,lifecycle){
  function retry(){if(!valid())return;lifecycle.reload();for(const e of entries){detach(e);attach(e);}}
  function dispose(){if(disposed)return;disposed=true;for(const e of entries)detach(e);entries.clear();database.ref('.info/connected').off('value',connectionCallback);untrack();}
  const untrack=lifecycle.track(dispose);
- connectionCallback=snap=>{if(!valid())return;const next=snap.val()===true;if(!next&&connected){lost=true;lifecycle.fail('read/disconnected',epoch);}if(next&&lost){lost=false;retry();}connected=next;};
+ connectionCallback=snap=>{if(!valid())return;const next=snap.val()===true,wasConnected=connected;connected=next;if(!next&&wasConnected){lost=true;lifecycle.fail('read/disconnected',epoch);}if(next&&lost){lost=false;retry();}};
  if(valid())database.ref('.info/connected').on('value',connectionCallback,e=>lifecycle.fail(e?.code||'read/connection',epoch));
  function ref(path=''){
  const original=database.ref(path);const writable=()=>valid()&&connected&&lifecycle.read().status==='ready';

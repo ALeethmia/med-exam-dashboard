@@ -5,11 +5,12 @@ import {REQUIRED_PATHS} from './readiness.js';
 // Keep the existing classic-script globals intact; start learning only after authentication.
 let started = false;
 let activeUID=null,authEpoch=0;
-async function startLearning() {
+async function startLearning(stillCurrent=()=>true) {
   if (started) return;
   started = true;
   window.learningStorage=window.becomingStorage.view();preserveRewardCache(window.learningStorage);window.SubjectUI?.bindStorage();
   await import('./sync.js');
+  if(!stillCurrent())return;
   const script = document.createElement('script');
   script.textContent = document.getElementById('learning-script').textContent;
   document.body.append(script);
@@ -132,7 +133,7 @@ if (window.workspaceLocalOnly) {
       activeUID=user.uid;window.becomingStorage.bind(user.uid);window.i3Runtime?.begin(user);
       window.authenticatedUser = user;
       login.close();
-      try { await startLearning(); if(epoch!==authEpoch||activeUID!==user.uid)return;addAccount(auth, user); }
+      try { await startLearning(()=>epoch===authEpoch&&activeUID===user.uid&&window.authenticatedUser?.uid===user.uid); if(epoch!==authEpoch||activeUID!==user.uid)return;addAccount(auth, user); }
       catch { status.textContent = '介面載入失敗，請重新整理後重試。'; login.showModal(); }
     }, error => { window.becomingStorage?.unbind();window.authenticatedUser=null;window.i3Runtime?.stop();status.textContent = authMessage(error); button.disabled = false; });
   } catch {
