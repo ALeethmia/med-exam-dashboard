@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Becoming：魔法書與王冠</title>
+  <rect width="64" height="64" rx="13" fill="#1D3557"/>
+  <path d="M21 12 27 17 32 9 37 17 43 12 41 24H23Z" fill="#D9B56D"/>
+  <g fill="#F6F1E8">
+    <path d="M10 29C18 26 24 27 31 32V54C24 49 18 48 10 50Z"/>
+    <path d="M54 29C46 26 40 27 33 32V54C40 49 46 48 54 50Z"/>
+  </g>
+</svg>
