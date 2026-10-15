@@ -45,12 +45,13 @@ export async function openPrototypeQueue({name,indexedDB=globalThis.indexedDB,ma
   const getAll=store=>run(session,'readonly',({store:s,request,done})=>request(s(store).index('uid').getAll(uid),done));
   return Object.freeze({uid,sessionId:session.id,
    list:()=>getAll('intents'),unsettled:()=>getAll('flights'),
-   put(path,value){
+   put(path,value,{epoch=null}={}){
+    if(epoch!==null&&(!Number.isSafeInteger(epoch)||epoch<0))throw fault('queue/invalid-epoch');
     courseKey(path);const target=targetValue(value),intentId=freshId();
     return run(session,'readwrite',({store,request,done})=>{
      const key=[uid,path];request(store('revisions').get(key),previous=>{
       const generation=(previous?.generation||0)+1;if(!Number.isSafeInteger(generation))throw fault('queue/generation-exhausted');
-      const row={uid,path,intentId,generation,target,state:'queued',createdAt:now()};
+      const row={uid,path,intentId,generation,target,state:'queued',ownerSession:session.id,epoch,createdAt:now()};
       store('revisions').put({uid,path,generation});store('intents').put(row);done(row);
      });
     });

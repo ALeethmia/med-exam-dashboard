@@ -1,10 +1,10 @@
 # B2-B 未來最小接線計畫與風險
 
-B2-A 只建立儲存／交易原型。**本文件不是接線、資料遷移或部署授權。**
+B2-A 只建立儲存／交易原型。B2-B.1 已另提供[隔離 SDK Promise Adapter](B2B1_WRITE_ADAPTER.md)與[正式接線前檢查清單](B2B2_PREWIRING_CHECKLIST.md)，仍未接入產品。**本文件不是接線、資料遷移或部署授權。**
 
 ## 尚未解決的邊界
 
-1. `settleOwnFlight(flightToken,evidence)` 只確認原 session 的不可變 flight 身分與呼叫者提供的契約值；沒有實作 Firebase Promise／server-only GET 證據驗證。不能直接用在產品自動結案。
+1. `settleOwnFlight(flightToken,evidence)` 只確認原 session 的不可變 flight 身分與呼叫者提供的契約值；B2-B.1 另以注入 writer 綁定原 Promise，但沒有產品 Firebase Adapter 或 server-only GET 證據驗證。不能直接用在產品自動結案。
 2. 原 session 關閉後，未知 flight 故意保持阻擋。跨 session 如何在不重送舊寫入的情況下，取得證據並安全結束 blocker，尚未實作。
 3. 同 UID 舊版分頁仍可自由操作原 localStorage 與 SDK 寫入。本原型無法約束它們；不掃描、不刪除、不搬移舊 pending，也不假裝 BroadcastChannel 心跳能證明舊分頁已不存在。
 4. IDB 是同 origin／同瀏覽器儲存區的協調，不是跨裝置一致性協定。generation 不能判定其他裝置哪次修改較新。
