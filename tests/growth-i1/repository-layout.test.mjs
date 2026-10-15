@@ -63,6 +63,12 @@ test('all relative ES imports, dynamic imports and re-exports resolve to canonic
 test('HTML bootstrap and script order are unchanged except canonical stylesheet/module URLs',()=>{
  for(const name of ['index.html','kingdom-preview.html']){
   let html=readFileSync(path.join(root,name),'utf8');
+  const faviconLinks=["<link rel=\"icon\" href=\"./public/favicon/favicon.ico\" sizes=\"any\">", "<link rel=\"icon\" type=\"image/svg+xml\" href=\"./public/favicon/favicon.svg\">", "<link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"./public/favicon/favicon-32x32.png\">", "<link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"./public/favicon/favicon-16x16.png\">", "<link rel=\"apple-touch-icon\" href=\"./public/favicon/apple-touch-icon.png\">"];
+  const newline=html.includes('\r\n')?'\r\n':'\n';
+  const faviconBlock=newline+faviconLinks.join(newline)+newline;
+  assert(html.includes(faviconBlock),name+' favicon links');
+  for(const link of faviconLinks)assert(existsSync(path.join(root,link.match(/href="([^"]+)"/)[1])),link);
+  html=html.replace(faviconBlock,'');
   for(const [a,b] of Object.entries(aliases))html=html.replaceAll('src="./'+b+'"','src="./'+a+'"').replaceAll('href="./'+b+'"','href="./'+a+'"');
   assert.equal(hash(html),old.files.find(f=>f.from===name).originalSHA256,name);
  }
