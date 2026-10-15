@@ -1,4 +1,4 @@
-import {DB_PREFIX,fault,storageFault,uidKey,courseKey,targetValue,expectedKey,matches,transitionAllowed} from './contract.mjs';
+import {DB_PREFIX,fault,storageFault,uidKey,courseKey,targetValue,expectedKey,matches,transitionAllowed,flightKey,matchesFlight} from './contract.mjs';
 const stores=['intents','revisions','flights'];
 // Explicit prototype name is mandatory. Never opens/migrates a production or legacy database.
 export async function openPrototypeQueue({name,indexedDB=globalThis.indexedDB,makeId=()=>globalThis.crypto.randomUUID(),now=()=>Date.now(),openTimeoutMs=3000}={}){
@@ -60,7 +60,10 @@ export async function openPrototypeQueue({name,indexedDB=globalThis.indexedDB,ma
     return run(session,'readwrite',({store,request,done})=>request(store('intents').get(key),row=>{
      if(!matches(row,expected)){done(false);return;}
      const apply=()=>{const next={...row,state:to,updatedAt:now()};
-      if(to==='in-flight'){next.ownerSession=session.id;store('flights').put({...next});}
+      if(to==='in-flight'){
+       const flightToken={kind:'flight-token',uid,path:row.path,intentId:row.intentId,generation:row.generation,flightId:freshId(),ownerSession:session.id};
+       next.flightToken=flightToken;store('flights').put({...flightToken,kind:'flight',phase:'unsettled',target:row.target,createdAt:now()});
+      }
       store('intents').put(next);done(next);
      };
      if(to==='in-flight')request(store('flights').index('course').count(key),count=>count?done(false):apply());else apply();
@@ -75,11 +78,11 @@ export async function openPrototypeQueue({name,indexedDB=globalThis.indexedDB,ma
    },
    // Caller-supplied evidence is NOT validated against a server in this prototype.
    // Only the original session can settle its own flight; recovery does not guess.
-   settleOwnFlight(expected,evidence){
-    expectedKey(expected,uid);if(!['acknowledged','proved-not-sent'].includes(evidence))throw fault('queue/invalid-evidence');
+   settleOwnFlight(token,evidence){
+    const key=flightKey(token,uid);if(!['acknowledged','proved-not-sent'].includes(evidence))throw fault('queue/invalid-evidence');
     return run(session,'readwrite',({store,request,done})=>{
-     const key=[uid,expected.path,expected.intentId,expected.generation];request(store('flights').get(key),flight=>{
-      if(!matches(flight,expected)||flight.ownerSession!==session.id){done(false);return;}store('flights').delete(key);done(true);
+     request(store('flights').get(key),flight=>{
+      if(!matchesFlight(flight,token)||token.ownerSession!==session.id){done(false);return;}store('flights').delete(key);done(true);
      });
     });
    },

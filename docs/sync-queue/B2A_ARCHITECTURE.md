@@ -14,7 +14,7 @@ DB version 1，三個 object store：
 | revisions | `[uid,path]` | 持久遞增 generation；意圖刪除後不歸零 |
 | flights | `[uid,path,intentId,generation]` | 已宣告 in-flight、尚未結束的寫入標記；course／uid index 支援檢查 |
 
-當前意圖：`uid`、`path`、`intentId`、`generation`、`target`、`state`、診斷時間。target 為 `{kind:'set',value:boolean}` 或 `{kind:'delete'}`；刪除不與 false 混同。state 為 queued／in-flight／awaiting-proof／needs-choice。
+當前意圖：`uid`、`path`、`intentId`、`generation`、`target`、`state`、診斷時間；claim 成功後另含 `flightToken`。target 為 `{kind:'set',value:boolean}` 或 `{kind:'delete'}`；刪除不與 false 混同。state 為 queued／in-flight／awaiting-proof／needs-choice。
 
 所有新增、代次更新、狀態轉換、flight 記錄與條件刪除，都在原生 IDB readwrite transaction 中執行；Promise 只在 transaction complete 後成功。多分頁的正確性依靠 IDB 的交易序列化，**沒有依賴 Web Locks 或 BroadcastChannel**。讀寫交易目前涵蓋三個 store，簡單且保守；未做高吞吐最佳化。
 
@@ -34,7 +34,7 @@ const queued=await a.put('physiology/fc_p_1_a',true);
 const flight=await a.transition(queued,'in-flight');
 // 本原型不會送出任何寫入。此處僅示範持久狀態契約。
 // 真實證據必須由未來 B2-B 的受保護 Adapter 提供，不可憑 Boolean 自行宣告。
-await a.settleOwnFlight(flight,'acknowledged');
+await a.settleOwnFlight(flight.flightToken,'acknowledged');
 await a.removeIfCurrent(flight);
 client.close();
 ```
@@ -47,12 +47,39 @@ client.close();
 | view.`unsettled()` | 只讀該 UID 的未決 flights；新意圖可能仍被舊 flight 阻擋 |
 | view.`transition(expected,to)` | CAS 更新。queued→in-flight 會原子建立 flight，若已有 blocker 回 false |
 | view.`removeIfCurrent(expected)` | 僅身分、代次、state 完全一致且該路徑無 flight 時刪指定列；否則回 false。保留 revision |
-| view.`settleOwnFlight(expected,evidence)` | 僅原始 session、完全匹配的 flight 可刪除自己的標記；不刪較新的 intent。不替呼叫者驗證伺服器證據 |
+| view.`settleOwnFlight(flightToken,evidence)` | 僅原始 session、完全匹配的實際 flight 可刪除自己的標記；不接受 intent 快照、不刪較新的 intent。不替呼叫者驗證伺服器證據 |
 | `unbind()`／`close()` | 使該 client 的舊 view／回呼失效，close 關閉 DB；不清空任何紀錄 |
 
 合法轉換：queued→in-flight／needs-choice；in-flight→awaiting-proof／needs-choice；awaiting-proof→needs-choice；needs-choice→awaiting-proof。**沒有從未知狀態自動回 queued 的轉換。**
 
 `settleOwnFlight` 的 evidence 只有 bounded 值 `acknowledged`／`proved-not-sent`，它是未來 Adapter 的契約，並不是本原型已驗證的伺服器收據。不得把它直接暴露成一般 UI／自動結案 API。即使 settle 成功，仍需另一次 CAS 才能刪 current intent；中間若出現新意圖，舊 callback 不會刪到它。
+
+## Intent 與 flight 是不同契約（Code Review 修正）
+
+先前 `transition()` 只更新 intents.state，而 flight 複製了 claim 當時的 state；`settleOwnFlight()` 卻用同一個含 state 的 matches，導致拿 awaiting-proof intent 結束原 flight 會失敗。已先用 Chromium 重現 settle=false，再新增完整 regression。
+
+現在明確區分：
+
+- `intents.state` 是可變的處理階段；CAS 刪除／transition 仍嚴格比對最新預期 state。
+- `flights` 不保存 intents.state。它的 `phase:'unsettled'` 只表示物理寫入尚未結束；成功 settle 才刪除該 flight。
+- claim 原子建立獨立 `flightId`、`ownerSession`，回傳型別為 `kind:'flight-token'` 的 `flightToken`。儲存列為 `kind:'flight'`，以免把 intent 或 flight 列誤當成 token。
+- token 不可變，包含 UID、path、intentId、generation、flightId、ownerSession。settle 嚴格比對全部欄位、原 session 與 flight.phase；不是簡單移除原 state 條件。
+- intent 進入 awaiting-proof／needs-choice 不應改變物理寫入身分。確認回呼持有原 token，即使 intent 已轉換階段仍可 settle。後續只能使用**最新 intent state** 做 CAS；原 in-flight 快照不能刪 awaiting-proof。
+- 新意圖取代舊意圖時，原 token 只可結束原 flight；不能刪新意圖，也不能結束新 flight。重複、錯誤、過期 token 均不清理其他紀錄。
+
+合法範例：
+
+```js
+const claimed=await a.transition(queued,'in-flight');
+const awaiting=await a.transition(claimed,'awaiting-proof');
+// 收到原寫入的合法確認後，沿用 claim 時捕捉的不可變 token。
+await a.settleOwnFlight(claimed.flightToken,'acknowledged');
+await a.removeIfCurrent(awaiting); // 仍需當前 state／intent 身分一致。
+```
+
+檢查六個合法轉換邊與代表性生命週期：直接確認、awaiting-proof 後確認、needs-choice 後確認、awaiting-proof→needs-choice→awaiting-proof 後確認均可結束。queued→needs-choice→awaiting-proof 若本來沒有物理寫入，不會捏造 flight；其刪除仍是呼叫端明確決策，不是已驗證的伺服器成功。
+
+DB store/key schema 維持 version 1；本原型尚未合併／接線。先前手動使用的舊格式 prototype flight 沒有 typed token／flightId，不會猜測身分或自動遷移、刪除，仍會阻擋該路徑；測試使用獨立新 DB 與合成舊格式資料驗證此限制。這不涉及使用者 legacy localStorage pending。
 
 ## 失敗與恢復
 
@@ -77,7 +104,7 @@ npm run lint
 npm test
 ```
 
-12 項 Node 契約／開啟失敗測試；14 項 Chromium 測試：不同路徑並行、同路徑代次、true-false-true、過期結果、state mismatch、刪除後代次、未決 flight、單次 settle、重啟保守恢復、UID 切換、活動交易中切帳、Quota／Abort、legacy 不接管、交易中關頁、versionchange、完整瀏覽器 profile 重啟。部分測試含多個斷言／情境，測試數依 runner 顯示。
+15 項 Node 契約／開啟失敗測試；21 項 Chromium 測試：不同路徑並行、同路徑代次、true-false-true、過期結果、state mismatch、刪除後代次、未決 flight、單次 settle、重啟保守恢復、UID 切換、活動交易中切帳、Quota／Abort、legacy 不接管、交易中關頁、versionchange、完整瀏覽器 profile 重啟。部分測試含多個斷言／情境，測試數依 runner 顯示。
 
 - 開啟失敗以測試替身注入；Quota／Abort 在真實 IDB 交易上注入例外，不是真實磁碟填滿。
 - 關頁途中只保證觀察到「交易全有或全無」，不假設使用者關頁必然發生在 commit 前。
@@ -85,7 +112,7 @@ npm test
 - legacy 測試使用獨立瀏覽器 context 的合成 localStorage；原型完全不接管它。不代表舊版分頁已能安全相容正式新佇列。
 - 邊界測試確認產品入口不 import 原型，原型無 fetch／Firebase／localStorage 操作或事件派發。
 
-CI 增加本原型的 Node／Chromium 測試，保留既有 regression。未改 package、依賴、版本或 Vercel 設定。
+CI 增加本原型的 Node／Chromium 測試，保留既有 regression。新增涵蓋 awaiting-proof 完整結案、跨分頁 state／settle 競爭、新 flight 與過期 token、原 session 失效、claim／settle 交易 abort 回滾及舊格式 prototype flight 保留。未改 package、依賴、版本或 Vercel 設定。
 
 ## 發布界線
 

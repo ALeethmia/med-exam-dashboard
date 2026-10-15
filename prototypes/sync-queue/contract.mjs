@@ -15,3 +15,12 @@ export function expectedKey(expected,uid){
 }
 export function matches(row,expected){return !!row&&row.uid===expected.uid&&row.path===expected.path&&row.intentId===expected.intentId&&row.generation===expected.generation&&row.state===expected.state;}
 export function transitionAllowed(from,to){return ({queued:['in-flight','needs-choice'],'in-flight':['awaiting-proof','needs-choice'],'awaiting-proof':['needs-choice'],'needs-choice':['awaiting-proof']})[from]?.includes(to)===true;}
+
+// A flight is an immutable transmission identity, not the mutable intent workflow state.
+export function flightKey(token,uid){
+ if(!token||token.kind!=='flight-token'||token.uid!==uid||!['intentId','flightId','ownerSession'].every(k=>typeof token[k]==='string'&&token[k].length>0&&token[k].length<=128)||!Number.isSafeInteger(token.generation)||token.generation<1)throw fault('queue/invalid-flight');
+ courseKey(token.path);return [uid,token.path,token.intentId,token.generation];
+}
+export function matchesFlight(flight,token){
+ return token?.kind==='flight-token'&&!!flight&&flight.kind==='flight'&&flight.phase==='unsettled'&&['uid','path','intentId','generation','flightId','ownerSession'].every(key=>flight[key]===token[key]);
+}

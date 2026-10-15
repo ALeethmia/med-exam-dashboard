@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DB_PREFIX,uidKey,courseKey,targetValue,matches,expectedKey,transitionAllowed,storageFault} from '../../prototypes/sync-queue/contract.mjs';
+import {DB_PREFIX,uidKey,courseKey,targetValue,matches,expectedKey,transitionAllowed,storageFault,flightKey,matchesFlight} from '../../prototypes/sync-queue/contract.mjs';
 import {readFileSync,readdirSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -29,4 +29,23 @@ test('prototype is not imported by product entries and has no Firebase/network/l
  const entries=[...readdirSync(root).filter(f=>/\.(js|html)$/.test(f)).map(f=>path.join(root,f)),...walk(path.join(root,'src'))];
  for(const entry of entries)assert(!readFileSync(entry,'utf8').includes('prototypes/sync-queue'),entry);
  for(const f of ['contract.mjs','indexeddb-queue.mjs'])assert(!/\bfetch\s*\(|\bfirebase\b|\blocalStorage\s*\.|dispatchEvent\s*\(/.test(readFileSync(path.join(root,'prototypes/sync-queue',f),'utf8').replace(/^\s*\/\/.*$/gm,'')),f);
+});
+
+const token={kind:'flight-token',uid:row.uid,path:row.path,intentId:row.intentId,generation:row.generation,flightId:'transmission-one',ownerSession:'original-session'};
+const storedFlight={...token,kind:'flight',phase:'unsettled'};
+test('flight token is a distinct typed immutable identity, not an intent snapshot',()=>{
+ assert.deepEqual(flightKey(token,row.uid),[row.uid,row.path,row.intentId,row.generation]);
+ assert.throws(()=>flightKey(row,row.uid),/invalid-flight/);
+ assert.throws(()=>flightKey(storedFlight,row.uid),/invalid-flight/);
+ for(const patch of [{uid:'other'},{flightId:''},{ownerSession:''},{generation:0},{kind:'intent'}])assert.throws(()=>flightKey({...token,...patch},row.uid),/invalid-flight/);
+});
+test('settlement matches the exact transmission and original owner, never the mutable intent state',()=>{
+ assert(matchesFlight(storedFlight,token));
+ for(const patch of [{uid:'other'},{path:'physiology/fc_p_1_c'},{intentId:'newer'},{generation:2},{flightId:'transmission-two'},{ownerSession:'other-session'}])assert(!matchesFlight(storedFlight,{...token,...patch}));
+ assert(!matchesFlight({...storedFlight,phase:'settled'},token));assert(!matchesFlight(null,token));assert(!matchesFlight(storedFlight,undefined));assert(!matchesFlight(storedFlight,{...token,kind:'intent'}));
+});
+test('intent transition table preserves exactly the six allowed workflow edges',()=>{
+ const allowed=new Set(['queued/in-flight','queued/needs-choice','in-flight/awaiting-proof','in-flight/needs-choice','awaiting-proof/needs-choice','needs-choice/awaiting-proof']);
+ const states=['queued','in-flight','awaiting-proof','needs-choice'];
+ for(const from of states)for(const to of states)assert.equal(transitionAllowed(from,to),allowed.has(from+'/'+to),from+' -> '+to);
 });
