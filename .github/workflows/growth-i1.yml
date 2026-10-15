@@ -27,6 +27,10 @@ jobs:
         run: |
           npx playwright test tests/browser/sync-ux.spec.js --reporter=line
           node --test tests/sync-b1/reconcile-model.test.mjs
+      - name: Isolated B2-A queue contract and Chromium multi-tab tests
+        run: |
+          node --test tests/sync-queue/contract.test.mjs
+          npx playwright test tests/browser/sync-queue.spec.js --reporter=line
       - name: Canonical auth and Fixtures integration
         shell: bash
         run: |
