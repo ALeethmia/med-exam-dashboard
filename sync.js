@@ -22,7 +22,7 @@
     panel.hidden=!conflicts.size;panel.replaceChildren();
     if(!conflicts.size)return;
     const summary=document.createElement('summary');summary.textContent=`${conflicts.size} 筆離線變更待確認`;panel.append(summary);
-    const note=document.createElement('p');note.textContent='雲端與本機不同，已暫停自動重播。課程只有完成狀態，無法確認哪份較新；首次完成日期另行同步。';panel.append(note);
+    const note=document.createElement('p');note.textContent='雲端與本機不同，已暫停自動重播。課程只有完成狀態，無法確認哪份較新；快照也可能是快取，數值相同不等於已收到寫入確認。首次完成日期另行同步。';panel.append(note);
     for(const [path,entry] of conflicts){
       const row=document.createElement('p');row.append(document.createTextNode(`${path} · 本機：${JSON.stringify(entry.local)} · 雲端：${JSON.stringify(entry.remote)} `));
       for(const [label,keep] of [['採用雲端',false],['重新套用本機',true]]){const button=document.createElement('button');button.type='button';button.className='workspace-link';button.textContent=label;button.disabled=!ready();button.onclick=()=>{if(keep&&!window.confirm('這會以本機變更覆寫目前的雲端紀錄。無法自動判斷其他裝置的修改先後，確定重新套用？'))return;void window.resolveLearningSync(path,keep);};row.append(button);}
@@ -40,15 +40,15 @@
     if(!ready()||!window.learningDB||window.workspaceLocalOnly||!Object.keys(pending).length)return;
     active=true;requested=false;
     try{
-      // Matching server values acknowledge an uncertain write without submitting it again.
+      // A value callback/once can be SDK cache, not a server write acknowledgement.
+      // Unconfirmed intents require a decision even when the observed value matches.
       for(const path of [...review]){
         if(!Object.hasOwn(pending,path)){review.delete(path);continue;}
         const local=pending[path],snap=await window.learningDB.ref(path).once('value');
         if(!ready())return;
         if(!same(local,pending[path]))continue;
         const remote=snap.val();
-        if(same(remote,local)){delete pending[path];review.delete(path);conflicts.delete(path);save();}
-        else conflicts.set(path,{local,remote});
+        conflicts.set(path,{local,remote});
       }
       if(!ready())return;
       const sent=Object.fromEntries(Object.entries(pending).filter(([path])=>!review.has(path)));
