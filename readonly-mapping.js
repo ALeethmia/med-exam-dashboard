@@ -12,7 +12,10 @@ const emptyCatalog=()=>({physio:[],anatomy:[],biochem:[],pharm:[]});
 function usableCatalog(v){return isRecord(v)&&['physio','anatomy','biochem','pharm'].every(k=>Array.isArray(v[k]))&&v.physio.every(g=>isRecord(g)&&Array.isArray(g.sections)&&g.sections.every(unit))&&v.anatomy.every(g=>isRecord(g)&&Array.isArray(g.lectures)&&g.lectures.every(weightedUnit))&&v.pharm.every(g=>isRecord(g)&&Array.isArray(g.lectures)&&g.lectures.every(weightedUnit))&&v.biochem.every(unit);}
 const unit=v=>isRecord(v)&&['string','number'].includes(typeof v.id)&&typeof v.title==='string';
 const weightedUnit=v=>unit(v)&&Number.isFinite(v.durationSec)&&v.durationSec>=0;
-const usableStates=v=>isRecord(v)&&['physiology','videos','biochem','pharmacology'].every(k=>isRecord(v[k])&&Object.values(v[k]).every(x=>typeof x==='boolean'));
+// RTDB returns dense numeric child keys as arrays, including null gap placeholders.
+// Both shapes support ID lookup; accept only Boolean records and array gaps, without coercion.
+const usableCourseState=state=>(isRecord(state)||Array.isArray(state))&&Object.values(state).every(value=>typeof value==='boolean'||Array.isArray(state)&&value===null);
+const usableStates=v=>isRecord(v)&&['physiology','videos','biochem','pharmacology'].every(k=>usableCourseState(v[k]));
 const usableHabits=v=>isRecord(v)&&Object.values(v).every(day=>isRecord(day)&&(!Object.hasOwn(day,'questOS_v1')||(isRecord(day.questOS_v1)&&['exercise','leisure'].every(k=>!Object.hasOwn(day.questOS_v1,k)||isRecord(day.questOS_v1[k])))));
 // No source functions, databases, storage or clocks enter this projection.
 export function mapKingdomReadOnly(input){
