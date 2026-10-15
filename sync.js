@@ -7,7 +7,7 @@
   const review=new Set(Object.keys(pending)), conflicts=new Map();
   const owner=window.becomingStorage?.capture();
   let connected=false,active=false,failed=false,requested=false,epoch=null,connectionRef=null,connectionCallback=null;
-  const valid=()=> (!owner||owner.valid()) && (epoch===null||window.i3Runtime?.read().epoch===epoch&&window.i3Runtime.read().status!=='signedOut');
+  const valid=()=> (!owner||owner.valid()) && (epoch===null||window.workspaceLocalOnly||window.i3Runtime?.read().epoch===epoch&&window.i3Runtime.read().status!=='signedOut');
   const ready=()=>valid()&&connected&&(!window.i3Runtime||window.i3Runtime.read().status==='ready');
   const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
   const save=()=>{if(valid())learningStorage.setItem(key,JSON.stringify(pending));};

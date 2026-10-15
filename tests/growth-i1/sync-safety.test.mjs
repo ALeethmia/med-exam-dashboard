@@ -10,11 +10,11 @@ const source=readFileSync(new URL('../../sync.js',import.meta.url),'utf8');
 const tick=()=>new Promise(resolve=>setTimeout(resolve,20));
 const memory=()=>{const values=new Map();return {getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,String(v)),removeItem:k=>values.delete(k),key:i=>[...values.keys()][i]??null,get length(){return values.size;}};};
 class CustomEvent extends Event {constructor(type,{detail}={}){super(type);this.detail=detail;}}
-function setup({seed={},pending=null}={}){
+function setup({seed={},pending=null,localOnly=false}={}){
  const backing=memory(),account=createAccountStorage(backing);account.bind('fixture-A');const storage=account.view();if(pending)storage.setItem('med_exam_pending_writes_v1',JSON.stringify(pending));
- const lifecycle=createReadiness({paths:['videos'],timeoutMs:0});lifecycle.start({displayName:'Fixture A'});
+ const lifecycle=createReadiness({paths:['videos'],timeoutMs:0});if(!localOnly)lifecycle.start({displayName:'Fixture A'});
  const database=createMockDatabase(seed,{delay:1});const target=new EventTarget(),status={};let wrapped;
- Object.assign(target,{learningStorage:storage,becomingStorage:account,workspaceLocalOnly:false,i3Runtime:{lifecycle,read:lifecycle.read,subscribe:lifecycle.subscribe,wrap:db=>(wrapped=observeDatabase(db,lifecycle)),retry:()=>wrapped.retry()}});
+ Object.assign(target,{learningStorage:storage,becomingStorage:account,workspaceLocalOnly:localOnly,i3Runtime:{lifecycle,read:lifecycle.read,subscribe:lifecycle.subscribe,wrap:db=>db?(wrapped=observeDatabase(db,lifecycle)):null,retry:()=>wrapped.retry()}});
  vm.runInNewContext(source,{window:target,document:{getElementById:()=>status},Event,CustomEvent});target.attachLearningDB(database);
  const attach=()=>wrapped.ref('videos').on('value',snap=>target.mergeLearningSnapshot('videos',snap.val()));
  const saved=()=>JSON.parse(storage.getItem('med_exam_pending_writes_v1')||'{}');
@@ -74,8 +74,7 @@ test('rapid complete/cancel while the first acknowledgement is delayed coalesces
  h.window.learningDB={ref(path){const ref=real.ref(path);return path?ref:{update:patch=>{if(first){first=false;return new Promise(resolve=>{release=async()=>{await ref.update(patch);resolve();};});}return ref.update(patch);}};}};
  h.window.persistCourseChanges({'videos/1':true});h.window.persistCourseChanges({'videos/1':false});h.window.retryLearningSync();h.window.retryLearningSync();await release();await tick();assert.equal(h.database.inspect().tree.videos[1],false);assert.equal(h.database.inspect().writes.length,2);assert.deepEqual(h.saved(),{});assert.equal(h.window.learningSyncStatus('videos/1').review,false);h.dispose();
 });
-test('explicit local demo dates remain operable when its runtime begins after Store initialization',()=>{
- const lifecycle=createReadiness({paths:['videos'],timeoutMs:0}),storage=memory();let writes=0;
- const store=createCourseDates({keys:new Set(['videos__1']),localOnly:true,lifecycle,db:{ref(){writes++;throw Error('Local mode must not connect');}},storage,events:new EventTarget(),today:()=> '2026-10-15',newId:()=> 'local-date'});
- lifecycle.start({displayName:'Local demo'});lifecycle.success('videos');store.set('videos__1','2026-10-15');assert.equal(store.records().videos__1.day,'2026-10-15');assert.equal(store.status('videos__1').pending,false);assert.equal(writes,0);store.dispose();lifecycle.dispose();
+test('explicit local demo completion/date bridge works when runtime begins after Store initialization',()=>{
+ const h=setup({localOnly:true});const store=createCourseDates({keys:new Set(['videos__1']),localOnly:true,lifecycle:h.lifecycle,db:{ref(){throw Error('Local mode must not connect');}},storage:h.storage,events:new EventTarget(),today:()=> '2026-10-15',newId:()=> 'local-date'});
+ h.window.addEventListener('study-completed',()=>store.set('videos__1','2026-10-15',{firstOnly:true}));h.lifecycle.start({displayName:'Local demo'});h.lifecycle.success('videos');h.window.persistCourseChanges({'videos/1':true});assert.equal(store.records().videos__1.day,'2026-10-15');assert.equal(store.status('videos__1').pending,false);assert.equal(h.database.inspect().writes.length,0);assert.equal(h.database.inspect().listeners,0);store.dispose();h.dispose();
 });
