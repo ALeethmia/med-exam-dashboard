@@ -41,4 +41,4 @@
 
 已審查 Head `12f56cece9ac95a2a566b2e4865eef88cff28556` 的 CI：完整 browser 201/201、SDK Emulator 78/78、Auth／Fixtures 及 Node／build／lint 全部通過。七組本機局部 Emulator 14/14；包含 quota、舊 pending、重連、重新登入與跨 UID。測試 adapter 只用於既有 UI mocks，真正 SDK Emulator 直接驗實際路徑及 Rules。
 
-後續空白初始化準備只新增離線計畫與合成驗證，保留原有安全測試；最終 Head 的結果及連結記錄在 PR 描述。本輪沒有部署、真實資料操作或 reset 執行器。保持 Draft，等待 Code Review。
+後續空白初始化準備只新增離線計畫與合成驗證，保留原有安全測試；最終 Head 的結果及連結記錄在 PR 描述。七組隔離本身不執行部署或真實資料操作；後續獨立受管執行器預設停用，見 MANAGED_ENTRY.md。保持 Draft，等待 Code Review。

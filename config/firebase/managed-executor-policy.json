@@ -1,0 +1,10 @@
+{
+  "format": "becoming-managed-policy-v1",
+  "enabled": false,
+  "projectId": "my-exam-1aab9",
+  "instanceId": "my-exam-1aab9-default-rtdb",
+  "databaseOrigin": null,
+  "serviceAccount": null,
+  "approvalPublicKeySha256": null,
+  "ledgerBucket": null
+}

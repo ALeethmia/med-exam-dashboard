@@ -1,5 +1,6 @@
 // Standalone synthetic integration. Starts its OWN ephemeral loopback emulator; no remote URL option.
 import assert from 'node:assert/strict';
+import {verifyManagedExecutor} from './managed-executor-emulator.mjs';
 import {verifyCutoverRehearsal} from './cutover-rehearsal-emulator.mjs';
 import {verifyBackupRestore} from './backup-restore-emulator.mjs';
 import {verifyBlankAccount} from './blank-account-emulator.mjs';
@@ -54,7 +55,7 @@ try{
  async function load(){await page.goto(base);await page.waitForFunction(()=>window.updateWorkspace&&window.i3Runtime.read().status==='ready');}
  async function drain(){try{await page.waitForFunction(()=>!window.courseSync.inspect().pending.length,null,{timeout:15000});}catch(error){console.log('DRAIN',JSON.stringify(await page.evaluate(()=>({sync:courseSync.inspect(),runtime:i3Runtime.read()}))));console.log('DOC',JSON.stringify(await read(domain)));throw error;}}
  let count=0;async function check(name,fn){const start=Date.now();await fn();count++;console.log('PASS '+name+' ('+(Date.now()-start)+'ms)');}
- if(!process.argv.includes('--blank-only')&&!process.argv.includes('--restore-only')&&!process.argv.includes('--cutover-only')){
+ if(!process.argv.includes('--executor-only')&&!process.argv.includes('--blank-only')&&!process.argv.includes('--restore-only')&&!process.argv.includes('--cutover-only')){
  await load();await createRulesAttacker(page);
  if(!process.argv.includes('--life-only')){
  await check('Rules reject forged initialization and malformed containers before the first legitimate operation',async()=>{
@@ -118,8 +119,9 @@ try{
   assert.deepEqual(await read('gamification'),history.gamification);const current=await read(domain);assert.equal(current?.gate,undefined);assert.equal(current?.receipts,undefined);assert.equal(external,0);assert.deepEqual(errors,[]);
  });
  }
- if(!process.argv.includes('--restore-only')&&!process.argv.includes('--cutover-only'))await verifyBlankAccount({browser,base,read,admin,adminUpdate,check});
- if(!process.argv.includes('--cutover-only'))await verifyBackupRestore({read,admin,check});
- await verifyCutoverRehearsal({browser,base,origin,namespace:ns,check});
+ if(!process.argv.includes('--executor-only')&&!process.argv.includes('--restore-only')&&!process.argv.includes('--cutover-only'))await verifyBlankAccount({browser,base,read,admin,adminUpdate,check});
+ if(!process.argv.includes('--executor-only')&&!process.argv.includes('--cutover-only'))await verifyBackupRestore({read,admin,check});
+ if(!process.argv.includes('--executor-only'))await verifyCutoverRehearsal({browser,base,origin,namespace:ns,check});
+ await verifyManagedExecutor({origin,namespace:ns,check});
  console.log('Durable course Emulator checks passed: '+count+' (real product UI + SDK 9.22.0 + Emulator 4.11.2; synthetic identities/rules only).');
 }finally{clearTimeout(all);await browser?.close();if(server)await new Promise(r=>server.close(r));child.kill('SIGTERM');}

@@ -92,10 +92,16 @@ B2B1_EMULATOR_JAR="$PWD/work/firebase/database.jar" FIREBASE_SDK_DIR="$PWD/work/
 
 ### 最小權限與尚缺工具
 
-最小可行正式方式：管理者現有 Firebase Console 負責 Rules／匯出，搭配**另行審查的一次性受管 Admin SDK 工作**，只做 frozen snapshot 核對、單次 root multi-location update、server 驗證及退出。不能用 Console 的整根 Import 覆蓋全庫來代替 atomic patch，也不能把 Emulator helper 換 URL 後當正式工具。
+最小可行正式方式：管理者現有 Firebase Console 負責 Rules／匯出，搭配**獨立受管 REST 執行器**，只做 frozen snapshot 核對、單次 root multi-location update、server 驗證及退出。不能用 Console 的整根 Import 覆蓋全庫來代替 atomic patch，也不能把 Emulator helper 換 URL 後當正式工具。
 
 需要該 instance 的 Rules／全資料唯讀、經授權階段的 Rules 管理與資料原子寫入權限，以及 Auth UID 查核的唯讀能力；**不需要 Auth 建立／刪除／改密碼或整個專案 Owner**。資料管理身分通常越過 Rules，無法靠前端 Rules 將其限制為單一 UID，所以受管入口必須自己鎖 instance／UID／path allowlist／patch hash，留下操作記錄並於維護窗限制其他 admin。透過既有 Console 權限或短效受管身分提供，不在聊天貼金鑰，不建立長效 service-account key。
 
-該正式管理工作與正式權限目前**尚未提供／核准**；本輪刻意不建立可誤執行正式 reset 的通用腳本。這是正式操作入口及授權前提，不能宣稱已可直接切換。現有同步／隔離核心本輪沒有改動，沒有發現需要重大重構的新增程式阻擋。既有維護 Preview 保持原狀，分支 Git 自動部署持續停用，本輪不部署任何 Preview／Production。
+獨立受管執行器已提供，但正式信任設定／權限與執行授權**尚未配置／核准**；不提供任意 reset 的通用腳本。這是正式操作入口及授權前提，不能宣稱已可直接切換。現有同步／隔離核心本輪沒有改動，沒有發現需要重大重構的新增程式阻擋。既有維護 Preview 保持原狀，分支 Git 自動部署持續停用，本輪不部署任何 Preview／Production。
 
-純離線正式操作 packet、現有 Owner 的短效身分用法、受管執行器設計及分階段停止／授權表，統一見 [MANAGED_ENTRY.md](MANAGED_ENTRY.md)。`managed-cutover-dry-run.mjs` 只有讀檔、差異與 hash 檢查，沒有正式寫入能力；本輪不建立正式 executor。使用者確認摘要與授權即可，不需手工修改複雜 JSON。
+純離線正式操作 packet、現有 Owner 的短效身分用法、受管執行器操作及分階段停止／授權表，統一見 [MANAGED_ENTRY.md](MANAGED_ENTRY.md)。`managed-cutover-dry-run.mjs` 只有讀檔、差異與 hash 檢查，沒有正式寫入能力；正式 executor 預設停用，需獨立簽署及受管 ledger。使用者確認摘要與授權即可，不需手工修改複雜 JSON。
+
+## 獨立受管執行器（預設停用）
+
+已提供 `scripts/managed-cutover-executor.mjs`；正式入口不再只是設計，但**沒有正式操作授權**。`status`／`prepare`／`request` 純離線；`run-stage` 需 reviewed policy、乾淨不可變 Head、KMS 獨立簽章、限時 manifest 及 GCS create-only ledger。freeze、最終快照、一次性原子初始化、active Rules 各自核准執行，不包含網站部署。原 dry-run／Emulator-only helper 仍不可拿來寫正式環境。
+
+Cloud Shell 權限、逐階段指令、備份 hash、未知結果停止及不可恢復舊 root grants 的完整規定見 [MANAGED_ENTRY.md](MANAGED_ENTRY.md)。正式信任設定與 IAM／KMS／GCS 尚未配置／線上驗證；只有 Emulator 成功不能解除這些關卡。初始化仍必須另有真實帳號重置授權。
