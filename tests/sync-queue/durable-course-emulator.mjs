@@ -49,9 +49,10 @@ try{
  async function drain(){try{await page.waitForFunction(()=>!window.courseSync.inspect().pending.length,null,{timeout:15000});}catch(error){console.log('DRAIN',JSON.stringify(await page.evaluate(()=>({sync:courseSync.inspect(),runtime:i3Runtime.read()}))));console.log('DOC',JSON.stringify(await read(domain)));throw error;}}
  let count=0;async function check(name,fn){const start=Date.now();await fn();count++;console.log('PASS '+name+' ('+(Date.now()-start)+'ms)');}
  await load();await createRulesAttacker(page);
- await check('Rules reject forged initial generation and era before the first legitimate operation',async()=>{
-  for(const invalid of [{...initial,generation:'forged-initial'},{...initial,era:1}])assert.equal(await page.evaluate(async({domain,invalid})=>{try{await window.rulesAttackDatabase.ref(domain).set(invalid);return false;}catch(e){return e.code==='PERMISSION_DENIED';}},{domain,invalid}),true);
-  assert.equal(await read(domain),null);
+ await check('Rules reject forged initialization and malformed containers before the first legitimate operation',async()=>{
+  const before=await read('');
+  for(const invalid of [{...initial,generation:'forged-initial'},{...initial,era:1},{...initial,courses:true},{...initial,courses:{videos:true}},{...initial,courses:{biochem:'injected'}},{...initial,versions:true},{...initial,firstCompletion:true}])assert.equal(await page.evaluate(async({domain,invalid})=>{try{await window.rulesAttackDatabase.ref(domain).set(invalid);return false;}catch(e){return e.code==='PERMISSION_DENIED';}},{domain,invalid}),true);
+  assert.equal(await read(domain),null);assert.deepEqual(await read(''),before);
  });
  await check('actual Becoming checkbox, first date and chapter operation use one atomic per-UID document',async()=>{
   await page.evaluate(()=>showStudyItem('physiology','fc_p_1_a'));await page.locator('[data-study-key="physiology__fc_p_1_a"] input[type=checkbox]').check();await drain();

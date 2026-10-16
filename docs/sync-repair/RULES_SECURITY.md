@@ -6,13 +6,15 @@
 
 在相同 SDK 9.22.0／Database Emulator 4.11.2／Chromium、合成 `fixture-A` 的環境，將 fixture 暫換為基準 Head 的原始 Rules，新測試立即失敗：一般客戶端可建立任意 initial generation。原始 Rules 的 Boolean 與版本 validator 也只檢查型別，沒有交叉核對。
 
-候選已補上：owner／UID 隔離、Boolean／UUID／clock 關聯、課程與版本成對存在、禁止刪除 tombstone、固定 generation／era、已知 115 項資料範圍、退役寫入 deny、歷史 XP 帳本唯讀。候選與測試 fixture 用同一 generator，避免只測到比較安全的替身。
+後續對中間 Head `f5b5d76` 再作攻擊驗證，發現已知容器可被改成 primitive，沒有子節點就會略過 child validator。新增 7 種初始化拒絕測試（generation、era、courses／科目／versions／firstCompletion 容器），舊候選會失敗；最後補上各容器 `hasChildren()` 驗證。空 map 在 RTDB 中是不存在節點，合法空文件初始化仍可通過。
+
+候選已補上：容器完整性、owner／UID 隔離、Boolean／UUID／clock 關聯、課程與版本成對存在、禁止刪除 tombstone、固定 generation／era、已知 115 項資料範圍、退役寫入 deny、歷史 XP 帳本唯讀。候選與測試 fixture 用同一 generator，避免只測到比較安全的替身。
 
 ## 本輪測試
 
 | 驗證 | 結果／範圍 |
 |---|---|
-| 真實 Becoming + SDK + Emulator | 65 組場景，含原有 12 組產品與故障流程，全部保留 |
+| 真實 Becoming + SDK + Emulator | 65 組場景，含 7 次初始化拒絕、原有 12 組產品與故障流程，全部保留 |
 | Rules 攻擊 | 46 組逐一拒絕並比較整個合成 DB，確保沒有部分寫入 |
 | 身分隔離 | 一組場景內 24 次匿名／其他 UID／ancestor／舊路徑讀寫拒絕；其他 UID 原值不變 |
 | 合法操作 | 空文件首次建立、勾選、日期編輯／tombstone、章節混合批次、115 項原子批次、合法 child multi-update、同快照重試；115 項由真正 Becoming writer 提交，驗證 UUID／clock 與 pending 清除 |

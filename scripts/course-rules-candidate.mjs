@@ -34,13 +34,14 @@ export function makeCourseRules(owner){
    `(${initial} || ${stable})`,...retained,
    ...courses.map(c=>`${at(n,'courses/'+c.path+'/'+c.id)}.exists() === ${at(n,'versions/'+c.key)}.exists()`)
   ].join(' && '),
-  schema:{},generation:{},era:{},clock:{},courses:{},versions:{},firstCompletion:{},'$other':{'.validate':false}
+  schema:{},generation:{},era:{},clock:{},courses:{'.validate':'newData.hasChildren()'},versions:{'.validate':'newData.hasChildren()'},firstCompletion:{'.validate':'newData.hasChildren()'},'$other':{'.validate':false}
  };
  for(const subject of new Set(courses.map(c=>c.path))){
   const ids=courses.filter(c=>c.path===subject).map(c=>c.id).join('|');
   const nr='newData.parent().parent().parent()',dr='data.parent().parent().parent()';
   const version=`versions/${subject}__`;
   doc.courses[subject]={
+   '.validate':'newData.hasChildren()',
    '$id':{'.validate':`$id.matches(/^(${ids})$/) && newData.isBoolean() && ${nr}.child('${version}' + $id).isString() && (newData.val() === data.val() || (${nr}.child('${version}' + $id).val() !== ${dr}.child('${version}' + $id).val() && (${increment(nr,dr)})))`}
   };
  }

@@ -19,7 +19,7 @@
 4. 批次會包含原本已完成的項目，這些項目的版本仍可更新，但必須共用本批真正 Boolean 改動的 UUID。不能一律要求每個版本更新都翻轉 Boolean，否則會誤擋章節操作。全 115 項混合批次也納入測試。
 5. 日期修改需要新的 `_version` 和 clock +1；刪 day 以保留版本的 tombstone 表示。祖先驗證保留既有課程、版本與日期紀錄，防止 Firebase 對刪除節點略過 `.validate` 造成繞過。
 6. generation／era 建立後不可由一般客戶端改動，整份文件或 fence 不能刪除。首次建立只准 `initial-v3`、era 0、clock 0/1；重置後任意新 generation 必須由另行授權的管理程序建立。clock／era 限制安全整數，clock 只可不變或 +1。
-7. 只接受目前 115 個課程 ID、已知欄位、Boolean、UUID 及日期格式。generator 從現有課程資料導出 allowlist，CI 檢查產物沒有漂移。未來課程增刪要一起審查 Rules；不能任意刪除既有 tombstone。
+7. `courses`、四科子容器、`versions`、`firstCompletion` 存在時必須有子節點，不能以 Boolean／字串替換來略過 child validator；空 map 在 RTDB 是不存在節點，正常空文件仍可建立。只接受目前 115 個課程 ID、已知欄位、Boolean、UUID 及日期格式。generator 從現有課程資料導出 allowlist，CI 檢查產物沒有漂移。未來課程增刪要一起審查 Rules；不能任意刪除既有 tombstone。
 
 **Rules 不證明呼叫來源或客戶端 CAS 程式曾執行。** Realtime Database Rules 看合併後資料，無法區分 transaction、完整 set 或多路徑 update；只要合併結果完全符合契約，合法子路徑 multi-update 也應通過。Rules 不能證明 UUID 從未在久遠歷史使用過，也不能阻止已獲授權 owner 故意提交一筆結構合法的新操作。與同一 UUID 的合法 Boolean 批次一起更新未改值成員，是現有批次契約允許的行為，不應宣稱任何版本值變動都被拒絕。
 
