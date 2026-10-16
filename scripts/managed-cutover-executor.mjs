@@ -49,10 +49,9 @@ function executor({transport,ledger,policy,head,now=()=>Date.now()}){
   }
   // Global packet claim prevents replay under a different operation ID, even on another host.
   // Both claims are durable create-if-absent, never deleted, including unknown outcomes.
-  if(m.stage==='initialize'){
-   if(typeof finalBackupRaw!=='string'||rawHash(finalBackupRaw)!==m.finalBackupSha256||m.finalBackupSha256!==previous.backupFileSha256||digest(JSON.parse(finalBackupRaw))!==packet.hashes.sourceSnapshotSha256)fail('final-backup-mismatch');
-  }else if(m.stage==='active-rules'){
-   if(m.finalBackupSha256!==previous.finalBackupSha256)fail('final-backup-mismatch');
+  if(['initialize','active-rules'].includes(m.stage)){
+   const receiptBackup=m.stage==='initialize'?previous.backupFileSha256:previous.finalBackupSha256;
+   if(typeof finalBackupRaw!=='string'||rawHash(finalBackupRaw)!==m.finalBackupSha256||m.finalBackupSha256!==receiptBackup||digest(JSON.parse(finalBackupRaw))!==packet.hashes.sourceSnapshotSha256)fail('final-backup-mismatch');
   }else if(m.finalBackupSha256!==null)fail('unexpected-final-backup');
   // Ensure all checks and authorization occur before any network mutation or lock acquisition.
   const frozen=makeFrozenCourseRules(MANAGED_TARGET.ownerUID),active=makeCourseRules(MANAGED_TARGET.ownerUID);

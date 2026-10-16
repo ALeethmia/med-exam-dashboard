@@ -40,6 +40,8 @@ export async function verifyManagedExecutor({origin,namespace,check}){
   const init=await s.runner.run(s.args('initialize',final));assert.equal(init.status,'confirmed');
   assert.equal(await client.read('physiology'),null);assert.equal((await client.read('users/'+uid+'/learningV3')).generation,'managed-course-new');
   assert.deepEqual(await client.read('users/synthetic-other-uid'),before.users['synthetic-other-uid']);assert.deepEqual(await client.read('definitions'),before.definitions);
+  await assert.rejects(s.runner.run({...s.args('active-rules',init),finalBackupRaw:null}),/final-backup-mismatch/);
+  await assert.rejects(s.runner.run({...s.args('active-rules',init),finalBackupRaw:'{}'}),/final-backup-mismatch/);
   const active=await s.runner.run(s.args('active-rules',init));assert.equal(active.stage,'active-rules');assert.deepEqual(await client.read('.settings/rules'),makeCourseRules(uid));
   assert.equal(s.ledger.entries.size,9); // four claims, four receipts, one permanent patch claim
  });
