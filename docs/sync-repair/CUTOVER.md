@@ -42,6 +42,8 @@
 - Rules 不能證明是 transaction 呼叫、驗證 UUID 在全歷史未曾用過，或阻止已授權 owner 提交結構合法的新操作。相同日期＋新版本／clock 的合法再次操作仍允許。需要防惡意 owner 的更強契約仍須 server writer，不是本輪部署準備範圍。
 - 七組隔離已在程式及候選 Rules 完成；不再把 shared writer 當尚待開發項目。但未安裝正式 Rules 前，舊 root grant 仍是正式切換阻擋。
 
+合成七根 JSON 的實際 Emulator 全樹還原與 null／陣列正規化演練見 [RESTORE_DRILL.md](RESTORE_DRILL.md)。它不代替第 2／4 關的真實完整匯出驗證，也不授權正式整根清空或還原。
+
 ## 本輪證據與剩餘阻擋
 
 `createBlankAccountPlan` 僅產生 `executable:false` artifact，沒有 SDK、Auth、網路或 apply 能力。直接單元測試與 loopback Emulator 的 `--blank-only` 驗證空白初始化、freeze、其他 UID／靜態資料、實際登入流程（合成 Auth）、課程／日期／任務／習慣、XP 與王國；完整回歸由最終 Head CI 執行。結果連結以 PR 描述為準。
