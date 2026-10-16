@@ -49,3 +49,18 @@
 `createBlankAccountPlan` 僅產生 `executable:false` artifact，沒有 SDK、Auth、網路或 apply 能力。直接單元測試與 loopback Emulator 的 `--blank-only` 驗證空白初始化、freeze、其他 UID／靜態資料、實際登入流程（合成 Auth）、課程／日期／任務／習慣、XP 與王國；完整回歸由最終 Head CI 執行。結果連結以 PR 描述為準。
 
 正式部署執行仍 NO-GO：原始 live Rules／完整 frozen backup／ownership 尚未獨立驗證，沒有正式管理執行權限、兩份授權、production smoke 或相容 rollback build。可以提交**部署授權審查**；審查須把上述關卡與獨立 reset 決策列為前置條件，不能直接開始部署。真實重置不因 CI 綠燈自動獲准。
+
+## 維護模式 artifact（已準備，未部署）
+
+`src/ui/maintenance-config.js` 的 `maintenanceEnabled` 預設 **false**。在獨立審查的維護 artifact 中改為 true，`firebase-entry.js` 會先顯示維護畫面，**不 import Auth、account-storage、runtime、sync 或 workspace**，不建立課程／生活 writer，也不回退本機學習模式。即使網址帶 `?mode=local` 仍受同一維護 gate 控制。既有 Auth persistence／pending 不刪、不宣稱已保存。
+
+啟用方式（未取得 Preview／Production 部署授權前只做隔離驗證）：
+
+1. 隔離工作目錄使用此 Head 的 artifact，只將 `maintenance-config.js` 設為 true，保留其餘設定／Rules hashes；以現有 `node server.js` 在 loopback 提供網站。不得使用 `.growth-review` 的 `review-start.js` 作維護驗證，該入口是專用 RAM fixture，不是正式 bootstrap。
+2. 局部 `npx playwright test tests/browser/maintenance.spec.js` 會在真正入口以本機路由回傳 enabled config，驗手機／桌面、cloud／local、reload、零 Storage／IndexedDB 修改、無 Firebase 初始化與 writer 模組請求、原 Auth／pending／session keys 不變，以及切回 disabled artifact 後完整 reload 才恢復正常既有 local flow。不連線真實 Firebase；模擬維護 config 僅存在測試攔截，不是產品 URL 開關。
+3. 取得**另行明確 Preview 授權**後，才可建立獨立維護 Preview，檢查 immutable deployment ID／Head／config=true、維護畫面、無編輯控制項／writer 初始化，並核對 network/storage。現有 Git integration 本來 Push 就會建立 Preview；本分支在 `vercel.json` 明列 `fix/durable-course-sync: false`，本輪 Push 不授權任何自動 Preview。另一條已停用的 review 分支保持不變，main 設定不更動；手動部署仍需授權。
+4. 未來正式啟用仍依第 3／9 關先安裝並驗證 freeze Rules，再切換經驗證的維護 artifact。畫面會說明暫停使用、維護模式不會清除資料。靜態 catalog／外觀腳本與 SDK library 仍可能下載，但不初始化 Firebase Auth／DB、不啟動學習；這不是阻止所有頁面資源下載的開關。
+
+安全停用：先完成 server 初始化與 active Rules／control／fence 驗收，再取得正常 artifact 切換授權，核對同一新同步契約與 config=false，切回後**完整 reload**。不在既有維護頁熱啟動，不讓使用者以 query 或 localStorage 繞過；既有 201 項產品回歸及正式 smoke 繼續適用。局部 disabled 測試只證明原 local flow 能恢復，真實 OAuth／server 寫入仍須授權的正式 smoke，不可混稱。
+
+限制：這是新頁面的啟動阻擋，不能停止已開啟的舊分頁、繞過網站的舊程式或管理身分。**freeze Rules 仍是實際 server 保護**，不可用畫面或要求重新整理代替。維護 artifact 也不是可寫 rollback build；故障時保持 freeze／維護並保全資料，未核准前不恢復寫入。若 config/module 載入失敗，入口不會繼續初始化 writers；仍需監測畫面是否成功載入。

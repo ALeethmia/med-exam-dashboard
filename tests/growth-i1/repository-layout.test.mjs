@@ -45,7 +45,10 @@ test('untouched product modules retain layout migration identity',()=>{
    const [name,...query]=spec.split('?');
    const target=path.posix.normalize(path.posix.join(path.posix.dirname(entry.path),name));
    return prefix+quote+'@/'+(aliases[target]||target)+(query.length?'?'+query.join('?'):'')+quote;
-  });assert.equal(hash(normalized),entry.path==='sync.js'?'58a46201a727eb7673258e4f7a052e7cf5f7974cc348857611c0842c6d32507a':entry.sha256,entry.path);
+  });
+  // Reviewed maintenance bootstrap has browser coverage; keep its identity check exact.
+  const expected=entry.path==='firebase-entry.js'?'b68855969a2c62f81496f737927a5aad8f1f225896e44fa57f6ebd2fb67477b4':entry.path==='sync.js'?'58a46201a727eb7673258e4f7a052e7cf5f7974cc348857611c0842c6d32507a':entry.sha256;
+  assert.equal(hash(normalized),expected,entry.path);
  }
 });
 test('server and Vercel serve legacy bridges/CSS without redirects or duplicate implementations',()=>{
@@ -53,7 +56,7 @@ test('server and Vercel serve legacy bridges/CSS without redirects or duplicate 
  assert.deepEqual(v.rewrites,Object.entries(aliases).map(([a,b])=>({source:'/'+a,destination:a.endsWith('.js')?'/compat/'+a:'/'+b})));
  for(const [a,b] of Object.entries(aliases))if(a.endsWith('.js'))assert.equal(readFileSync(path.join(root,'compat',a),'utf8'),"// Served at the legacy URL; use the canonical module instance.\nexport * from '/"+b+"';\n");
  const source=readFileSync(path.join(root,'server.js'),'utf8');assert.match(source,/res\.sendFile/);assert.match(source,/etag:false, lastModified:false/);assert.match(source,/config\/legacy-assets\.json/);
- assert.deepEqual(v.git,JSON.parse('{"deploymentEnabled":{"codex/growth-i1-integration":false}}'));
+ assert.deepEqual(v.git,JSON.parse('{"deploymentEnabled":{"codex/growth-i1-integration":false,"fix/durable-course-sync":false}}'));
 });
 test('all relative ES imports, dynamic imports and re-exports resolve to canonical real files',()=>{
  const files=[...tree(path.join(root,'src')),...readdirSync(root).filter(n=>n.endsWith('.js')).map(n=>path.join(root,n))];let checked=0;
