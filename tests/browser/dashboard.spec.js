@@ -155,7 +155,7 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
     window.firebase={apps:[],initializeApp(){this.apps.push({});},auth:()=>({onAuthStateChanged:callback=>setTimeout(()=>callback({uid:'test-owner',email:'owner@example.test'}),0)}),database:()=>db};
     window.mockDatabase={records,writes};
   });
-  await page.goto('/');await page.waitForFunction(()=>i3Runtime.read().status==='ready');
+  await page.goto('/');await page.waitForFunction(()=>window.i3Runtime?.read().status==='ready');
   await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
   await addCustom(page);
   await expect.poll(()=>page.evaluate(()=>Object.keys(mockDatabase.records.gamification?.v3?.planner?.tasks||{}).length)).toBe(1);
