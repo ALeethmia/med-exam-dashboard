@@ -155,8 +155,9 @@ test('mock Firebase keeps unrelated records and confines XP to its namespace',as
     window.firebase={apps:[],initializeApp(){this.apps.push({});},auth:()=>({onAuthStateChanged:callback=>setTimeout(()=>callback({uid:'test-owner',email:'owner@example.test'}),0)}),database:()=>db};
     window.mockDatabase={records,writes};
   });
-  await page.goto('/');await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
-  await page.waitForFunction(()=>i3Runtime.read().status==='ready');await addCustom(page);
+  await page.goto('/');await page.waitForFunction(()=>i3Runtime.read().status==='ready');
+  await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
+  await addCustom(page);
   await expect.poll(()=>page.evaluate(()=>Object.keys(mockDatabase.records.gamification?.v3?.planner?.tasks||{}).length)).toBe(1);
   await page.locator('#task-list input').first().check();await expect(page.locator('#xp-detail')).toContainText('0 XP');
   await expect.poll(()=>page.evaluate(()=>Object.values(window.mockDatabase.records.gamification?.v3?.planner?.tasks || {}).filter(t=>t.award?.xp===20).length)).toBe(0);

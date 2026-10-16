@@ -1,3 +1,5 @@
+> 後續部署前安全驗證：請一併閱讀 [CUTOVER.md](CUTOVER.md) 與 [RULES_SECURITY.md](RULES_SECURITY.md)。下文數字是第二輪同步修復基準，後續測試結果另列，不能視為正式 Rules 已部署。
+
 # PR #26 · 第二輪驗收
 
 Reviewed input: `00c28dea082707affef25726cc5c7605cee7b446`。比較基準 main: `faf357ceab5752c4399bd6712c68a9ad2b1c2587`。

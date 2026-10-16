@@ -1,5 +1,7 @@
 # 一次性重置：只規劃與合成測試
 
+最新 Rules 候選、七組 shared writer 隔離阻擋、freeze／切換／復原順序見 [CUTOVER.md](CUTOVER.md)。候選已禁止舊課程／日期／v2 與 v1 歷史 XP 帳本寫入，但生活／任務 shared roots 尚未隔離，不能執行全帳號重置。
+
 沒有連線或重置任何真實帳號。`src/study/reset-plan.js` 只有備份範圍、SHA-256 與身分驗證；沒有 Firebase、Auth、storage apply/delete API，輸出固定 `executable:false`。
 
 1. 先審查／驗收同步契約與伺服器舊 writer 淘汰方案。不能以要求關閉分頁或刷新 Service Worker 作保證。舊課程／日期／v2 路徑必須永久 deny；shared 生活與任務路徑的舊 writer 也須獨立證明已淘汰，否則禁止真實重置。

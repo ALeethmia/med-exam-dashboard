@@ -1,5 +1,6 @@
 // Standalone synthetic integration. Starts its OWN ephemeral loopback emulator; no remote URL option.
 import assert from 'node:assert/strict';
+import {verifyCourseRules,createRulesAttacker} from './course-rules-attacks.mjs';
 import {readFileSync,existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {createServer} from 'node:http';
@@ -15,7 +16,7 @@ for(const [file,value] of Object.entries(hashes))assert.equal(hash(sdk+'/'+file)
 const probe=tcpServer();await new Promise(r=>probe.listen(0,'127.0.0.1',r));const port=probe.address().port;await new Promise(r=>probe.close(r));
 const child=spawn('java',['-Xmx256m','-jar',jar,'--host','127.0.0.1','--port',String(port)],{stdio:['ignore','pipe','pipe']});
 const ns='demo-becoming-durable-courses',origin='http://127.0.0.1:'+port;
-let server,browser;const all=setTimeout(()=>{child.kill('SIGKILL');process.exitCode=1;},240000);
+let server,browser;const all=setTimeout(()=>{child.kill('SIGKILL');process.exitCode=1;},360000);
 try{
  await new Promise((resolve,reject)=>{let log='';const timeout=setTimeout(()=>reject(Error('Emulator startup timeout')),20000);const data=b=>{log+=b;if(log.includes('Listening at 127.0.0.1:'+port)){clearTimeout(timeout);resolve();}};child.stdout.on('data',data);child.stderr.on('data',data);child.once('error',reject);child.once('exit',()=>reject(Error('Emulator exited')));});
  const endpoint=p=>origin+'/'+p+'.json?ns='+ns;
@@ -25,7 +26,7 @@ try{
  await admin('.settings/rules',JSON.parse(readFileSync(new URL('../fixtures/course-rules.json',import.meta.url))));
  const initial={schema:3,generation:'initial-v3',era:0,clock:0,courses:{},versions:{},firstCompletion:{}};
  const domain='users/fixture-A/learningV3';
- const history={gamification:{v1:{awards:{historical:{xp:20,day:'2026-10-01'}}}},physiology:{legacy:true},users:{'fixture-A':{learningV3:initial},'fixture-B':{learningV3:{...initial,generation:'other-UID'}}}};await admin('',history);const otherUIDBefore=await read('users/fixture-B');
+ const history={gamification:{v1:{awards:{historical:{xp:20,day:'2026-10-01'}}}},physiology:{legacy:true},users:{'fixture-A':{},'fixture-B':{learningV3:{...initial,generation:'other-UID'}}}};await admin('',history);const otherUIDBefore=await read('users/fixture-B');
  const root=new URL('../../',import.meta.url);
  server=createServer((req,res)=>{
   const file=new URL(req.url,'http://127.0.0.1').pathname;
@@ -46,8 +47,12 @@ try{
  const base='http://127.0.0.1:'+server.address().port;
  async function load(){await page.goto(base);await page.waitForFunction(()=>window.updateWorkspace&&window.i3Runtime.read().status==='ready');}
  async function drain(){try{await page.waitForFunction(()=>!window.courseSync.inspect().pending.length,null,{timeout:15000});}catch(error){console.log('DRAIN',JSON.stringify(await page.evaluate(()=>({sync:courseSync.inspect(),runtime:i3Runtime.read()}))));console.log('DOC',JSON.stringify(await read(domain)));throw error;}}
- let count=0;async function check(name,fn){await fn();count++;console.log('PASS '+name);}
- await load();
+ let count=0;async function check(name,fn){const start=Date.now();await fn();count++;console.log('PASS '+name+' ('+(Date.now()-start)+'ms)');}
+ await load();await createRulesAttacker(page);
+ await check('Rules reject forged initial generation and era before the first legitimate operation',async()=>{
+  for(const invalid of [{...initial,generation:'forged-initial'},{...initial,era:1}])assert.equal(await page.evaluate(async({domain,invalid})=>{try{await window.rulesAttackDatabase.ref(domain).set(invalid);return false;}catch(e){return e.code==='PERMISSION_DENIED';}},{domain,invalid}),true);
+  assert.equal(await read(domain),null);
+ });
  await check('actual Becoming checkbox, first date and chapter operation use one atomic per-UID document',async()=>{
   await page.evaluate(()=>showStudyItem('physiology','fc_p_1_a'));await page.locator('[data-study-key="physiology__fc_p_1_a"] input[type=checkbox]').check();await drain();
   let doc=await read(domain);assert.equal(doc.courses.physiology.fc_p_1_a,true);assert(doc.firstCompletion.physiology__fc_p_1_a.day);const before=doc.clock;
@@ -77,6 +82,7 @@ try{
   await page.evaluate(()=>courseDates.set('videos__1','2026-10-01'));await drain();assert.equal((await read(domain)).firstCompletion.videos__1.day,'2026-10-01');
   await page.evaluate(()=>courseDates.set('videos__1',null));await drain();await page.evaluate(()=>setStudyCompletion('videos','1',false));await drain();await page.evaluate(()=>setStudyCompletion('videos','1',true));await drain();assert.equal((await read(domain)).firstCompletion.videos__1.day??null,null);
  });
+ await verifyCourseRules({page,read,admin,domain,initial,check});
  await check('two actual Becoming tabs without Web Locks preserve independent groups and ABA identities',async()=>{
   const other=await context.newPage();await other.addInitScript(()=>Object.defineProperty(navigator,'locks',{value:undefined}));await other.goto(base);await other.waitForFunction(()=>window.updateWorkspace&&i3Runtime.read().status==='ready');
   await page.evaluate(()=>setStudyCompletion('videos','2',true));await other.evaluate(()=>setStudyCompletion('videos','3',true));await drain();try{await other.waitForFunction(()=>!courseSync.inspect().pending.length);}catch(error){console.log('MULTITAB',JSON.stringify(await other.evaluate(()=>courseSync.inspect())));console.log('SERVER',JSON.stringify(await read(domain)));throw error;}
