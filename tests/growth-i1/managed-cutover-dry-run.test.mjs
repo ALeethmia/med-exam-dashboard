@@ -22,6 +22,7 @@ test('offline synthetic packet binds target, full backup/Rules/hash, exact diff 
 });
 test('packet/checker reject target, approval-like flags, ownership, backup, Rules and patch drift',async()=>{
  const i=input(),packet=await createManagedDryRun(i);
+ const direct=await createManagedDryRun(i);direct.stages[3].authorization='deployment-without-reset';await assert.rejects(verifyManagedDryRun(direct,i,direct.hashes.patchSha256),/packet-or-approved/);assert.equal((await createManagedDryRun(i)).stages[3].authorization,'account-reset:exact-patch');
  for(const target of [{...i.target,projectId:'other'},{...i.target,instanceId:'other'},{...i.target,ownerUID:'other'}])await assert.rejects(createManagedDryRun({...i,target}),/target-mismatch/);
  for(const extra of [{apply:true},{dryRun:false},{authorized:true},{url:'https://other.firebaseio.com'}])await assert.rejects(createManagedDryRun({...i,...extra}),/unsupported-input/);
  await assert.rejects(createManagedDryRun({...i,reviewedLegacyPaths:[]}),/ownership/);

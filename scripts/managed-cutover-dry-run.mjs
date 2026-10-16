@@ -54,7 +54,7 @@ export async function createManagedDryRun(input){
   generations:{course:plan.canonicalFence.replacement.generation,courseEra:plan.canonicalFence.replacement.era,life:plan.lifeFence.replacement.generation,lifeEra:plan.lifeFence.replacement.era},
   atomicUpdate:plan.atomicUpdate,allowedPaths:Object.keys(plan.atomicUpdate).sort(),
   changes:Object.entries(plan.atomicUpdate).map(([path,value])=>({path,operation:value===null?(at(snapshot,path)===null?'empty-namespace':'delete'):(at(snapshot,path)===null?'create':'replace'),beforeSha256:hash(at(snapshot,path)),afterSha256:hash(value),beforeLeaves:leaves(at(snapshot,path)),afterLeaves:leaves(value)})),
-  localKeys:plan.localKeys,stages,provenanceVerified:false,
+  localKeys:plan.localKeys,stages:structuredClone(stages),provenanceVerified:false,
   blockers:['No production authorization or executor is included.','Server origin/completeness, frozen final snapshot, legacy ownership and external generation non-reuse require independent verification.','Missing local snapshot is not proof that no UID local keys exist.','Approve exact target, Head, backup/Rules/patch hashes and separate deployment/reset stages; hashes alone are not authorization.']};
 }
 export async function verifyManagedDryRun(packet,input,approvedPatchSha256){
