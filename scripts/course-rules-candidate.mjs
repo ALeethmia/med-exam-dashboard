@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
+import {LIFE_PATHS} from '../src/study/life-isolation.js';
 import {OWNER_UID} from '../owner-config.js';
 import {flattenSubjects} from '../src/study/study-core.js';
 const root=new URL('../',import.meta.url);
@@ -59,12 +60,14 @@ export function makeCourseRules(owner){
   day:{},_version:{},'$other':{'.validate':false}
  };
  // No ancestor write grants: legacy course, date and v2 roots stay denied.
- const rw={'.read':access,'.write':access};
- return {rules:{'.read':false,'.write':false,users:{$uid:{learningV3:doc}},
+ const current=`${access} && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation`;
+ const life={'.read':current};
+ for(const bucket of Object.values(LIFE_PATHS)){let node=life;const parts=bucket.split('/');for(const name of parts.slice(0,-1))node=node[name]??={};node[parts.at(-1)]={'.read':current,'.write':current};}
+ return {rules:{'.read':false,'.write':false,users:{$uid:{learningV3:doc,lifeControl:{'.read':access+' && auth.uid === $uid','.write':false},lifeV1:{$generation:life}}},
   videos:{'.write':false},biochem:{'.write':false},physiology:{'.write':false},pharmacology:{'.write':false},
-  gamification:{'.read':access,v1:{days:{'.read':access,'.write':false},awards:{'.read':access,'.write':false}},v2:{timeTasks:{...rw}},v3:{planner:{tasks:{...rw}}}},
-  habits:{...rw},custom_events:{...rw},checklist:{...rw},
-  questOS:{v1:{courseFirstCompletion:{'.write':false},courseSyncV2:{'.write':false},training:{...rw},adaptiveStudy:{settings:{...rw}}}}
+  gamification:{v1:{days:{'.read':access,'.write':false},awards:{'.read':access,'.write':false}},v2:{timeTasks:{'.read':false,'.write':false}},v3:{planner:{tasks:{'.read':false,'.write':false}}}},
+  habits:{'.read':false,'.write':false},custom_events:{'.read':false,'.write':false},checklist:{'.read':false,'.write':false},
+  questOS:{v1:{courseFirstCompletion:{'.write':false},courseSyncV2:{'.write':false},training:{'.read':false,'.write':false},adaptiveStudy:{settings:{'.read':false,'.write':false}}}}
  }};
 }
 export function makeFrozenCourseRules(owner){
@@ -83,7 +86,7 @@ if(process.argv[1]===fileURLToPath(import.meta.url)){
   writeFileSync(new URL('database.rules.freeze.candidate.json',directory),frozen);
   const sha256=createHash('sha256').update(rules).digest('hex');
   const worktreeDirty=!!execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).trim();
-  writeFileSync(new URL('manifest.json',directory),JSON.stringify({executable:false,uid:OWNER_UID,head:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),sha256,worktreeDirty,frozenSha256:createHash('sha256').update(frozen).digest('hex'),blockers:[...(worktreeDirty?['Uncommitted worktree; regenerate packet after commit']:[]),'Live Rules export/ancestor grants not audited','No Production write or deployment authorization','Shared non-course old writers still enabled; full-account reset forbidden']},null,2)+'\n');
+  writeFileSync(new URL('manifest.json',directory),JSON.stringify({executable:false,uid:OWNER_UID,head:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),sha256,worktreeDirty,frozenSha256:createHash('sha256').update(frozen).digest('hex'),blockers:[...(worktreeDirty?['Uncommitted worktree; regenerate packet after commit']:[]),'Live Rules export/ancestor grants not audited','No Production write or deployment authorization','Life control + course fence must be provisioned/rotated atomically; no real reset authorization']},null,2)+'\n');
   console.log('Prepared owner-bound candidate + checksum in work/course-cutover (executable:false; NO network/deployment).');
   process.exit(0);
  }

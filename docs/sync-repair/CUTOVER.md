@@ -1,3 +1,5 @@
+> 七組 writer 的後續實作與最新切換前提見 [LIFE_ISOLATION.md](LIFE_ISOLATION.md)。下文保留前輪審查脈絡；七組 shared writer 的程式／候選 Rules 阻擋已由該次實作解決，正式切換／重置授權仍未完成。
+
 # PR #26：Rules 安全審查與切換準備
 
 本輪基準 `948ac6fc54e88b17c5ef8df1cfbcb7d1151ecc47`。只修改候選 Rules、測試、離線準備工具與文件；沒有改核心同步契約、正式 Rules、正式資料或網站部署。維持 Draft。
@@ -42,11 +44,11 @@
 
 測試實際讓 owner 的獨立舊式 SDK 對七組 shared paths 寫入並由 Emulator 管理端驗證，證明風險存在。沒有假設新版本、重新登入、刷新或 Service Worker 能使全部舊分頁失效。歷史 pending 繼續隔離保留，不重送、不丟棄、不按 Boolean 判成功。
 
-### 全帳號重置的最小前提（尚未實作）
+### 全帳號重置的最小前提（已由後續隔離實作接續）
 
 課程 fence 可阻止課程舊請求，但不足以保護上述七組 shared roots。可評估小範圍 DB facade 映射，把這七組 writer／reader 改到 `users/<uid>/lifeV1/<generation>/...`，由管理端唯寫的 account control 指定目前 generation；Rules 要求 `$generation` 等於目前 control，永久 deny shared 舊路徑與所有舊 generation 的寫入。重置時原子輪換 control 與課程 generation／era；舊頁面即使仍登入、持有舊 pending，也只能命中被拒絕的舊位置。需要測試 session／本機 cache 隔離及七組產品流程後才能採用，不能只改路徑字串就宣稱完成。受控 server writer 也是替代方案，單純 revoke token 不足以長期隔離同 UID 舊程式重新登入。
 
-本輪沒有實作這項擴充。**全帳號真實重置仍阻擋；不應在 shared roots 仍可寫時刪資料再開回原 Rules。**
+後續已實作此 facade 與 control，七組舊路徑在候選 Rules 永久 deny，詳見 LIFE_ISOLATION.md。**正式 Rules 尚未切換，真實重置仍未授權；不可刪資料再開回舊 Rules。**
 
 ## 可執行的切換順序（本輪只準備，沒有執行）
 

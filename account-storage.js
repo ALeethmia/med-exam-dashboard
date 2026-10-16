@@ -18,7 +18,8 @@ export function routeAccountStorageEvents(target,storage){
  const forwarded=new WeakSet();
  target.addEventListener('storage',event=>{
   if(forwarded.has(event)||event.key==='med_exam_theme')return;
-  const key=storage.acceptsStorageEvent(event.key);event.stopImmediatePropagation();
+  const accountKey=storage.acceptsStorageEvent(event.key);
+  const key=target.learningStorage?.eventKey?target.learningStorage.eventKey(accountKey):accountKey;event.stopImmediatePropagation();
   if(key!==null){const next=new target.StorageEvent('storage',{key,newValue:event.newValue,oldValue:event.oldValue});forwarded.add(next);target.dispatchEvent(next);}
  },true);
 }

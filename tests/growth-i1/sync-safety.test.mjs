@@ -47,7 +47,7 @@ test('local demo persists atomically without Firebase and uses the same date con
 });
 test('signout during asynchronous module bootstrap never appends the stale learning script',async()=>{
  const auth=readFileSync(new URL('../../auth.js',import.meta.url),'utf8');let release,appended=0,current=true;
- const code=auth.slice(auth.indexOf('async function startLearning('),auth.indexOf('\nfunction dialog(')).replace("await import('./src/study/course-contract.js')",'await barrier').replace("await import('./src/study/course-sync.js')",'await Promise.resolve()').replace("await import('./sync.js')",'await Promise.resolve()').replace("await import('./workspace.js')",'await Promise.resolve()');
+ const code=auth.slice(auth.indexOf('async function startLearning('),auth.indexOf('\nfunction dialog(')).replace("await import('./src/study/life-isolation.js')",'await barrier').replace("await import('./src/study/course-contract.js')",'await barrier').replace("await import('./src/study/course-sync.js')",'await Promise.resolve()').replace("await import('./sync.js')",'await Promise.resolve()').replace("await import('./workspace.js')",'await Promise.resolve()');
  const context={window:{becomingStorage:{view:()=>({})},SubjectUI:{bindStorage(){}}},document:{createElement:()=>({}),getElementById:()=>({textContent:''}),body:{append(){appended++;}}},preserveRewardCache(){},barrier:new Promise(r=>release=r)};
  vm.runInNewContext('let started=false;'+code+';globalThis.bootstrap=startLearning;',context);const promise=context.bootstrap(()=>current);current=false;release({createCourseDatabase(){}});await promise;assert.equal(appended,0);
 });

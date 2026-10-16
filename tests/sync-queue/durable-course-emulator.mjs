@@ -1,5 +1,6 @@
 // Standalone synthetic integration. Starts its OWN ephemeral loopback emulator; no remote URL option.
 import assert from 'node:assert/strict';
+import {verifyLifeIsolation} from './life-isolation-emulator.mjs';
 import {verifyCourseRules,createRulesAttacker} from './course-rules-attacks.mjs';
 import {readFileSync,existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
@@ -26,7 +27,7 @@ try{
  await admin('.settings/rules',JSON.parse(readFileSync(new URL('../fixtures/course-rules.json',import.meta.url))));
  const initial={schema:3,generation:'initial-v3',era:0,clock:0,courses:{},versions:{},firstCompletion:{}};
  const domain='users/fixture-A/learningV3';
- const history={gamification:{v1:{awards:{historical:{xp:20,day:'2026-10-01'}}}},physiology:{legacy:true},users:{'fixture-A':{},'fixture-B':{learningV3:{...initial,generation:'other-UID'}}}};await admin('',history);const otherUIDBefore=await read('users/fixture-B');
+ const history={gamification:{v1:{awards:{historical:{xp:20,day:'2026-10-01'}}}},physiology:{legacy:true},users:{'fixture-A':{lifeControl:{schema:1,generation:'fixture-life-1',era:0}},'fixture-B':{learningV3:{...initial,generation:'other-UID'}}}};await admin('',history);const otherUIDBefore=await read('users/fixture-B');
  const root=new URL('../../',import.meta.url);
  server=createServer((req,res)=>{
   const file=new URL(req.url,'http://127.0.0.1').pathname;
@@ -34,7 +35,7 @@ try{
   if(file==='/firebase-config.js')return res.end('window.examFirebaseConfig='+JSON.stringify({projectId:ns,databaseURL:'https://'+ns+'.firebaseio.com'})+';');
   if(file==='/owner-config.js')return res.end("export const OWNER_UID='fixture-A';");
   if(file==='/fixture-app.js'||file==='/fixture-db.js')return res.end(readFileSync(sdk+(file==='/fixture-app.js'?'/firebase-app-compat.js':'/firebase-database-compat.js')));
-  if(file==='/fixture-auth.js')return res.end(`Object.defineProperty(window,'workspaceLocalOnly',{get:()=>false,set(){}});const original=firebase.database.bind(firebase);let instance;firebase.database=()=>{if(!instance){instance=original();instance.useEmulator('127.0.0.1',${port},{mockUserToken:{sub:'fixture-A',user_id:'fixture-A'}});}return instance;};let notify;const auth=()=>({onAuthStateChanged(fn){notify=fn;queueMicrotask(()=>fn({uid:'fixture-A',displayName:'Synthetic Emulator'}));},async signOut(){notify(null);}});auth.GoogleAuthProvider=class{};firebase.auth=auth;`);
+  if(file==='/fixture-auth.js')return res.end(`Object.defineProperty(window,'workspaceLocalOnly',{get:()=>false,set(){}});const original=firebase.database.bind(firebase);let instance;firebase.database=()=>{if(!instance){instance=original();instance.useEmulator('127.0.0.1',${port},{mockUserToken:{sub:'fixture-A',user_id:'fixture-A'}});}return instance;};let notify;const auth=()=>({onAuthStateChanged(fn){notify=fn;window.lifeAuthFixture=fn;queueMicrotask(()=>fn({uid:'fixture-A',displayName:'Synthetic Emulator'}));},async signOut(){notify(null);}});auth.GoogleAuthProvider=class{};firebase.auth=auth;`);
   try{
    if(file==='/'||file==='/index.html')return res.end(readFileSync(new URL('index.html',root),'utf8').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js','/fixture-app.js').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js','/fixture-db.js').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js','/fixture-auth.js'));
    if(!/^\/(src|styles|public)\//.test(file)&&!/^\/[a-z][a-z0-9-]*\.js$/.test(file))throw Error('invalid path');
@@ -49,6 +50,7 @@ try{
  async function drain(){try{await page.waitForFunction(()=>!window.courseSync.inspect().pending.length,null,{timeout:15000});}catch(error){console.log('DRAIN',JSON.stringify(await page.evaluate(()=>({sync:courseSync.inspect(),runtime:i3Runtime.read()}))));console.log('DOC',JSON.stringify(await read(domain)));throw error;}}
  let count=0;async function check(name,fn){const start=Date.now();await fn();count++;console.log('PASS '+name+' ('+(Date.now()-start)+'ms)');}
  await load();await createRulesAttacker(page);
+ if(!process.argv.includes('--life-only')){
  await check('Rules reject forged initialization and malformed containers before the first legitimate operation',async()=>{
   const before=await read('');
   for(const invalid of [{...initial,generation:'forged-initial'},{...initial,era:1},{...initial,courses:true},{...initial,courses:{videos:true}},{...initial,courses:{biochem:'injected'}},{...initial,versions:true},{...initial,firstCompletion:true}])assert.equal(await page.evaluate(async({domain,invalid})=>{try{await window.rulesAttackDatabase.ref(domain).set(invalid);return false;}catch(e){return e.code==='PERMISSION_DENIED';}},{domain,invalid}),true);
@@ -104,8 +106,10 @@ try{
   await page.evaluate(async row=>{const {applyCourseRequest}=await import('/src/study/course-contract.js');await firebase.database().ref('users/fixture-A/learningV3').transaction(current=>applyCourseRequest(current,row),undefined,false);},old);assert.equal((await read(domain)).clock,0);
   await page.evaluate(()=>setStudyCompletion('videos','1',true));await drain();await load();await drain();assert.equal((await read(domain)).clock,1);assert.deepEqual(await read('users/fixture-B'),otherUIDBefore);
  });
+ }
+ await verifyLifeIsolation({page,context,base,read,admin,check,load,domain});
  await check('history/XP stay unchanged; no external requests, receipt growth, gate or console exception',async()=>{
-  assert.deepEqual(await read('gamification'),history.gamification);const current=await read(domain);assert.equal(current.gate,undefined);assert.equal(current.receipts,undefined);assert.equal(external,0);assert.deepEqual(errors,[]);
+  assert.deepEqual(await read('gamification'),history.gamification);const current=await read(domain);assert.equal(current?.gate,undefined);assert.equal(current?.receipts,undefined);assert.equal(external,0);assert.deepEqual(errors,[]);
  });
  console.log('Durable course Emulator checks passed: '+count+' (real product UI + SDK 9.22.0 + Emulator 4.11.2; synthetic identities/rules only).');
 }finally{clearTimeout(all);await browser?.close();if(server)await new Promise(r=>server.close(r));child.kill('SIGTERM');}

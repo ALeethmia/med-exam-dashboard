@@ -1,3 +1,5 @@
+> 七組隔離已完成於程式／候選 Rules；最新 control＋課程 fence 原子輪換與備份範圍見 [LIFE_ISOLATION.md](LIFE_ISOLATION.md)。這仍不是執行授權。
+
 # 一次性重置：只規劃與合成測試
 
 最新 Rules 候選、七組 shared writer 隔離阻擋、freeze／切換／復原順序見 [CUTOVER.md](CUTOVER.md)。候選已禁止舊課程／日期／v2 與 v1 歷史 XP 帳本寫入，但生活／任務 shared roots 尚未隔離，不能執行全帳號重置。

@@ -104,18 +104,15 @@ export async function verifyCourseRules({page,read,admin,domain,initial,check}){
     const db=window.rulesAttackDatabase,denied=[];
     const doc=(await db.ref(domain).once('value')).val(),id=crypto.randomUUID();
     const legal={...doc,courses:{...doc.courses,videos:{...doc.courses.videos,1:!doc.courses.videos[1]}},versions:{...doc.versions,videos__1:id},clock:doc.clock+1};
-    for(const path of [domain,'habits/blocked','gamification/v2/timeTasks/blocked','gamification/v3/planner/tasks/blocked','questOS/v1/training/blocked','questOS/v1/adaptiveStudy/settings/blocked','custom_events/blocked','checklist/blocked'])try{await db.ref(path).set(path===domain?legal:true);denied.push(false);}catch(e){denied.push(e.code==='PERMISSION_DENIED');}
+    for(const path of [domain,...['habits','timeTasks','planner/tasks','training','adaptiveStudy/settings','custom_events','checklist'].map(bucket=>'users/fixture-A/lifeV1/fixture-life-1/'+bucket+'/blocked')])try{await db.ref(path).set(path===domain?legal:true);denied.push(false);}catch(e){denied.push(e.code==='PERMISSION_DENIED');}
     const value=(await db.ref(domain).once('value')).val();return {denied,clock:value.clock};
    },domain);
    assert.equal(result.denied.length,8);assert(result.denied.every(Boolean));assert.equal(result.clock,(await read(domain)).clock);assert.deepEqual(await read(''),before);
   }finally{await admin('.settings/rules',makeCourseRules('fixture-A'));}
  });
- await check('shared legacy life/time-task/planner writers remain allowed for owner: full-reset blocker is real',async()=>{
-  const before=await read('');
-  const paths=['habits/security-proof','gamification/v2/timeTasks/security-proof','gamification/v3/planner/tasks/security-proof','questOS/v1/training/security-proof','questOS/v1/adaptiveStudy/settings/security-proof','custom_events/security-proof','checklist/security-proof'];
-  await page.evaluate(async paths=>{for(const path of paths)await window.rulesAttackDatabase.ref(path).set({oldWriter:true});},paths);
-  for(const path of paths)assert.deepEqual(await read(path),{oldWriter:true});
-  // Only synthetic test data, restore the fixture so XP/history invariance checks remain meaningful.
-  await admin('',before);
+ await check('all seven retired shared writers are denied; old data cannot be recreated',async()=>{
+  const before=await read('');const paths=['habits/security-proof','gamification/v2/timeTasks/security-proof','gamification/v3/planner/tasks/security-proof','questOS/v1/training/security-proof','questOS/v1/adaptiveStudy/settings/security-proof','custom_events/security-proof','checklist/security-proof'];
+  const denied=await page.evaluate(async paths=>{const out=[];for(const path of paths)try{await window.rulesAttackDatabase.ref(path).set({oldWriter:true});out.push(false);}catch(e){out.push(e.code==='PERMISSION_DENIED');}return out;},paths);
+  assert(denied.every(Boolean));assert.deepEqual(await read(''),before);
  });
 }

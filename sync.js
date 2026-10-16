@@ -150,6 +150,7 @@
     connectionRef?.off?.('value',connectionCallback);
     epoch=window.i3Runtime?.read().epoch??null;connected=false;
     if(database&&window.createCourseDatabase)database=window.createCourseDatabase(database,window.becomingStorage.read().uid);
+    if(database&&window.lifeSession)database=window.lifeSession.database(database);
     if(window.i3Runtime)database=window.i3Runtime.wrap(database);
     window.learningDB=database;
     if(database){connectionRef=database.ref('.info/connected');connectionCallback=snap=>{if(!valid())return;connected=snap.val()===true;if(!connected)pause();status();if(connected){void flush();void courseSync?.pump();}};connectionRef.on('value',connectionCallback,()=>{if(valid()){failed=true;pause();status();}});}

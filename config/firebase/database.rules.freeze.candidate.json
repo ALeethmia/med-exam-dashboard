@@ -62,6 +62,47 @@
           "$other": {
             ".validate": false
           }
+        },
+        "lifeControl": {
+          ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid",
+          ".write": false
+        },
+        "lifeV1": {
+          "$generation": {
+            ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation",
+            "habits": {
+              ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation",
+              ".write": false
+            },
+            "training": {
+              ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation",
+              ".write": false
+            },
+            "adaptiveStudy": {
+              "settings": {
+                ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation",
+                ".write": false
+              }
+            },
+            "timeTasks": {
+              ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation",
+              ".write": false
+            },
+            "planner": {
+              "tasks": {
+                ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation",
+                ".write": false
+              }
+            },
+            "custom_events": {
+              ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation",
+              ".write": false
+            },
+            "checklist": {
+              ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__' && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation",
+              ".write": false
+            }
+          }
         }
       }
     },
@@ -78,7 +119,6 @@
       ".write": false
     },
     "gamification": {
-      ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
       "v1": {
         "days": {
           ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
@@ -91,29 +131,29 @@
       },
       "v2": {
         "timeTasks": {
-          ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
+          ".read": false,
           ".write": false
         }
       },
       "v3": {
         "planner": {
           "tasks": {
-            ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
+            ".read": false,
             ".write": false
           }
         }
       }
     },
     "habits": {
-      ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
+      ".read": false,
       ".write": false
     },
     "custom_events": {
-      ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
+      ".read": false,
       ".write": false
     },
     "checklist": {
-      ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
+      ".read": false,
       ".write": false
     },
     "questOS": {
@@ -125,12 +165,12 @@
           ".write": false
         },
         "training": {
-          ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
+          ".read": false,
           ".write": false
         },
         "adaptiveStudy": {
           "settings": {
-            ".read": "auth != null && auth.uid === '__REVIEWED_OWNER_UID__'",
+            ".read": false,
             ".write": false
           }
         }
