@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {approvalRequest,emulatorExecutor,managedGCSLedger} from '../../scripts/managed-cutover-executor.mjs';
+import {approvalRequest,emulatorExecutor,managedRTDBLedger,businessTree,LEDGER_ROOT} from '../../scripts/managed-cutover-executor.mjs';
 test('executor CLI is offline and inert by default; no apply, URL, identity, policy or dry-run override',()=>{
  const cli=new URL('../../scripts/managed-cutover-executor.mjs',import.meta.url);
  const status=spawnSync(process.execPath,[cli.pathname,'status'],{encoding:'utf8'});assert.equal(status.status,0,status.stderr);assert.deepEqual(JSON.parse(status.stdout),{productionTrustConfigured:false,writes:false,network:false,stages:['freeze','final-snapshot','initialize','active-rules']});
@@ -12,11 +12,18 @@ test('Emulator trust cannot be used with remote/proxy endpoints; approval has bo
  assert.throws(()=>approvalRequest({packet:{},stage:'all',operation:'cutover-synthetic-operation',expiresAt:Date.now()+1000}),/stage-or-operation/);
  assert.throws(()=>approvalRequest({packet:{},stage:'initialize',operation:'cutover-synthetic-operation',expiresAt:Date.now()+7200000}),/expiry/);
 });
-test('actual durable GCS ledger uses immutable create-if-absent, scoped names, no overwrite/delete or retry',async()=>{
- const calls=[],http=async(...args)=>{calls.push(args);return {ok:true};};const ledger=managedGCSLedger('becoming-cutover-synthetic',http);
+test('actual RTDB ledger creates only fixed UID metadata using null_etag CAS and never retries',async()=>{
+ const calls=[],request=async(...args)=>{calls.push(args);return args[2]??null;};const ledger=managedRTDBLedger(request);
  await ledger.claim('cutover-synthetic-operation/initialize/claim',{hash:'synthetic'});
- const [url,method,body]=calls[0],u=new URL(url);assert.equal(u.origin,'https://storage.googleapis.com');assert.equal(u.searchParams.get('ifGenerationMatch'),'0');assert.equal(u.searchParams.get('name'),'v1/cutover-synthetic-operation/initialize/claim');assert.equal(method,'POST');assert.deepEqual(body,{hash:'synthetic'});
- const denied=managedGCSLedger('becoming-cutover-synthetic',async()=>{throw Error('executor/http-412');});await assert.rejects(denied.claim('patches/hash',{}),/412/);
- assert.equal(calls.length,1);assert.throws(()=>managedGCSLedger('bad/bucket',http),/ledger-bucket/);
- assert.equal(await managedGCSLedger('becoming-cutover-synthetic',async()=>{throw Error('executor/http-404');}).read('missing'),null);
+ const [path,method,body,headers]=calls[0];assert.match(path,/^users\/[^/]+\/cutoverAdmin\/v1\/cutover-synthetic-operation\/initialize\/claim$/);assert.equal(method,'PUT');assert.deepEqual(headers,{'if-match':'null_etag'});assert.deepEqual(body,{hash:'synthetic'});
+ let attempts=0;const denied=managedRTDBLedger(async()=>{attempts++;throw Error('executor/http-412');});await assert.rejects(denied.claim('initialize-once',{spent:true}),/412/);assert.equal(attempts,1);
+ for(const key of ['users/another/record','../initialize-once','', 'patches/bad','cutover-synthetic-operation/initialize'])await assert.rejects(ledger.claim(key,{}),/ledger-path/);
+ for(const invalid of [null,{},[],false])await assert.rejects(ledger.claim('initialize-once',invalid),/ledger-value/);
+ assert.equal(calls.length,1);assert.equal(await ledger.read('initialize-once'),null);
+});
+
+test('backup projection excludes only the exact signed UID ledger root and preserves every other path',()=>{
+ const uid=LEDGER_ROOT.split('/')[1];const tree={users:{[uid]:{cutoverAdmin:{v1:{claim:true},v2:{keep:false}},learningV3:{clock:1}},other:{cutoverAdmin:{v1:{keep:false}}}},definitions:{keep:true}};
+ assert.deepEqual(businessTree(tree),{users:{[uid]:{cutoverAdmin:{v2:{keep:false}},learningV3:{clock:1}},other:{cutoverAdmin:{v1:{keep:false}}}},definitions:{keep:true}});
+ assert.equal(tree.users[uid].cutoverAdmin.v1.claim,true,'raw full backup is never mutated');
 });

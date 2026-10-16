@@ -1,112 +1,91 @@
-# 受管切換入口（尚未取得正式執行授權）
+# NT$0 受管切換入口（預設停用）
 
-離線計畫仍用 `managed-cutover-dry-run.mjs`／`reset-plan.js`；獨立執行器為 `scripts/managed-cutover-executor.mjs`。本輪只使用合成資料與 Emulator，沒有取得正式身分、連線正式 Firebase、建立雲端資源或部署。網站與帳號重置仍是兩項不同授權。
+本方案取代舊版 KMS／GCS 前置條件。使用既有 Spark RTDB、免費 Cloud Shell／IAM、離線核准簽章；不建立 KMS、GCS、Cloud Run／Functions、付費備份或計費帳戶，不升級 Blaze。網站與帳號重置仍須分別授權。本輪只用合成資料和本機 Emulator，沒有正式連線、身分取得、資源建立或部署。
 
-## 預設關閉與核准契約
+## 免費能力與尚未證實的部分
+
+依 2026-10-17 核對的官方文件：
+
+- [Spark 定價](https://firebase.google.com/docs/projects/billing/firebase-pricing-plans)與 [RTDB billing](https://firebase.google.com/docs/database/usage/billing)：Spark 具有 RTDB 免費額度，不按超量收費；到額度會限制服務，不應以升級或開啟 Billing 解決。Console 核對 Spark、預設 instance 及 Usage 額度；不是 Codex 已獨立核對正式帳號。
+- [Cloud Shell pricing](https://cloud.google.com/shell/pricing)：Cloud Shell 免費，不必安裝本機 Firebase CLI；[IAM pricing](https://cloud.google.com/iam/pricing)：IAM API 免費。專用無金鑰 SA 是身分，不是付費運算基礎設施。建立它及授權仍需另外同意；任何步驟要求綁 Billing，立即停止。
+- [RTDB REST](https://firebase.google.com/docs/database/rest/start)支援既有資料庫端點；[Rules REST](https://firebase.google.com/docs/database/rest/app-management)支援完整 Rules GET／PUT；[OAuth authentication](https://firebase.google.com/docs/database/rest/auth)要求適當身分與 scopes。**Owner／Cloud Shell 登入不證明 REST 管理權限已可用**。
+- [條件式寫入](https://firebase.google.com/docs/reference/rest/database#section-conditional-requests)的 `PUT` + `if-match: null_etag` 可只在空位置建立值；[multi-location PATCH](https://firebase.google.com/docs/database/rest/save-data)保持初始化原子性。不能把 PATCH 當成支援 ETag CAS；本方案分開「metadata CAS claim」與「一次性精確 PATCH」。
+
+結論是技術上不需新增付費服務，**不是本專案的短效 IAM／REST 權限已實測可用**。本輪禁止正式連線，因此該驗證保留為授權後的停止關卡。若既有專案政策不允許無計費的短效身分／API，停止，不使用 Owner token、長期 SA key 或付費替代品。
+
+## 固定信任與離線核准
+
+`scripts/managed-cutover-executor.mjs status` 完全離線、不可寫。`config/firebase/managed-executor-policy.json` 預設 `enabled:false`，固定 `budget:NT$0`、`ledgerBackend:rtdb-cas-v1`。正式啟用前另行審查一個乾淨不可變 commit，填入確認的 HTTPS origin、專用 SA、公鑰 SPKI DER SHA-256；沒有 URL／token／policy／dry-run override，也不接受舊 GCS policy。
+
+KMS 改為**單次維護窗的離線核准 RSA key**。核准者在獨立可信設備或另一帳號的 Cloud Shell 使用內建 OpenSSL，私鑰不送到執行器 Cloud Shell、不進 repository、聊天或 CI；只交公鑰與逐階段簽章。這不是 Firebase／SA 憑證，也不是將現有長期管理金鑰交給工具。若無法分開核准私鑰與執行環境，停止，不以自簽自動同意取代獨立核准。
 
 ```sh
-node scripts/managed-cutover-executor.mjs status
+# 僅核准者環境；本輪不代為建立正式信任 key。
+umask 077
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out approval-private.pem
+openssl pkey -in approval-private.pem -pubout -out approval-public.pem
+openssl pkey -pubin -in approval-public.pem -outform DER | openssl dgst -sha256
 ```
 
-此命令不取 token、不連網、不寫入。Repository 的 `config/firebase/managed-executor-policy.json` 預設 `enabled:false`，缺任何信任設定就拒絕正式執行。沒有 `--apply`、URL、token、policy、dry-run 切換或跨階段命令。既有 dry-run 的 `executable:false` 等標記仍只描述該離線工具，不表示新入口已獲授權。
+公鑰 fingerprint 經獨立審查固定於 policy。manifest v2 綁定完整 packet／Head、project／instance／Owner UID、備份與 Rules hashes、精確業務 paths、雙 generation／era、patch hash、operation、前階段 receipt、最終 backup bytes hash、**額外唯一協調路徑** `users/<Owner UID>/cutoverAdmin/v1`、用途及最多一小時有效期。v1 核准不相容，必須重新審核；dry-run JSON／Boolean 仍不是授權。
 
-正式啟用前，必須在**另行審查的不可變 commit** 固定：已確認的資料庫 HTTPS origin、固定專案／instance 的專用 service account、專用 ledger bucket、獨立核准者的 KMS 公鑰 SPKI DER SHA-256。Owner UID 固定來自 `owner-config.js`。不得只在工作目錄臨時改設定；執行器要求乾淨 checkout、Git Head 與 packet／簽署 manifest 的 Head 一致。信任設定尚未完成，現在不能執行正式階段。
+核准者核對 request 的 canonical 原始 bytes 後，每階段分開簽署：
 
-核准 manifest 綁定完整 packet hash、固定 target、Head、原始備份 bytes hash、完整來源樹 hash、舊／freeze／active Rules hashes、精確 paths、雙 generation／era、patch hash、操作 ID、前階段 receipt hash、最終備份 bytes hash、階段用途、最長一小時期限及必要人工作業證明。簽章採 SHA-256／RSA（建議 KMS `RSA_SIGN_PKCS1_2048_SHA256`），公鑰必須吻合 reviewed policy；把 Boolean 或 JSON 改為 authorized 無效。
+```sh
+openssl dgst -sha256 -sign approval-private.pem -out STAGE.signature.bin STAGE.manifest.json
+openssl base64 -A -in STAGE.signature.bin -out STAGE.signature.txt
+```
 
-每階段獨立簽署、獨立執行：`freeze` → `final-snapshot` → `initialize` → `active-rules`。沒有「全部執行」。初始化另需 **account-reset:exact-patch** 核准；部署同意不包含放棄舊資料。所有階段只允許維護窗內沒有其他 admin writer 的情況。管理身分可繞過 Rules，程式不能阻止另一位持有管理權限的人直接改庫。
+不重新排版或加換行，不一次簽完所有階段；結束維護窗後撤銷執行權限、妥善結束此一次性核准 key 的使用，保留公鑰／簽章作稽核。
 
-## Cloud Shell 所需資源與最小權限
+## Cloud Shell 最短操作與權限
 
-使用者在官方 Cloud Shell 正常登入，不向 Codex 分享密碼／token／長期 JSON key。Cloud Shell 登入本身**不代表有資料庫管理權限**。Owner 在獨立授權後準備：
+以下全部留待獨立授權，不是現在執行：
 
-| 主體 | 所需能力與邊界 |
-|---|---|
-| 執行人 | 對 `becoming-cutover@my-exam-1aab9.iam.gserviceaccount.com` 的 `roles/iam.serviceAccountTokenCreator`，只限該帳號，不授 project-wide impersonation；用完撤回 |
-| 專用執行 SA | 目標 project 的 RTDB 讀取資料／Rules、更新資料／Rules。最小自訂角色候選為 `firebasedatabase.instances.get`、`firebasedatabase.instances.update`；須由管理員依目前 IAM 支援核對並在隔離專案確認 REST 讀寫／Rules 能力。不要直接給 Owner、Editor、Auth 管理或 RTDB 建立／刪除權限 |
-| 專用執行 SA | 專用 GCS bucket 的 `storage.objects.create`、`storage.objects.get`；不給 delete、update、list 或 bucket 管理。Bucket 預先開啟 versioning／保留政策並禁止自動清除 `v1/` ledger；不能換桶來重跑 |
-| 獨立核准人 | 指定 KMS asymmetric key version 的 `cloudkms.cryptoKeyVersions.useToSign`（例如 key 級 `roles/cloudkms.signerVerifier`）。核准人讀取公鑰；執行 SA 不可簽章／管理此 key |
-
-IAM 無法將 RTDB admin 能力縮成單一 UID/path，**不能把執行器 path 檢查描述成 IAM 沙箱**。因此只在短維護窗授權，固定 SA／bucket／project，禁止其他管理 writer，事後撤回。Owner 可設定資源及授權，無需建立長期 service-account key。若 IAM 無法提供所需最小權限、KMS／GCS 不可用或身分不明，停止；不要改用 Owner token 或寬鬆角色繞過。
-
-執行器內部呼叫 `gcloud auth print-access-token --impersonate-service-account=... --lifetime=600s`，使用 cloud-platform、firebase.database、userinfo.email scopes。token 僅在記憶體，禁止自行傳入 token。失敗不降級到 ADC、Cloud Shell 預設帳號或長期 key。此輪沒有實際驗證 GCP IAM／KMS／GCS，相關權限與資源仍是正式前置阻擋。
-
-## 最短 Cloud Shell 清單
-
-下列是**未來獨立授權後**的操作，不是現在執行。Cloud Shell 已有 Node、Git、gcloud；不需要 Firebase CLI。Codex 可整理摘要／產生檔案，使用者只核對 target、舊資料歸屬、放棄紀錄與每階段核准，不手改複雜 JSON。
-
-1. Owner 核對 project／instance／UID、最新 live Rules、完整伺服器匯出（不是 SDK cache）、備份異地副本、維護網站 artifact 及停機窗。先完成上表資源／權限設定與 policy commit 審查。checkout 該不可變 SHA；確認完整 CI。取消其他管理 writer，停止網站寫入；freeze 才是伺服器屏障。
-2. 建立 repository 外的私密目錄，例如 `umask 077; mkdir -m 700 /tmp/becoming-cutover-private`。原始 backup、Rules、核准 scope path array 僅放此處，檔案 0600；不放 repository／PR／CI artifact／公開日誌。**prepare/request/status 完全離線**。
+1. Owner 在 Console 確認 `my-exam-1aab9`、預設 RTDB、Owner UID、Spark／沒有 Billing、免費額度足夠；保留完整匯出與 Rules 的本機異地副本，確認舊 shared roots 資料歸屬。保留維護 artifact，不要求新增 Preview。
+2. 配置無金鑰 `becoming-cutover@my-exam-1aab9.iam.gserviceaccount.com`。執行人僅對該 SA 取得 `roles/iam.serviceAccountTokenCreator`；SA 使用 RTDB 自訂最小角色候選 `firebasedatabase.instances.get`／`firebasedatabase.instances.update`（由管理員確認現行 IAM 能力）。不授 Auth 編輯、資料庫建立／刪除、project Owner／Editor、KMS／GCS 角色。確認 IAM Credentials API 可在不啟用 Billing 下使用；不可默認 API／角色已配置。短效 token 由工具使用 `gcloud ... --impersonate-service-account=... --lifetime=600s` 與 firebase.database／userinfo.email／cloud-platform scopes 取得，僅放記憶體，失敗不降級。
+3. checkout reviewed SHA，確認乾淨與相關測試。建立 repository 外 0700 私密目錄；備份／Rules／scope、packet／input、最終 snapshot、簽章／receipts 均 0600，使用絕對路徑。執行器沿用原來 `prepare`、`request`、`run-stage` 命令，不接受免費旗標來繞過核准：
 
 ```sh
 node scripts/managed-cutover-executor.mjs prepare \
-  --backup /tmp/becoming-cutover-private/backup.json \
-  --legacy-rules /tmp/becoming-cutover-private/legacy-rules.json \
-  --reviewed-paths /tmp/becoming-cutover-private/reviewed-paths.json \
-  --out-dir /tmp/becoming-cutover-private
-```
-
-自動產生 `packet.json`、`input.json`，包含隨機新 generations 與精確 atomic update；使用者只審摘要。拒絕覆寫已存在的 artifact。備份／Rules 若與伺服器不符，freeze 前停止，不自動刷新核准。
-
-3. 每次只產生一個 `request`（`--expires-at` 明確 UTC，例如核准後 30 分鐘；`--operation` 本次固定且唯一的 `cutover-...` ID）。第一階段例：
-
-```sh
+  --backup PRIVATE/backup.json --legacy-rules PRIVATE/legacy-rules.json \
+  --reviewed-paths PRIVATE/reviewed-paths.json --out-dir PRIVATE
 node scripts/managed-cutover-executor.mjs request \
-  --packet /tmp/becoming-cutover-private/packet.json \
-  --input /tmp/becoming-cutover-private/input.json \
-  --stage freeze --operation cutover-REPLACE-WITH-LOWERCASE-UNIQUE-ID \
-  --expires-at REPLACE-WITH-UTC-TIME \
-  --out /tmp/becoming-cutover-private/freeze.manifest.json
-```
-
-占位值必須由 Codex 根據核准摘要產生合法值。獨立核准人核對 canonical manifest，使用自己的短效 Google 身分簽署該檔（不把 signer 權限給執行 SA）：
-
-```sh
-gcloud kms asymmetric-sign --project=APPROVED_KMS_PROJECT --location=APPROVED_LOCATION \
-  --keyring=APPROVED_RING --key=APPROVED_KEY --version=APPROVED_VERSION \
-  --digest-algorithm=sha256 \
-  --input-file=/tmp/becoming-cutover-private/freeze.manifest.json \
-  --signature-file=/tmp/becoming-cutover-private/freeze.signature.bin
-base64 -w0 /tmp/becoming-cutover-private/freeze.signature.bin > /tmp/becoming-cutover-private/freeze.signature.txt
-```
-
-公鑰 `approval-public.pem` 必須由核准 KMS version 取得，與 policy 中 fingerprint 相符；不能接受執行人任選公鑰。簽署檔案就是 request 的 canonical bytes，不加換行、不重新排版。獨立簽署是正式變更授權；測試通過不是授權。
-
-4. 執行一個階段：
-
-```sh
+  --packet PRIVATE/packet.json --input PRIVATE/input.json \
+  --stage freeze --operation cutover-UNIQUE-LOWERCASE-ID \
+  --expires-at APPROVED-UTC-TIME --out PRIVATE/freeze.manifest.json
+# 核准者獨立簽署後，執行人只執行這一個階段：
 node scripts/managed-cutover-executor.mjs run-stage \
-  --packet /tmp/becoming-cutover-private/packet.json \
-  --input /tmp/becoming-cutover-private/input.json \
-  --manifest /tmp/becoming-cutover-private/freeze.manifest.json \
-  --signature /tmp/becoming-cutover-private/freeze.signature.txt \
-  --public-key /tmp/becoming-cutover-private/approval-public.pem \
-  --receipt-out /tmp/becoming-cutover-private/freeze.receipt.json
+  --packet PRIVATE/packet.json --input PRIVATE/input.json \
+  --manifest PRIVATE/freeze.manifest.json --signature PRIVATE/freeze.signature.txt \
+  --public-key PRIVATE/approval-public.pem --receipt-out PRIVATE/freeze.receipt.json
 ```
 
-後續每列都重複「產 request → 人工確認／獨立簽署 → run-stage」，不能預先簽完或用迴圈一鍵執行：
+`PRIVATE` 等占位由 Codex 依核准摘要填成私密絕對路徑／合法時間與 ID；使用者不手改資料庫 JSON。所有輸出 exclusive create，不覆寫。原本 reset-plan／dry-run 的 path／hash／generation／era 及獨立重置授權完全保留。
 
-| 階段 | request / run-stage 額外參數 | 停止關卡 |
-|---|---|---|
-| freeze | 無 previous | live Rules／整樹與已核准備份一致；寫入 freeze 並讀回；來源若改變就停止。另以普通客戶端驗證拒寫 |
-| final-snapshot | 兩者 `--previous freeze.receipt.json`；run-stage `--snapshot-out FINAL.json` | 讀回完整凍結樹，寫私密最終檔與 bytes hash；須完成完整性／隔離還原驗證再核准 initialize。若與凍結前計畫不同，停止重新審查，不沿用舊核准 |
-| initialize | 兩者 `--previous final-snapshot.receipt.json --final-backup FINAL.json` | **單獨真實帳號放棄／重置授權**、完整備份、restore 證據、fresh generations、patch hash、無其他 admin。只發一次 root PATCH，精確 multi-location paths；整樹讀回驗證其他 UID／定義都沒變 |
-| active-rules | 兩者 `--previous initialize.receipt.json --final-backup FINAL.json` | 已確認初始化 receipt、凍結規則及完整預期樹一致才更新；成功讀回完整 active Rules |
+4. 每列都「新 request → 人工確認／離線簽章 → 單一 run-stage」，無一鍵跨關卡：
 
-表中檔名均使用私密目錄的**絕對路徑**。每階段使用新的 manifest／signature／receipt 檔，不覆寫。初始化不讀取或刪除 Firebase Auth，不含整庫 Import、root PUT、網站部署或第二次自動重置。舊 shared roots 的刪除僅限明列且已確認屬此 Owner 的路徑。
+| 階段 | 額外參數與停止條件 |
+|---|---|
+| freeze | 先以短效管理身分讀完整資料／Rules，與核准 input 完全相符才 PUT freeze 並讀回。**確認 freeze 後才在 RTDB 建 claim**，不信任舊 root grant 保護鎖。Rules PUT／資料 CAS 若拒絕或不明立即停。此時才證實該身分的實際管理操作；不能提前宣稱 Owner 足夠。另驗普通客戶端不能寫 |
+| final-snapshot | request／run 加 `--previous PRIVATE/freeze.receipt.json`；run 加 `--snapshot-out PRIVATE/FINAL.json`。取得整份 server tree，包含協調 metadata；記錄完整 bytes／canonical hash。完整性與隔離還原驗證完成後才核准 initialize |
+| initialize | 兩命令加 `--previous PRIVATE/final-snapshot.receipt.json --final-backup PRIVATE/FINAL.json`。獨立**真實帳號重置**核准，驗完整 final bytes、業務樹、Rules、UID／paths／generation／era／patch；先取得永久帳號鎖，再送**一次**精確原子 PATCH。結果不明只讀、不重送、不補成功 receipt、不進下一關 |
+| active-rules | 兩命令加 `--previous PRIVATE/initialize.receipt.json --final-backup PRIVATE/FINAL.json`。驗成功 receipt／完整備份、凍結與預期業務樹才開 active。失敗只嘗試 freeze，不恢復舊 Rules／舊資料 |
 
-5. active 後停止，由另行部署授權切換既有正常網站 artifact，再按 CUTOVER 驗登入／課程／日期／任務／XP／王國／重連。此工具不執行任何 Vercel 操作。確認或保留維護狀態，撤回短效 impersonation 與 SA 權限，保留不可變 ledger／備份／簽章／receipts。備份不得因結束而刪除。
+5. 停止。網站切換／smoke 另依 CUTOVER 的部署授權處理；本工具沒有網站部署／Auth 修改。事後撤回 impersonation／SA 權限，保留完整備份與稽核檔。任何配額不足、Billing 提示、權限不足、無法確認 freeze 都是停止條件，不升級方案。
 
-## 一次性鎖與故障停止
+## 免費協調與備份的安全邊界
 
-正式 ledger 用 GCS `ifGenerationMatch=0` 原子建立每階段 claim／receipt，另以 patch hash 建立全域初始化鎖；只接受前階段已落在 ledger 的成功 receipt。兩個 Cloud Shell 程序、改 operation ID 或重新啟動都不能重送同一 patch。ledger 不存個人紀錄，只存 hashes／階段；禁止清除 claim、換 bucket 或換 patch 來掩蓋失敗。
+正式入口完全移除 GCS 呼叫；RTDB metadata CAS 為 server-side create-only，412／回應遺失不重試。每個 stage 有 claim／receipt，另有 `initialize-once` 永久帳號鎖與 patch hash 鎖。換機、重開 Cloud Shell、換 operation 或新 patch 都不能自動二次初始化。鎖落盤後即使 PATCH 尚未送出也停止，不提供解鎖／刪除／覆寫命令。
 
-任何初始化送出後的錯誤都不重試，讀回比對並回報 `approved-result-present`／`different-or-uncommitted`／`unavailable`，保留 claim。即使結果完全吻合，也**不自動補成功 receipt 或進 active**：保持 freeze，人工審查伺服器證據與新的獨立復原授權。本工具沒有「解鎖再 reset」命令。PATCH 尚未送出但 claim 已消耗也一樣停止。
+現有 freeze／active 候選 Rules 已無 ancestor grant，協調路徑由預設 deny 保護，**無須改同步核心或候選 Rules**。普通 owner 客戶端不能讀寫／刪除鎖或祖先；管理 IAM 仍可繞過 Rules，無法靠它保護惡意 admin。維護窗必須排除其他 admin writer，不能將 SA 的管理能力說成只有單一 UID。
 
-active 回應遺失／receipt 落盤失敗時，只嘗試重裝已核准 freeze 並讀回，永不恢復舊 root grants，不回復舊資料。若 freeze 未確認，輸出 `freezeConfirmed:false`，必須停止所有後續動作並由獲授權管理員確認／凍結；不能宣稱網路故障時一定能安裝 Rules。維護頁本身不能撤銷其他分頁或管理身分的寫入權限。
+業務資料比較只排除 manifest 明列的**該 UID 的協調根**；其他 UID、定義與任何其他節點仍逐樹比較。原始 input backup 的 full hash、最終 snapshot 的 full bytes／canonical hash 都保留；final snapshot 不偷偷刪 metadata。初始化 receipt 的 `resultDataSha256` 明確表示排除協調根後的業務樹，不能冒稱整庫 hash。PATCH 不含協調節點，也不能將 metadata 忽略擴大成其他 paths。
 
-## 本輪證據與正式缺口
+**還原注意**：完整備份可含早於 initialize 的 metadata。未來任何管理還原必須保全伺服器較新的 `cutoverAdmin/v1`，不可用舊 snapshot 覆蓋它；否則會丟掉永久鎖。本執行器仍禁止整庫 Import／root PUT，也不提供恢復舊 metadata 的功能。任意管理員手動刪鎖、換庫或整庫回復不在可保證範圍；這與持有管理權限者能繞過程式限制的邊界相同，不可把 Cloud Shell 本機檔當永久跨機鎖替代。
 
-直接執行同一 stage engine 的 Emulator 測試覆蓋：簽章／target／Head／path／hash／era 竄改、期限、跳階段、四階段成功、完整快照、其他 UID／定義保留、備份漂移、兩程序競爭、換 operation 重送、PATCH 前失敗及寫後回應遺失、snapshot／ledger 失敗、freeze／active 回應遺失及安全凍結。正式 GCS adapter 另驗證 create-only precondition，Emulator ledger 以共享原子 Map 模擬；**不是 GCP IAM／GCS／KMS 的線上整合驗證**。
+## 本輪驗證與剩餘阻擋
 
-尚缺：reviewed policy 的實際 endpoint／SA／bucket／公鑰、隔離 GCP 權限驗證、正式來源與最新備份／restore 證據、核准者身分與部署／重置分階段授權。這些未滿足前只能進授權準備與 Code Review，不能執行正式切換。
+僅 Emulator／合成資料：保留全部六組執行器安全測試，新增真正 RTDB CAS 的四組：完整四階段／完整 backup metadata、普通合法 UID 可讀課程但不能刪鎖或祖先、兩個新程序競爭與永久帳號鎖、PATCH ACK 遺失／CAS ACK 遺失／重啟／其他 UID 漂移。沒有把 Map 替身結果當成真正 server CAS 證據。相關單元驗 CAS 的固定 UID/path/header、拒絕與不重試。
+
+技術上可用 NT$0 方案；正式仍 NO-GO：未配置 reviewed policy／獨立核准 key、未核對專案當前免費額度、未在獲授權後實測短效 IAM／REST 管理能力，亦沒有部署／重置／正式驗收授權。任何條件不符就停，不降低核准、備份、一次性或 freeze 保證。

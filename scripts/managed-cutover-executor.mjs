@@ -9,6 +9,7 @@ import {canonical,digest,emulatorAddress} from './emulator-cutover.mjs';
 import {makeCourseRules,makeFrozenCourseRules} from './course-rules-candidate.mjs';
 import {RESET_CLOUD_PATHS} from '../src/study/reset-plan.js';
 const rawHash=v=>createHash('sha256').update(v).digest('hex');
+export const LEDGER_ROOT='users/'+MANAGED_TARGET.ownerUID+'/cutoverAdmin/v1';
 const stages=['freeze','final-snapshot','initialize','active-rules'];
 const purposes={'freeze':'deployment:freeze','final-snapshot':'read-only:final-snapshot','initialize':'account-reset:exact-patch','active-rules':'deployment:active-rules'};
 const fail=code=>{throw Error('executor/'+code);};
@@ -29,8 +30,11 @@ export async function validatePacket({packet,input,head}){
 export function approvalRequest({packet,stage,operation,expiresAt,previous=null,finalBackupSha256=null,now=Date.now()}){
  if(!stages.includes(stage)||!/^cutover-[a-z0-9-]{8,80}$/.test(operation||''))fail('stage-or-operation');
  if(!Number.isSafeInteger(expiresAt)||expiresAt<=now||expiresAt-now>3600000)fail('expiry');
- return {format:'becoming-stage-approval-v1',stage,purpose:purposes[stage],operation,target:MANAGED_TARGET,reviewHead:packet.reviewHead,packetSha256:digest(packet),hashes:packet.hashes,allowedPaths:packet.allowedPaths,generations:packet.generations,previousReceiptSha256:previous?digest(previous):null,finalBackupSha256,issuedAt:now,expiresAt,onFailure:'freeze-only',assertions:{serverBackupComplete:true,legacyPathsOwnedByTarget:true,generationsNeverUsed:true,exclusiveAdminWindow:true,restoreVerified:true}};
+ return {format:'becoming-stage-approval-v2',coordination:{backend:'rtdb-cas-v1',path:LEDGER_ROOT},stage,purpose:purposes[stage],operation,target:MANAGED_TARGET,reviewHead:packet.reviewHead,packetSha256:digest(packet),hashes:packet.hashes,allowedPaths:packet.allowedPaths,generations:packet.generations,previousReceiptSha256:previous?digest(previous):null,finalBackupSha256,issuedAt:now,expiresAt,onFailure:'freeze-only',assertions:{sparkAndNoBillingConfirmed:true,freeQuotaSufficient:true,serverBackupComplete:true,legacyPathsOwnedByTarget:true,generationsNeverUsed:true,exclusiveAdminWindow:true,restoreVerified:true}};
 }
+// Only ledger metadata is excluded from business-tree comparisons. Full backup bytes still include it.
+export const businessTree=tree=>patchTree(tree,{[LEDGER_ROOT]:null});
+const sameBusiness=(a,b)=>equal(businessTree(a),businessTree(b));
 // Only this private factory runs a stage. Production and Emulator constructors below have distinct trust sources.
 function executor({transport,ledger,policy,head,now=()=>Date.now()}){
  async function run({packet,input,manifest,signature,publicKey,previous=null,finalBackupRaw=null,saveSnapshot}){
@@ -51,7 +55,7 @@ function executor({transport,ledger,policy,head,now=()=>Date.now()}){
   // Both claims are durable create-if-absent, never deleted, including unknown outcomes.
   if(['initialize','active-rules'].includes(m.stage)){
    const receiptBackup=m.stage==='initialize'?previous.backupFileSha256:previous.finalBackupSha256;
-   if(typeof finalBackupRaw!=='string'||rawHash(finalBackupRaw)!==m.finalBackupSha256||m.finalBackupSha256!==receiptBackup||digest(JSON.parse(finalBackupRaw))!==packet.hashes.sourceSnapshotSha256)fail('final-backup-mismatch');
+   if(typeof finalBackupRaw!=='string'||rawHash(finalBackupRaw)!==m.finalBackupSha256||m.finalBackupSha256!==receiptBackup||!sameBusiness(JSON.parse(finalBackupRaw),JSON.parse(input.backupRaw)))fail('final-backup-mismatch');
   }else if(m.finalBackupSha256!==null)fail('unexpected-final-backup');
   // Ensure all checks and authorization occur before any network mutation or lock acquisition.
   const frozen=makeFrozenCourseRules(MANAGED_TARGET.ownerUID),active=makeCourseRules(MANAGED_TARGET.ownerUID);
@@ -61,36 +65,39 @@ function executor({transport,ledger,policy,head,now=()=>Date.now()}){
    if(!equal(rules,JSON.parse(input.legacyRulesRaw))||digest(tree)!==packet.hashes.sourceSnapshotSha256)fail('initial-server-drift');
   }else{
    if(!equal(rules,frozen))fail('freeze-not-confirmed');
-   if(!equal(tree,m.stage==='active-rules'?expectedTree:JSON.parse(input.backupRaw)))fail('server-data-drift');
+   if(!sameBusiness(tree,m.stage==='active-rules'?expectedTree:JSON.parse(input.backupRaw)))fail('server-data-drift');
   }
   if(m.expiresAt<=now())fail('approval-expired-before-claim');
-  await ledger.claim(key+'/claim',{manifestSha256:digest(m)});
-  if(m.stage==='initialize')await ledger.claim('patches/'+packet.hashes.patchSha256,{operation:m.operation});
+  if(m.stage!=='freeze')await ledger.claim(key+'/claim',{manifestSha256:digest(m)});
+  if(m.stage==='initialize'){await ledger.claim('initialize-once',{operation:m.operation,patchSha256:packet.hashes.patchSha256});await ledger.claim('patches/'+packet.hashes.patchSha256,{operation:m.operation});}
   if(m.expiresAt<=now())fail('approval-expired-before-write');
   const receipt={format:'becoming-stage-receipt-v1',operation:m.operation,stage:m.stage,packetSha256:digest(packet),manifestSha256:digest(m),status:'confirmed'};
   try{
    if(m.stage==='freeze'){
     await transport.setRules(frozen);if(!equal(await transport.rules(),frozen))fail('freeze-readback');
     // A racing admin/client before freeze must cause a stop, not initialize from an earlier backup.
-    if(digest(await transport.read())!==packet.hashes.sourceSnapshotSha256)fail('freeze-source-drift');
+    if(!sameBusiness(await transport.read(),JSON.parse(input.backupRaw)))fail('freeze-source-drift');
+    // Legacy root grants cannot protect a coordination node: claim only AFTER freeze readback.
+    await ledger.claim(key+'/claim',{manifestSha256:digest(m)});
    }else if(m.stage==='final-snapshot'){
-    const serialized=JSON.stringify(tree)+'\n';if(typeof saveSnapshot!=='function')fail('private-snapshot-sink-required');
-    await saveSnapshot(serialized);receipt.backupFileSha256=rawHash(serialized);receipt.sourceSnapshotSha256=digest(tree);
+    const latest=await transport.read();if(!sameBusiness(latest,tree))fail('snapshot-data-drift');
+    const serialized=JSON.stringify(latest)+'\n';if(typeof saveSnapshot!=='function')fail('private-snapshot-sink-required');
+    await saveSnapshot(serialized);receipt.backupFileSha256=rawHash(serialized);receipt.sourceSnapshotSha256=digest(latest);
    }else if(m.stage==='initialize'){
     // Exactly one PATCH. Never retry, even when transport throws after server commit.
     await transport.initialize(packet.atomicUpdate);
-    if(!equal(await transport.read(),expectedTree))fail('initialize-readback');
-    receipt.finalBackupSha256=m.finalBackupSha256;receipt.resultSha256=digest(expectedTree);
+    if(!sameBusiness(await transport.read(),expectedTree))fail('initialize-readback');
+    receipt.finalBackupSha256=m.finalBackupSha256;receipt.resultDataSha256=digest(businessTree(expectedTree));
    }else{
     await transport.setRules(active);if(!equal(await transport.rules(),active))fail('active-readback');
-    receipt.finalBackupSha256=m.finalBackupSha256;receipt.resultSha256=digest(expectedTree);
+    receipt.finalBackupSha256=m.finalBackupSha256;receipt.resultDataSha256=digest(businessTree(expectedTree));
    }
    await ledger.claim(key+'/receipt',receipt);return receipt;
   }catch(cause){
    // Never restore old root grants. Active may have committed: immediately attempt freeze once.
    let freezeConfirmed=false,result='unavailable';
    try{if(m.stage==='active-rules')await transport.setRules(frozen);freezeConfirmed=equal(await transport.rules(),frozen);}catch{}
-   try{result=digest(await transport.read())===digest(expectedTree)?'approved-result-present':'different-or-uncommitted';}catch{}
+   try{result=sameBusiness(await transport.read(),expectedTree)?'approved-result-present':'different-or-uncommitted';}catch{}
    // Hash/status only; no values, tokens, or raw HTTP errors in logs. Claim stays consumed.
    throw Object.assign(Error('executor/stopped-no-retry'),{stage:m.stage,freezeConfirmed,readback:result,causeCode:cause?.message?.startsWith('executor/')?cause.message:'transport-or-artifact-failure'});
   }
@@ -100,17 +107,17 @@ function executor({transport,ledger,policy,head,now=()=>Date.now()}){
 // Tests cannot inject this policy into the production constructor or change its endpoint.
 export function emulatorExecutor({origin,namespace,ledger,publicKeySha256,head,transportFault,now}){
  const base=emulatorAddress(origin,namespace);
- const request=async(path,method='GET',body)=>{
-  const response=await fetch(base+'/'+path+'.json?ns='+namespace,{method,redirect:'error',signal:AbortSignal.timeout(10000),headers:{Authorization:'Bearer owner','Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
+ const request=async(path,method='GET',body,extraHeaders={})=>{
+  const response=await fetch(base+'/'+path+'.json?ns='+namespace,{method,redirect:'error',signal:AbortSignal.timeout(10000),headers:{Authorization:'Bearer owner','Content-Type':'application/json',...extraHeaders},...(body===undefined?{}:{body:JSON.stringify(body)})});
   if(!response.ok)fail('emulator-http-'+response.status);return response.json();
  };
  const transport={read:()=>request(''),rules:()=>request('.settings/rules'),setRules:async v=>{await request('.settings/rules','PUT',v);if(transportFault==='lost-freeze-response'&&equal(v,makeFrozenCourseRules(MANAGED_TARGET.ownerUID))||transportFault==='lost-active-response'&&equal(v,makeCourseRules(MANAGED_TARGET.ownerUID)))throw Error('lost-response');},initialize:async v=>{if(transportFault==='initialize-not-sent')throw Error('not-sent');await request('','PATCH',v);if(transportFault==='lost-initialize-response')throw Error('lost-response');}};
- return executor({transport,ledger,policy:{approvalPublicKeySha256:publicKeySha256},head,now});
+ return executor({transport,ledger:ledger||managedRTDBLedger(request),policy:{approvalPublicKeySha256:publicKeySha256},head,now});
 }
 const repo=new URL('../',import.meta.url);
 function reviewedPolicy(){
  const policy=JSON.parse(readFileSync(new URL('config/firebase/managed-executor-policy.json',repo),'utf8'));
- if(policy.format!=='becoming-managed-policy-v1'||policy.enabled!==true||policy.projectId!==MANAGED_TARGET.projectId||policy.instanceId!==MANAGED_TARGET.instanceId||!/^https:\/\/my-exam-1aab9-default-rtdb(?:\.[a-z0-9-]+)?\.(?:firebaseio\.com|firebasedatabase\.app)$/.test(policy.databaseOrigin||'')||!/^becoming-cutover@[a-z0-9-]+\.iam\.gserviceaccount\.com$/.test(policy.serviceAccount||'')||!policy.serviceAccount.endsWith('@'+MANAGED_TARGET.projectId+'.iam.gserviceaccount.com')||!/^becoming-cutover-[a-z0-9-]{6,50}$/.test(policy.ledgerBucket||'')||!/^[a-f0-9]{64}$/.test(policy.approvalPublicKeySha256||''))fail('production-trust-unconfigured');
+ if(policy.format!=='becoming-managed-policy-v2'||policy.budget!=='NT$0'||policy.ledgerBackend!=='rtdb-cas-v1'||Object.hasOwn(policy,'ledgerBucket')||policy.enabled!==true||policy.projectId!==MANAGED_TARGET.projectId||policy.instanceId!==MANAGED_TARGET.instanceId||!/^https:\/\/my-exam-1aab9-default-rtdb(?:\.[a-z0-9-]+)?\.(?:firebaseio\.com|firebasedatabase\.app)$/.test(policy.databaseOrigin||'')||!/^becoming-cutover@[a-z0-9-]+\.iam\.gserviceaccount\.com$/.test(policy.serviceAccount||'')||!policy.serviceAccount.endsWith('@'+MANAGED_TARGET.projectId+'.iam.gserviceaccount.com')||!/^[a-f0-9]{64}$/.test(policy.approvalPublicKeySha256||''))fail('production-trust-unconfigured');
  return policy;
 }
 function checkedHead(){
@@ -122,19 +129,25 @@ async function productionExecutor(){
  // Only an impersonated, short-lived OAuth access token. No ADC/key/token input option exists.
  let token;try{token=execFileSync('gcloud',['auth','print-access-token','--impersonate-service-account='+policy.serviceAccount,'--lifetime=600s','--scopes=https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/firebase.database,https://www.googleapis.com/auth/userinfo.email','--quiet'],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();}catch{fail('short-lived-identity-unavailable');}
  if(!token||/\s/.test(token))fail('invalid-short-lived-identity');
- async function http(url,method='GET',body){
-  const res=await fetch(url,{method,redirect:'error',signal:AbortSignal.timeout(20000),headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
+ async function http(url,method='GET',body,extraHeaders={}){
+  const res=await fetch(url,{method,redirect:'error',signal:AbortSignal.timeout(20000),headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',...extraHeaders},...(body===undefined?{}:{body:JSON.stringify(body)})});
   if(!res.ok)fail('http-'+res.status);return res.json();
  }
  const origin=policy.databaseOrigin;
  const transport={read:()=>http(origin+'/.json'),rules:()=>http(origin+'/.settings/rules.json'),setRules:v=>http(origin+'/.settings/rules.json','PUT',v),initialize:v=>http(origin+'/.json','PATCH',v)};
- const ledger=managedGCSLedger(policy.ledgerBucket,http);
+ const ledger=managedRTDBLedger((path,method,body,headers)=>http(origin+'/'+path+'.json',method,body,headers));
  return executor({transport,ledger,policy,head});
 }
-export function managedGCSLedger(bucket,http){
- if(!/^becoming-cutover-[a-z0-9-]{6,50}$/.test(bucket))fail('ledger-bucket');
- const objectURL=key=>'https://storage.googleapis.com/storage/v1/b/'+bucket+'/o/'+encodeURIComponent('v1/'+key);
- return {read:async key=>{try{return await http(objectURL(key)+'?alt=media');}catch(e){if(e.message==='executor/http-404')return null;throw e;}},claim:(key,value)=>http('https://storage.googleapis.com/upload/storage/v1/b/'+bucket+'/o?uploadType=media&ifGenerationMatch=0&name='+encodeURIComponent('v1/'+key),'POST',value)};
+export function managedRTDBLedger(request){
+ const path=key=>{if(!/^(?:cutover-[a-z0-9-]{8,80}\/(?:freeze|final-snapshot|initialize|active-rules)\/(?:claim|receipt)|patches\/[a-f0-9]{64}|initialize-once)$/.test(key))fail('ledger-path');return LEDGER_ROOT+'/'+key;};
+ return {read:key=>request(path(key)),claim:async(key,value)=>{
+  const target=path(key);
+  if(!value||typeof value!=='object'||Array.isArray(value)||!Object.keys(value).length)fail('ledger-value');
+  // A conditional PUT creates ONE metadata leaf, never an import or business-tree replacement.
+  // 412 or unknown result consumes this invocation: no retry / delete / overwrite API.
+  const result=await request(target,'PUT',value,{'if-match':'null_etag'});
+  if(!equal(result,value))fail('ledger-create-readback');
+ }};
 }
 function privateFile(path){
  const real=realpathSync(path),root=realpathSync(fileURLToPath(repo));
@@ -161,7 +174,7 @@ if(process.argv[1]===fileURLToPath(import.meta.url)){
    if(command==='request'){
     if(Object.keys(flags).some(k=>!['--packet','--input','--previous','--final-backup','--stage','--operation','--expires-at','--out'].includes(k))||!flags['--out'])fail('request-arguments');
     const manifest=approvalRequest({packet,previous,stage:flags['--stage'],operation:flags['--operation'],expiresAt:Date.parse(flags['--expires-at']),finalBackupSha256:flags['--final-backup']?rawHash(privateFile(flags['--final-backup'])):null});
-    // Canonical bytes are the exact file signed by Cloud KMS; no line ending conversion.
+    // Canonical bytes are the exact file signed offline by the independent approver; no line ending conversion.
     savePrivate(flags['--out'],canonical(manifest));console.log(JSON.stringify({writes:false,network:false,manifestSha256:digest(manifest)}));
    }else{
     if(Object.keys(flags).some(k=>!['--packet','--input','--previous','--final-backup','--manifest','--signature','--public-key','--snapshot-out','--receipt-out'].includes(k))||!['--manifest','--signature','--public-key','--receipt-out'].every(k=>flags[k]))fail('stage-arguments');

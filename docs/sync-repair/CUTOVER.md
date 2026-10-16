@@ -102,6 +102,8 @@ B2B1_EMULATOR_JAR="$PWD/work/firebase/database.jar" FIREBASE_SDK_DIR="$PWD/work/
 
 ## 獨立受管執行器（預設停用）
 
-已提供 `scripts/managed-cutover-executor.mjs`；正式入口不再只是設計，但**沒有正式操作授權**。`status`／`prepare`／`request` 純離線；`run-stage` 需 reviewed policy、乾淨不可變 Head、KMS 獨立簽章、限時 manifest 及 GCS create-only ledger。freeze、最終快照、一次性原子初始化、active Rules 各自核准執行，不包含網站部署。原 dry-run／Emulator-only helper 仍不可拿來寫正式環境。
+已提供 `scripts/managed-cutover-executor.mjs`；正式入口不再只是設計，但**沒有正式操作授權**。`status`／`prepare`／`request` 純離線；`run-stage` 需 reviewed policy、乾淨不可變 Head、離線獨立簽章、限時 manifest 及 現有 Spark RTDB CAS 一次性 ledger。freeze、最終快照、一次性原子初始化、active Rules 各自核准執行，不包含網站部署。原 dry-run／Emulator-only helper 仍不可拿來寫正式環境。
 
-Cloud Shell 權限、逐階段指令、備份 hash、未知結果停止及不可恢復舊 root grants 的完整規定見 [MANAGED_ENTRY.md](MANAGED_ENTRY.md)。正式信任設定與 IAM／KMS／GCS 尚未配置／線上驗證；只有 Emulator 成功不能解除這些關卡。初始化仍必須另有真實帳號重置授權。
+Cloud Shell 權限、逐階段指令、備份 hash、未知結果停止及不可恢復舊 root grants 的完整規定見 [MANAGED_ENTRY.md](MANAGED_ENTRY.md)。正式信任設定與 短效 IAM／REST 尚未配置／線上驗證；只有 Emulator 成功不能解除這些關卡。初始化仍必須另有真實帳號重置授權。
+
+NT$0 方案見 MANAGED_ENTRY.md：不建立 KMS／GCS 或計費資源。鎖存於 Owner 的 `cutoverAdmin/v1`，不得以舊備份覆蓋較新的鎖；整庫 Import 仍禁止。一般部署不包含資料重置，正式操作仍需另外授權。

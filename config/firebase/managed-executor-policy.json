@@ -1,10 +1,11 @@
 {
-  "format": "becoming-managed-policy-v1",
+  "format": "becoming-managed-policy-v2",
   "enabled": false,
   "projectId": "my-exam-1aab9",
   "instanceId": "my-exam-1aab9-default-rtdb",
   "databaseOrigin": null,
   "serviceAccount": null,
   "approvalPublicKeySha256": null,
-  "ledgerBucket": null
+  "budget": "NT$0",
+  "ledgerBackend": "rtdb-cas-v1"
 }
