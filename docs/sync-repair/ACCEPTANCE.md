@@ -1,70 +1,61 @@
-# Durable course sync review — not ready for production
+# PR #26 · 第二輪驗收
 
-Base reviewed: `faf357ceab5752c4399bd6712c68a9ad2b1c2587` (main on 2026-10-16, Taipei). PRs #22–24 are merged. #25 remains a separate passing Draft; this change does not merge or depend on it. Version remains 1.0.0.
+Reviewed input: `00c28dea082707affef25726cc5c7605cee7b446`。比較基準 main: `faf357ceab5752c4399bd6712c68a9ad2b1c2587`。
 
-**The full “no recurring reset” acceptance standard is not yet met.** Unknown writes without a positive receipt remain quarantined. Old clients can bypass the cooperative protocol. Do not merge, deploy, or reset a real account from this Draft.
+本輪只更新既有 Draft PR。沒有 Merge、Release、Production 部署、正式 Rules 變更、真實 Firebase 資料讀寫或真實帳號重置。
 
-## Causes and changes
+## 寫入契約
 
-- `observeDatabase.ref()` passed `''` to Firebase `database.ref(path)`. The real compat SDK rejects this root reference. The mock accepted it, hiding a direct cause of multi-location update failures. Omit the optional argument for a root reference.
-- Legacy pending entries contained only values. Equal values could delete a newer true → false → true intent; offline/readiness changes converted all new edits into review entries.
-- Single-course and chapter handlers exposed memory/cache changes before pending persistence. Some chapter handlers bypassed the shared course facade entirely.
-- First-date edits mutated memory before local persistence. A storage exception could leave a date visible without a durable record.
+課程完成與首次日期合併成 `users/<UID>/learningV3` 的一筆 transaction。它只包含該 UID 的四科課程、每課最後操作 UUID、首次日期／移除 tombstone、generation、era、clock；不再 transaction 資料庫根節點，也不讀寫 XP、任務、習慣或行事曆。章節跨科整批仍是一個 transaction。正常目錄 115 個課程，伺服器 metadata 隨課程數成長，不隨修改次數成長。
 
-New authenticated course edits use one immutable UID-scoped localStorage record per batch. Each record has a unique ID, exact group membership, base values/revisions, delivery phase and original-day date handoffs. Appending one record is the local commit; UI state changes afterward. Repeated same-value saves create no request or date event. The four projection caches can be rebuilt from the journal. Explicit local demo mode uses the same durable commit/failure path, without any Firebase calls.
+每筆新操作先用獨立 localStorage key 持久保存不可變的內容與 base revisions。不同分頁不再覆寫同一個 journal JSON。發送者透過短 IndexedDB critical section 取得帶 UUID 的 3 秒 claim；Web Locks 只減少重複工作。SDK 呼叫期間不佔用 IDB transaction。其他分頁不能反覆搶走有效 claim，且租約到期只允許接管同一筆 CAS，絕不表示成功。遲到回覆仍須匹配 UID/session 以及仍存在的同一筆 journal。若 claim 已移交，只有 committed server snapshot 證明整批欄位全為該不可變操作 UUID，才可結案；其他回覆仍須匹配發送 claim。結案與 review 決策共用短本機互斥區，不會復活已刪除的 journal，也不會刪除後續 UUID。
 
-Web Locks serialize send/finalization across same-origin tabs. A server root transaction compares every base value **and revision**, reserving a cooperative gate without changing course values. A single SDK multi-location update then commits the entire group, revision IDs and immutable receipt together. The one original Promise owns success/failure. Newer operations are never deleted by an older callback. Acknowledgement persistence/cleanup failures retry local work only.
+SDK rejection 或 3 秒內沒有回覆都不能判定伺服器是否已寫入。停止等待只排程同一 CAS 的安全重試；舊 SDK 呼叫仍受不可變 bases、操作 UUID 與 session fence 約束，單一分頁也不會永遠等在原 Promise。重試相同不可變操作時，伺服器 transaction 檢查目前 revisions：
 
-A restarted session can close a previously committed operation using an exact receipt confirmed by a successful server transaction. Boolean equality, connected, ready, value callbacks and once/get never acknowledge an operation. Conflicting unsent groups remain intact; choosing a copy acts on the complete group. Legacy v1 pending is not imported, replayed or silently cleared.
+- 自己的 UUID 仍是操作中每個欄位的 revision：原操作已提交；相同 transaction 不增加 clock／日期，取得 committed server snapshot 後結案。
+- bases 仍完全一致：原操作可安全提交。
+- 其他裝置改過相同欄位：整批進入明確 review，不覆蓋較新的資料。這時無法由最後 revision 重建被覆蓋的歷史；不宣稱舊操作曾成功。使用者保留雲端或以新的 UUID 重新套用整批。其他不相干課程仍可同步。
+- generation 不同：舊 request 保留到 retired journal，不可套用到重置後資料，也不阻擋新進度。
 
-Loaded local course views remain editable when disconnected. Firebase writes remain connection/readiness gated; reconnect refreshes subscriptions. New first dates are durably handed to the existing first-only date store using the original operation day. There is no new XP emitter or legacy reward replay.
+只有 committed transaction 的 server snapshot 可以把新 pending 自動當作成功結案；明確放棄衝突操作或由 generation fence 隔離舊操作，均不宣稱寫入成功。快取、Boolean 相等、連線狀態、逾時或普通 value listener 都不作成功證明。成功後先持久保存不可變 confirmed snapshot、更新顯示快取與日期，再刪除 journal；本機結案失敗可以重試，reload 則由同一 CAS 恢復。
 
-## Local and server footprint
+confirmed snapshots 以 era/clock 選最新，正常保留最近兩份；延遲 callback 不可把投影倒退。首次日期由原始操作日決定，取消／重勾與重試不重設；手動移除保留 tombstone。沒有新 XP writer，也不重播舊獎勵。
 
-All local keys below are under `becoming_uid_v1:<encoded verified UID>:`:
+## 舊程式與部署限制
 
-- `med_exam_course_write_v2:<UUID>`: immutable batch plus delivery phase/base/date payload.
-- `med_exam_course_revision_v2:<subject>/<course>`: last acknowledged local revision, protecting against delayed pre-commit callbacks.
-- Existing four course projection caches and `med_exam_course_dates_v1`.
-- `med_exam_pending_writes_v1` remains the historical/non-course queue; historical course entries stay review-only.
+`sync.js` 的舊課程 pending、v2 journal 及舊日期 pending 都保留。新操作不讀它們作為新基準、不重送、不依 Boolean 清除，也不讓它們阻擋新操作。舊 UI 決策按鈕對歷史課程 pending 停用；日後另行授權的重置才清除。
 
-The existing four course roots retain Boolean values. New coordination data is under `questOS/v1/courseSyncV2/{gate,versions,receipts}`. Receipts contain ID, UID and a fingerprint string; Firebase object keys cannot contain `/`. The reservation transaction preserves other root fields. No Firebase rules, Auth accounts, definitions or artwork are changed.
+新的 read facade 將課程與日期讀取導向 canonical UID document，拒絕所有舊課程／日期寫入。writer 缺失時不啟用第二條 Boolean writer。
 
-## Blocking limitations
+**重新整理、Service Worker 更新或頁面廣播不能淘汰舊客戶端。** 安全切換需要伺服器 root deny，移除所有 ancestor write grants，對新 UID document 和既有非課程路徑逐一授權，並永久拒絕舊四科、舊日期及 v2 gate 路徑的寫入。`tests/fixtures/course-rules.json` 只適用合成 UID `fixture-A` 的隔離 Emulator；不是可直接部署的正式 Rules。
 
-1. **Unknown reservation/write without a server receipt:** the original sender may still deliver a delayed write. The current rules do not enforce a fencing token. Releasing its gate, discarding it, or reapplying automatically could allow that write to overwrite a newer choice. The implementation stops and preserves all evidence. A same-value cached snapshot is not a recovery path. This is a reproducible unresolved pending case, not a passed acceptance criterion.
-2. **Older clients:** they write Boolean values without updating revisions or honoring the gate. Changed-value conflicts are detected, but an old-client ABA cannot always be detected. Deployment needs an independently verified old-client retirement/fencing strategy. No production rules were edited to provide one.
-3. **Topology/reset:** production code uses owner-authorized shared root paths, not `/users/<uid>`. A verified Auth UID alone cannot prove ownership of each cloud child. Automated account deletion is therefore deliberately absent.
-4. **Scale/browser coverage:** root transactions read the account tree; immutable receipts currently have no safe bounded retention policy. Large-account latency/cost needs review. Chromium and emulated mobile viewports are covered; physical iPhone/Safari/Firefox are not. Unsupported Web Locks preserves local requests and stops sending.
-5. The broad pre-existing Playwright suite contains fixture/storage assumptions that predate UID isolation. One adaptive fixture failure was independently reproduced on untouched main. The complete broad result is recorded below; passing focused checks must not be described as all-browser acceptance.
+還有一個重置限制：舊非課程程式仍使用相同 shared 生活／任務路徑，無法只靠前端版本保證它們不在重置後回寫。真實全帳號重置必須先獨立證明這些 writer 已被伺服器淘汰，或另行審查其寫入契約。這輪不擴張成所有生活資料的架構遷移。正式切換、初始化／重置 fence 與真實重置皆仍 NO-GO。
 
-A robust automatic no-receipt recovery requires server-enforced fencing or a different server commit primitive. Neither is supplied by the existing permissive owner-only rules plus an unconditional multi-location update. This Draft does not pretend to solve that constraint with timeouts or leases.
+## 驗證與界線
 
-## Verification
+同一容器、Chromium、2 workers、196 個共同測試，分別使用原始 worktree，沒有修改 main 或 reviewed head 測試：
 
-All data used here is synthetic. Emulator tests start their own loopback instance, pin SDK 9.22.0 / Emulator 4.11.2 hashes and block non-loopback browser requests. Emulator rules are local to that disposable instance; production rules are untouched.
+| 版本 | Passed | Failed | Skipped |
+|---|---:|---:|---:|
+| main `faf357c` | 109 | 87 | 0 |
+| reviewed `00c28de` | 110 | 86 | 0 |
 
-- `npm test`: production/core, lifecycle, dates, growth, layout and new journal/reset-plan Node tests.
-- New journal regression: group success/cancel, no-op, offline/restart, ABA, delayed original Promise, local ack failure, receipt recovery, same UID tabs, cross-device revisions, pre/post-commit rejection, cached equality rejection, storage quota, UID/epoch invalidation, missing locks, 200 rounds, delayed snapshots and date handoff failure.
-- `npx playwright test tests/browser/durable-course-sync.spec.js tests/browser/sync-ux.spec.js`: actual Chromium localStorage/Web Locks, two-tab ABA, quota/cleanup faults, restart and retained sync UX.
-- `B2B1_EMULATOR_JAR=<local jar> FIREBASE_SDK_DIR=<local SDK directory> node tests/sync-queue/durable-course-emulator.mjs`: real SDK reservation, atomic chapter update, offline/reconnect, ABA/no-op, receipt recovery, stale device, permission failure and history preservation (7 checks).
-- Full Dashboard RAM fixtures exercise the production engine, task/course projections, four subjects, dates, calendar, planning, XP/kingdom, empty initial state and signout. The fixtures never connect to Firebase.
-- Backup plan tests verify exact paths, SHA-256, restore, unknown/static subtree preservation and other UID preservation. They simulate deletion only on cloned RAM objects; no shipped deletion function exists.
+共同通過 109，兩者都失敗 86，main 通過而 reviewed 失敗 **0**。main 額外一項 training reconnect 的操作 timeout，在 reviewed 通過。先前 111／85 不能當作這次配對重跑結果；差異包含非穩定的計時／測試環境失敗。逐項分類與最終結果見 [BROWSER_COMPARISON.md](BROWSER_COMPARISON.md)。
 
-Observed local results (2026-10-16 Taipei):
+故障注入涵蓋提交前後 rejection、遺失 ack 後 reload、local quota／結案失敗、延遲 Promise、同 UID 多分頁／混合 Web Locks 支援、ABA、不同裝置整批衝突、UID/session fence、manual date tombstone、reset generation 與 200 輪修改。原生 IndexedDB 測試與真正 index/auth/workspace 的 checkbox、chapter 操作都有覆蓋，不能以獨立函式測試取代。
 
-| Check | Result |
-| --- | --- |
-| `npm run lint`, `npm run build` | Passed; version unchanged |
-| `npm test` | 20 test files passed, including 17 new journal cases and 4 reset-plan cases |
-| Isolated B1 / B2-A / B2-B.1 Node regressions | 3 test files passed |
-| Focused Chromium sync/UX/version/date selection | 20 passed, plus 1 separate real course-UI quota/rollback check passed |
-| Real SDK / disposable Emulator | 7 passed |
-| Full Dashboard fixtures, 1440 / 390 | 48 passed |
-| Failure + batch / four-subject learning fixtures | 8 / 14 passed |
-| Canonical Auth + local-mode host bridge | 6 passed |
-| HTTP compatibility | 32 legacy URLs, 18 browser checks passed |
-| Exploratory broad pre-existing Playwright suite | **111 passed, 85 failed** (196 discovered at start of that run) |
-| Untouched-main baseline reproduction | The adaptive `priority/date edits...` failure also fails at `faf357c` |
+Emulator 使用 checksum 固定的 SDK 9.22.0／Database Emulator 4.11.2，僅 loopback transport，合成 Auth identities 與隔離 Rules。驗證舊 root multi-update 全部拒絕、其他 UID 保持原值、禁止一般客戶端改 generation／刪 fence。真實手機、跨瀏覽器儲存驅逐、無限期斷網、永久拒權或使用者清空網站資料不在自動恢復保證內。無 Web Locks 時使用原生 IDB；兩者皆不可用時保留 pending 並提示本機儲存協調失敗，絕不假造成功。
 
-The broad run preceded the final projection-recovery/local-mode defensive follow-ups; focused tests cover those follow-ups. Only one broad failure was independently compared against main; the remaining 84 must not be labelled pre-existing without triage. Broad regression is not green. No data loss or duplicate group dispatch was found in the passing tests. The no-receipt rejection test intentionally retains an unresolved pending/gate, demonstrating the blocking limitation rather than claiming recovery. Physical devices and non-Chromium browsers were not tested.
+## 建議
+
+保持 Draft，交由 ChatGPT 再審。正式上線 **NO-GO**，直到正式 Rules／舊 writer 淘汰與切換步驟經另一次審查和授權，且最終 CI 與完整產品測試結果確認可接受。一次性重置僅規劃與合成測試，不含執行入口。
+
+## 最終本機結果
+
+- 完整 Playwright：200 passed / 0 failed / 0 skipped（2 workers，同一容器）。
+- npm test：全部通過；展開執行 223 項檢查。
+- build、lint：通過。
+- 真實 Becoming + SDK Emulator：11 / 11；既有 Adapter SDK Emulator：5 / 5。
+- canonical auth：6；review browser：48；failure/batch：8；learning：14，均通過。
+- 相容網址：32；browser module/layout：18，無錯誤。
+- CI 已從子集提升為完整 200 項瀏覽器套件；新 Head 的 CI 結果以 PR checks 為準。

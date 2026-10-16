@@ -26,7 +26,7 @@ for(const width of [1440,390,320])for(const theme of ['light','dark']){
   expect(await page.locator('.workspace-controls #learning-sync-notice').count()).toBe(0);
   await details.locator('summary').focus();await page.keyboard.press('Enter');await expect(details).toHaveAttribute('open');
   await expect(details).toContainText('尚未取得可靠寫入確認');await expect(details).not.toContainText('雲端與本機不同');await expect(details).toContainText('細胞膜與運輸');
-  const button=details.getByRole('button',{name:'採用雲端',exact:true});await button.focus();
+  const button=details.locator('summary');await button.focus();
   const retained=await button.elementHandle();await page.evaluate(()=>window.retryLearningSync());
   await expect(button).toBeFocused();expect(await retained.evaluate(el=>el.isConnected)).toBe(true);await expect(details).toHaveAttribute('open');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -47,9 +47,9 @@ for(const scenario of ['same','different','offline','failure','normal'])test(`sy
  }
  if(process.env.SYNC_UX_SCREENSHOTS)await page.screenshot({path:`${process.env.SYNC_UX_SCREENSHOTS}/390-${scenario}.png`,fullPage:true});
 });
-test('retained manual decisions still act on the original pending queue',async({page})=>{
- await setup(page);await page.locator('summary').click();await page.getByRole('button',{name:'採用雲端',exact:true}).click();
- expect(await page.evaluate(()=>JSON.parse(window.observedSyncValues.get('med_exam_pending_writes_v1')))).toEqual({});expect(await page.evaluate(()=>window.writes.length)).toBe(0);
- await setup(page);await page.locator('summary').click();page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'重新套用本機',exact:true}).click();
- await expect.poll(()=>page.evaluate(()=>window.writes.length)).toBe(1);
+test('historical course intents remain read-only and cannot enter the new writer through legacy decisions',async({page})=>{
+ await setup(page);await page.locator('summary').click();
+ await expect(page.getByRole('button',{name:'採用雲端',exact:true})).toBeDisabled();await expect(page.getByRole('button',{name:'重新套用本機',exact:true})).toBeDisabled();
+ await page.evaluate(async()=>{await resolveLearningSync('physiology/fc_p_1_a',true);await resolveLearningSync('physiology/fc_p_1_a',false);});
+ expect(await page.evaluate(()=>JSON.parse(observedSyncValues.get('med_exam_pending_writes_v1')))).toEqual({'physiology/fc_p_1_a':true});expect(await page.evaluate(()=>writes.length)).toBe(0);
 });

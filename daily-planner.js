@@ -97,7 +97,7 @@ export function createPlanner({db=null,localOnly=false,storage=learningStorage,e
       current?._versions?.[field]!==intent.tokens[field] && !same(current?.[field],intent.patch[field]));
   }
   async function retry() {
-    if(!db||localOnly)return;
+    if(!db||localOnly||db.canWrite&&!db.canWrite())return;
     if(syncing){dirty=true;return;}
     syncing=true;dirty=false;
     try {
@@ -158,7 +158,7 @@ export function createPlanner({db=null,localOnly=false,storage=learningStorage,e
       }
       error='';
     } catch (failure) {error=String(failure?.code || 'NETWORK_ERROR').replace(/[^a-zA-Z_-]/g,'').slice(0,60) || 'NETWORK_ERROR';}
-    finally {batchCommitting=false;syncing=false;changed();if(dirty&&!error)void retry();}
+    finally {batchCommitting=false;syncing=false;changed();if(dirty&&(!db.canWrite||db.canWrite()))void retry();}
   }
   function resolve(id,keepLocal) {
     const intent=saved.pending[id];if(!intent||!conflicts[id])return;

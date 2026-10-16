@@ -15,65 +15,86 @@ for(const [file,value] of Object.entries(hashes))assert.equal(hash(sdk+'/'+file)
 const probe=tcpServer();await new Promise(r=>probe.listen(0,'127.0.0.1',r));const port=probe.address().port;await new Promise(r=>probe.close(r));
 const child=spawn('java',['-Xmx256m','-jar',jar,'--host','127.0.0.1','--port',String(port)],{stdio:['ignore','pipe','pipe']});
 const ns='demo-becoming-durable-courses',origin='http://127.0.0.1:'+port;
-let server,browser;const all=setTimeout(()=>{child.kill('SIGKILL');process.exitCode=1;},90000);
+let server,browser;const all=setTimeout(()=>{child.kill('SIGKILL');process.exitCode=1;},240000);
 try{
  await new Promise((resolve,reject)=>{let log='';const timeout=setTimeout(()=>reject(Error('Emulator startup timeout')),20000);const data=b=>{log+=b;if(log.includes('Listening at 127.0.0.1:'+port)){clearTimeout(timeout);resolve();}};child.stdout.on('data',data);child.stderr.on('data',data);child.once('error',reject);child.once('exit',()=>reject(Error('Emulator exited')));});
  const endpoint=p=>origin+'/'+p+'.json?ns='+ns;
  await new Promise((resolve,reject)=>{let n=0;const tryRead=()=>fetch(endpoint('')).then(()=>resolve(),()=>{if(++n>100)reject(Error('Emulator HTTP not ready'));else setTimeout(tryRead,100);});tryRead();});
  async function admin(p,value){const r=await fetch(endpoint(p),{method:'PUT',headers:{Authorization:'Bearer owner','Content-Type':'application/json'},body:JSON.stringify(value)});assert(r.ok);}
  async function read(p){const r=await fetch(endpoint(p),{headers:{Authorization:'Bearer owner'}});assert(r.ok);return r.json();}
- await admin('.settings/rules',{rules:{'.read':"auth != null && auth.uid === 'fixture-A'",'.write':"auth != null && auth.uid === 'fixture-A'"}});
- const history={questOS:{v1:{courseFirstCompletion:{old:{day:'2026-01-01',_version:'historical'}}}},gamification:{v1:{awards:{old:{xp:20}}}}};await admin('',history);
- server=createServer((req,res)=>{const file=new URL(req.url,'http://127.0.0.1').pathname;if(file==='/'){res.setHeader('Content-Type','text/html');return res.end('<title>B2-B.1 Emulator only</title>');}if(!['/src/study/course-sync.js','/account-storage.js'].includes(file)){res.statusCode=404;return res.end();}res.setHeader('Content-Type','text/javascript');res.end(readFileSync(new URL('../..'+file,import.meta.url)));});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ await admin('.settings/rules',JSON.parse(readFileSync(new URL('../fixtures/course-rules.json',import.meta.url))));
+ const initial={schema:3,generation:'initial-v3',era:0,clock:0,courses:{},versions:{},firstCompletion:{}};
+ const domain='users/fixture-A/learningV3';
+ const history={gamification:{v1:{awards:{historical:{xp:20,day:'2026-10-01'}}}},physiology:{legacy:true},users:{'fixture-A':{learningV3:initial},'fixture-B':{learningV3:{...initial,generation:'other-UID'}}}};await admin('',history);const otherUIDBefore=await read('users/fixture-B');
+ const root=new URL('../../',import.meta.url);
+ server=createServer((req,res)=>{
+  const file=new URL(req.url,'http://127.0.0.1').pathname;
+  res.setHeader('Content-Type',file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript':file.endsWith('.svg')?'image/svg+xml':'text/html');
+  if(file==='/firebase-config.js')return res.end('window.examFirebaseConfig='+JSON.stringify({projectId:ns,databaseURL:'https://'+ns+'.firebaseio.com'})+';');
+  if(file==='/owner-config.js')return res.end("export const OWNER_UID='fixture-A';");
+  if(file==='/fixture-app.js'||file==='/fixture-db.js')return res.end(readFileSync(sdk+(file==='/fixture-app.js'?'/firebase-app-compat.js':'/firebase-database-compat.js')));
+  if(file==='/fixture-auth.js')return res.end(`Object.defineProperty(window,'workspaceLocalOnly',{get:()=>false,set(){}});const original=firebase.database.bind(firebase);let instance;firebase.database=()=>{if(!instance){instance=original();instance.useEmulator('127.0.0.1',${port},{mockUserToken:{sub:'fixture-A',user_id:'fixture-A'}});}return instance;};let notify;const auth=()=>({onAuthStateChanged(fn){notify=fn;queueMicrotask(()=>fn({uid:'fixture-A',displayName:'Synthetic Emulator'}));},async signOut(){notify(null);}});auth.GoogleAuthProvider=class{};firebase.auth=auth;`);
+  try{
+   if(file==='/'||file==='/index.html')return res.end(readFileSync(new URL('index.html',root),'utf8').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js','/fixture-app.js').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js','/fixture-db.js').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js','/fixture-auth.js'));
+   if(!/^\/(src|styles|public)\//.test(file)&&!/^\/[a-z][a-z0-9-]*\.js$/.test(file))throw Error('invalid path');
+   const path=new URL('.'+file,root);if(!path.href.startsWith(root.href))throw Error('invalid path');return res.end(readFileSync(path));
+  }catch{res.statusCode=404;res.end();}
+ });await new Promise(r=>server.listen(0,'127.0.0.1',r));
  browser=await chromium.launch({executablePath:existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined,args:['--no-sandbox']});
- const context=await browser.newContext(),page=await context.newPage();let external=0;
- await context.route('**/*',r=>{const u=new URL(r.request().url());if(u.hostname==='127.0.0.1')return r.continue();external++;return r.abort();});
- await page.goto('http://127.0.0.1:'+server.address().port);
- for(const file of Object.keys(hashes))await page.addScriptTag({content:readFileSync(sdk+'/'+file,'utf8')});
- await page.evaluate(async({ns,port})=>{
-  firebase.initializeApp({projectId:ns,databaseURL:'https://'+ns+'.firebaseio.com'});
-  window.db=firebase.database();db.useEmulator('127.0.0.1',port,{mockUserToken:{sub:'fixture-A',user_id:'fixture-A'}});
-  const {createAccountStorage}=await import('/account-storage.js');
-  const {createCourseSync}=await import('/src/study/course-sync.js');
-  window.account=createAccountStorage(localStorage);account.bind('fixture-A');window.storage=account.view();window.online=true;window.calls=0;window.dates={};
-  const original=db.ref.bind(db);window.sdk={ref(path=''){const ref=path?original(path):original();return {on:(...a)=>ref.on(...a),off:(...a)=>ref.off(...a),transaction:(...a)=>ref.transaction(...a),update:patch=>{calls++;return ref.update(patch);}};}};
-  window.start=()=>window.engine=createCourseSync({storage,uid:'fixture-A',valid:()=>account.read().bound,ready:()=>online,locks:navigator.locks,prepareDates:changes=>Object.fromEntries(Object.entries(changes).filter(([,v])=>v).map(([p])=>[p,'2026-10-15'])),acceptDates:input=>{for(const [path,day] of Object.entries(input))dates[path]??=day;return true;}});
-  start();engine.attach(sdk);
- },{ns,port});
- async function wait(test){try{await page.waitForFunction(test,null,{timeout:15000});}catch(error){console.log('Diagnostic',await page.evaluate(()=>engine.inspect()));throw error;}}
- async function check(name,fn){await fn();console.log('PASS '+name);}
- await check('real SDK reserves then acknowledges one atomic chapter update',async()=>{
-  await page.evaluate(()=>engine.enqueue({'videos/1':true,'videos/2':true}));await wait(()=>engine.inspect().pending.length===0&&calls===1);
-  assert.equal((await read('videos'))[1],true);assert.equal((await read('videos'))[2],true);
+ const context=await browser.newContext(),page=await context.newPage();let external=0;const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.hostname==='127.0.0.1')return route.continue();external++;return route.abort();});
+ const base='http://127.0.0.1:'+server.address().port;
+ async function load(){await page.goto(base);await page.waitForFunction(()=>window.updateWorkspace&&window.i3Runtime.read().status==='ready');}
+ async function drain(){try{await page.waitForFunction(()=>!window.courseSync.inspect().pending.length,null,{timeout:15000});}catch(error){console.log('DRAIN',JSON.stringify(await page.evaluate(()=>({sync:courseSync.inspect(),runtime:i3Runtime.read()}))));console.log('DOC',JSON.stringify(await read(domain)));throw error;}}
+ let count=0;async function check(name,fn){await fn();count++;console.log('PASS '+name);}
+ await load();
+ await check('actual Becoming checkbox, first date and chapter operation use one atomic per-UID document',async()=>{
+  await page.evaluate(()=>showStudyItem('physiology','fc_p_1_a'));await page.locator('[data-study-key="physiology__fc_p_1_a"] input[type=checkbox]').check();await drain();
+  let doc=await read(domain);assert.equal(doc.courses.physiology.fc_p_1_a,true);assert(doc.firstCompletion.physiology__fc_p_1_a.day);const before=doc.clock;
+  await page.evaluate(()=>toggleAllChapter('甲',true));await drain();doc=await read(domain);assert.equal(doc.clock,before+1);assert.equal(doc.courses.physiology.fc_p_1_c,true);assert.deepEqual(await read('physiology'),history.physiology);
  });
- await check('offline local batch remains queued; reconnect drains without review',async()=>{
-  await page.evaluate(async()=>{online=false;db.goOffline();engine.enqueue({'physiology/fc_p_1_a':true,'physiology/fc_p_1_c':true});await engine.pump();});assert.equal(await page.evaluate(()=>calls),1);
-  await page.evaluate(()=>{db.goOnline();online=true;return engine.pump();});await wait(()=>engine.inspect().pending.length===0&&calls===2);
-  assert.deepEqual(await read('physiology'),{fc_p_1_a:true,fc_p_1_c:true});
+ await check('offline UI save and reconnect automatically close pending without a review decision',async()=>{
+  await page.evaluate(()=>firebase.database().goOffline());await page.waitForFunction(()=>document.querySelector('#sync-status').textContent.includes('離線'));
+  await page.evaluate(()=>setStudyCompletion('biochem','1',true));assert((await page.evaluate(()=>courseSync.inspect().pending)).length>0);await page.evaluate(()=>firebase.database().goOnline());await drain();assert.equal((await read(domain)).courses.biochem[1],true);
  });
- await check('true-false-true and same-value save keep distinct generations without extra no-op writes',async()=>{
-  await page.evaluate(async()=>{engine.enqueue({'videos/1':false},{baseline:{'videos/1':true}});engine.enqueue({'videos/1':true});await engine.pump();});await wait(()=>engine.inspect().pending.length===0&&calls===4);
-  const noop=await page.evaluate(()=>engine.enqueue({'videos/1':true},{baseline:{'videos/1':true}}));assert.equal(noop.noop,true);assert.equal(await read('videos/1'),true);
+ await check('acknowledgement lost after server commit and tab refresh cannot duplicate the mutation/date',async()=>{
+  const clock=(await read(domain)).clock;await page.evaluate(()=>{const raw=firebase.database(),root='users/fixture-A/learningV3';let first=true;courseSync.attach({ref(path){const ref=raw.ref(path);return path===root?{on:(...a)=>ref.on(...a),off:(...a)=>ref.off(...a),transaction:(...a)=>ref.transaction(...a).then(result=>{if(first){first=false;throw Error('synthetic lost acknowledgement');}return result;})}:ref;}});setStudyCompletion('videos','1',true);});
+  await page.evaluate(()=>courseSync.pump());const before=await read(domain);assert.equal(before.clock,clock+1);await load();await drain();const after=await read(domain);assert.equal(after.clock,before.clock);assert.deepEqual(after.firstCompletion.videos__1,before.firstCompletion.videos__1);
  });
- await check('SDK commit with local settlement failure recovers after reinitialization from exact server receipt',async()=>{
-  await page.evaluate(async()=>{window.remove=Storage.prototype.removeItem;Storage.prototype.removeItem=function(k){if(k.includes('med_exam_course_write_v2:'))throw Error('synthetic disk');return remove.call(this,k);};engine.enqueue({'biochem/1':true});await engine.pump();});assert.equal(await read('biochem/1'),true);
-  await page.evaluate(async()=>{engine.close();Storage.prototype.removeItem=remove;start();engine.attach(sdk);await engine.pump();});await wait(()=>engine.inspect().pending.length===0);assert.equal(await page.evaluate(()=>calls),5);
+ await check('single live Becoming tab retries a never-resolving acknowledgement and confirms with the server',async()=>{
+  const clock=(await read(domain)).clock;await page.evaluate(()=>{const raw=firebase.database();let first=true;courseSync.attach({ref(path){const ref=raw.ref(path);return {...ref,on:(...a)=>ref.on(...a),off:(...a)=>ref.off(...a),transaction:(...a)=>ref.transaction(...a).then(result=>{if(first){first=false;return new Promise(()=>{});}return result;})};}});setStudyCompletion('videos','5',true);});
+  await drain();assert.equal((await read(domain)).clock,clock+1);assert.equal((await read(domain)).courses.videos[5],true);await page.evaluate(()=>courseSync.attach(firebase.database()));
  });
- await check('stale device cannot silently overwrite a newer revision, including same Boolean ABA',async()=>{
-  // A queued request retains the base revision from before the other device's change.
-  await page.evaluate(()=>{online=false;engine.enqueue({'videos/1':false},{baseline:{'videos/1':true}});});
-  const root=await read('');root.videos[1]=true;root.questOS.v1.courseSyncV2.versions.videos__1='synthetic-other-device-ABA';await admin('',root);
-  await page.evaluate(()=>{online=true;return engine.pump();});await wait(()=>engine.inspect().pending.some(r=>r.phase==='review'));assert.equal(await read('videos/1'),true);assert.equal(await page.evaluate(()=>calls),5);
-  await page.evaluate(async()=>{await engine.resolve('videos/1',false);await engine.pump();});await wait(()=>engine.inspect().pending.length===0);
+ await check('delayed committed SDK proof survives claim handoff and cannot erase newer ABA operations',async()=>{
+  const clock=(await read(domain)).clock;await page.evaluate(()=>{const raw=firebase.database();let calls=0;courseSync.attach({ref(path){const ref=raw.ref(path);return {on:(...a)=>ref.on(...a),off:(...a)=>ref.off(...a),transaction:(...a)=>{const n=++calls;return ref.transaction(...a).then(async result=>{if(n===1)await new Promise(r=>setTimeout(r,4000));if(n===2)return new Promise(()=>{});return result;});}};}});setStudyCompletion('videos','6',true);});
+  await drain();assert.equal((await read(domain)).clock,clock+1);await page.evaluate(()=>{setStudyCompletion('videos','6',false);setStudyCompletion('videos','6',true);});await drain();assert.equal((await read(domain)).clock,clock+3);assert.equal((await read(domain)).courses.videos[6],true);await page.evaluate(()=>courseSync.attach(firebase.database()));
  });
- await check('actual write permission refusal is preserved and never automatically resent',async()=>{
-  // Deny only course writes so reservation can finish but the one group update is rejected.
-  await admin('.settings/rules',{rules:{'.read':true,'.write':false,questOS:{'.write':true},videos:{'.write':false}}});
-  // Root reservation also requires root permission; deny it and verify no course call follows.
-  await page.evaluate(()=>engine.enqueue({'videos/denied':true}));await wait(()=>engine.inspect().unknown);const calls=await page.evaluate(()=>window.calls);for(let i=0;i<3;i++)await page.evaluate(()=>engine.pump());assert.equal(await page.evaluate(()=>window.calls),calls);assert.equal(await read('videos/denied'),null);
+ await check('manual date edit, removal tombstone and recheck share the same atomic writer',async()=>{
+  await page.evaluate(()=>courseDates.set('videos__1','2026-10-01'));await drain();assert.equal((await read(domain)).firstCompletion.videos__1.day,'2026-10-01');
+  await page.evaluate(()=>courseDates.set('videos__1',null));await drain();await page.evaluate(()=>setStudyCompletion('videos','1',false));await drain();await page.evaluate(()=>setStudyCompletion('videos','1',true));await drain();assert.equal((await read(domain)).firstCompletion.videos__1.day??null,null);
  });
- await check('history and XP untouched; no non-loopback browser requests',async()=>{
-  assert.deepEqual(await read('gamification'),history.gamification);assert.deepEqual(await read('questOS/v1/courseFirstCompletion'),history.questOS.v1.courseFirstCompletion);assert.equal(external,0);
+ await check('two actual Becoming tabs without Web Locks preserve independent groups and ABA identities',async()=>{
+  const other=await context.newPage();await other.addInitScript(()=>Object.defineProperty(navigator,'locks',{value:undefined}));await other.goto(base);await other.waitForFunction(()=>window.updateWorkspace&&i3Runtime.read().status==='ready');
+  await page.evaluate(()=>setStudyCompletion('videos','2',true));await other.evaluate(()=>setStudyCompletion('videos','3',true));await drain();try{await other.waitForFunction(()=>!courseSync.inspect().pending.length);}catch(error){console.log('MULTITAB',JSON.stringify(await other.evaluate(()=>courseSync.inspect())));console.log('SERVER',JSON.stringify(await read(domain)));throw error;}
+  await other.evaluate(()=>{setStudyCompletion('videos','3',false);setStudyCompletion('videos','3',true);});await other.waitForFunction(()=>!courseSync.inspect().pending.length);assert.equal((await read(domain)).courses.videos[2],true);assert.equal((await read(domain)).courses.videos[3],true);await other.close();
  });
- console.log('Durable course Emulator checks passed: 7 (SDK 9.22.0 / Emulator 4.11.2 / Chromium; synthetic UID only).');
+ await check('retirement rules reject legacy writer batches, old date writes and cross-UID access',async()=>{
+  const rejected=await page.evaluate(async()=>{const raw=firebase.database(),results=[];for(const fn of [()=>raw.ref('physiology/old').set(true),()=>raw.ref().update({'videos/old':true,'habits/unsafe':true}),()=>raw.ref('questOS/v1/courseFirstCompletion/old').set({day:'2026-01-01',_version:'old'}),()=>raw.ref('users/fixture-B/learningV3').set({schema:3,era:0,generation:'other-UID',clock:1})])try{await fn();results.push(false);}catch{results.push(true);}return results;});assert.deepEqual(rejected,[true,true,true,true]);assert.equal(await read('habits/unsafe'),null);assert.deepEqual(await read('users/fixture-B'),otherUIDBefore);
+ });
+ await check('ordinary client cannot rotate/delete the reset generation',async()=>{
+  assert.equal(await page.evaluate(async()=>{try{await firebase.database().ref('users/fixture-A/learningV3').update({era:1,generation:'illegal'});return false;}catch{return true;}}),true);
+  assert.equal(await page.evaluate(async()=>{try{await firebase.database().ref('users/fixture-A/learningV3').remove();return false;}catch{return true;}}),true);
+ });
+ await check('synthetic reset fences a delayed pre-reset request and fresh progress works after reload',async()=>{
+  const old=await page.evaluate(()=>{const engine=courseSync;firebase.database().goOffline();setStudyCompletion('videos','4',true);return engine.inspect().pending.at(-1);});
+  const before=await read(domain);await admin(domain,{...initial,era:before.era+1,generation:'synthetic-reset-generation'});
+  // Synthetic UID only: reset local account caches, preserve other UID data and the Auth identity.
+  await page.evaluate(()=>{courseSync.close();const storage=learningStorage;for(let i=storage.length-1;i>=0;i--)storage.removeItem(storage.key(i));firebase.database().goOnline();});await load();
+  await page.evaluate(async row=>{const {applyCourseRequest}=await import('/src/study/course-contract.js');await firebase.database().ref('users/fixture-A/learningV3').transaction(current=>applyCourseRequest(current,row),undefined,false);},old);assert.equal((await read(domain)).clock,0);
+  await page.evaluate(()=>setStudyCompletion('videos','1',true));await drain();await load();await drain();assert.equal((await read(domain)).clock,1);assert.deepEqual(await read('users/fixture-B'),otherUIDBefore);
+ });
+ await check('history/XP stay unchanged; no external requests, receipt growth, gate or console exception',async()=>{
+  assert.deepEqual(await read('gamification'),history.gamification);const current=await read(domain);assert.equal(current.gate,undefined);assert.equal(current.receipts,undefined);assert.equal(external,0);assert.deepEqual(errors,[]);
+ });
+ console.log('Durable course Emulator checks passed: '+count+' (real product UI + SDK 9.22.0 + Emulator 4.11.2; synthetic identities/rules only).');
 }finally{clearTimeout(all);await browser?.close();if(server)await new Promise(r=>server.close(r));child.kill('SIGTERM');}

@@ -8,7 +8,7 @@ export function createReadiness({paths=REQUIRED_PATHS,timeoutMs=15000}={}){
  const api={read,subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);},track(fn){cleanups.add(fn);return()=>cleanups.delete(fn);},
  start(user){clear();epoch++;disposed=false;identity=user?{displayName:user.displayName??null}:null;error=null;status=user?'loading':'signedOut';emit();if(user&&timeoutMs>0){const e=epoch;timer=setTimeout(()=>api.fail('read/timeout',e),timeoutMs);timer.unref?.();}return epoch;},
  valid:e=>!disposed&&e===epoch&&status!=='signedOut',
- success(path,e=epoch){if(!api.valid(e)||!paths.includes(path)||status==='error')return;ready.add(path);if(paths.every(p=>ready.has(p))){status='ready';clearTimeout(timer);}emit();},
+ success(path,e=epoch){if(!api.valid(e)||!paths.includes(path)||status==='error'||ready.has(path))return;ready.add(path);if(paths.every(p=>ready.has(p))){status='ready';clearTimeout(timer);}emit();},
  fail(code='read/failed',e=epoch){if(!api.valid(e))return;status='error';error=/^[a-zA-Z0-9_/-]{1,80}$/.test(code)?code:'read/failed';ready.clear();clearTimeout(timer);emit();},
  reload(){if(status==='signedOut')return;ready.clear();error=null;status='loading';clearTimeout(timer);if(timeoutMs>0){const e=epoch;timer=setTimeout(()=>api.fail('read/timeout',e),timeoutMs);timer.unref?.();}emit();},
  dispose(){clear();epoch++;status='signedOut';identity=null;error=null;disposed=true;emit();listeners.clear();}
@@ -41,5 +41,5 @@ export function observeDatabase(database,lifecycle){
  };
  return {on(event,callback,cancel){if(!valid())return callback;const e={path,event,callback,cancel,ref:original,revision:0};entries.add(e);attach(e);return callback;},off(event,callback){for(const e of entries)if(e.path===path&&(!event||e.event===event)&&(!callback||e.callback===callback)){detach(e);entries.delete(e);}},once:guarded('once'),transaction:guarded('transaction'),update:guarded('update'),set:guarded('set')};
  }
- return Object.freeze({ref,retry,dispose,goOffline(){dispose();database.goOffline?.();},listenerCount:()=>entries.size});
+ return Object.freeze({ref,retry,dispose,canWrite:()=>valid()&&connected&&lifecycle.read().status==='ready',goOffline(){dispose();database.goOffline?.();},listenerCount:()=>entries.size});
 }

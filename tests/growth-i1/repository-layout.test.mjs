@@ -11,7 +11,7 @@ const old=JSON.parse(readFileSync(path.join(root,'docs/REPOSITORY_LAYOUT_B_MAP.j
 const specifiers=/(\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)(['"])([^'"\n]+)\2/g;
 const hash=v=>createHash('sha256').update(v).digest('hex');
 // These modules intentionally changed in the durable-sync repair; behavioral tests cover them.
-const repaired=new Set(['sync.js','auth.js','subjects.js','workspace.js','course-dates.js','index.html','readiness.js']);
+const repaired=new Set(['account-storage.js','sync.js','auth.js','subjects.js','workspace.js','course-dates.js','index.html','readiness.js','daily-planner.js','adaptive-store.js','src/kingdom/kingdom-map-input.js','styles/kingdom-map.css','kingdom-map.css']);
 const currentVersion=JSON.parse(readFileSync(path.join(root,'package.json'),'utf8')).version;
 function normalizePackageVersion(name,content,version){
  const metadata=JSON.parse(content);

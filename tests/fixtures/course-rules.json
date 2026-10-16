@@ -1,0 +1,48 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        "learningV3": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && newData.exists() && (!data.exists() || (newData.child('generation').val() === data.child('generation').val() && newData.child('era').val() === data.child('era').val()))",
+          ".validate": "newData.hasChildren(['schema','generation','era','clock']) && newData.child('schema').val() === 3 && newData.child('generation').isString() && newData.child('era').isNumber() && newData.child('era').val() >= 0 && newData.child('clock').isNumber() && newData.child('clock').val() >= 0 && (!data.exists() || newData.child('clock').val() === data.child('clock').val() || newData.child('clock').val() === data.child('clock').val() + 1)",
+          "schema": {},
+          "generation": {},
+          "era": {},
+          "clock": {},
+          "courses": {
+            "$subject": {
+              ".validate": "$subject === 'videos' || $subject === 'biochem' || $subject === 'physiology' || $subject === 'pharmacology'",
+              "$course": { ".validate": "newData.isBoolean()" }
+            }
+          },
+          "versions": { "$key": { ".validate": "newData.isString()" } },
+          "firstCompletion": {
+            "$key": {
+              ".validate": "newData.hasChildren(['_version']) && newData.child('_version').isString() && (!newData.child('day').exists() || newData.child('day').isString())",
+              "day": {}, "_version": {}, "$other": { ".validate": false }
+            }
+          },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+    "videos": { ".read": "auth != null && auth.uid === 'fixture-A'" },
+    "biochem": { ".read": "auth != null && auth.uid === 'fixture-A'" },
+    "physiology": { ".read": "auth != null && auth.uid === 'fixture-A'" },
+    "pharmacology": { ".read": "auth != null && auth.uid === 'fixture-A'" },
+    "gamification": { ".read": "auth != null && auth.uid === 'fixture-A'", ".write": "auth != null && auth.uid === 'fixture-A'" },
+    "habits": { ".read": "auth != null && auth.uid === 'fixture-A'", ".write": "auth != null && auth.uid === 'fixture-A'" },
+    "custom_events": { ".read": "auth != null && auth.uid === 'fixture-A'", ".write": "auth != null && auth.uid === 'fixture-A'" },
+    "checklist": { ".read": "auth != null && auth.uid === 'fixture-A'", ".write": "auth != null && auth.uid === 'fixture-A'" },
+    "questOS": {
+      "v1": {
+        "courseFirstCompletion": { ".read": "auth != null && auth.uid === 'fixture-A'" },
+        "training": { ".read": "auth != null && auth.uid === 'fixture-A'", ".write": "auth != null && auth.uid === 'fixture-A'" },
+        "adaptiveStudy": { ".read": "auth != null && auth.uid === 'fixture-A'", ".write": "auth != null && auth.uid === 'fixture-A'" }
+      }
+    }
+  }
+}

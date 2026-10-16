@@ -9,6 +9,9 @@ async function startLearning(stillCurrent=()=>true) {
   if (started) return;
   started = true;
   window.learningStorage=window.becomingStorage.view();preserveRewardCache(window.learningStorage);window.SubjectUI?.bindStorage();
+  const {createCourseDatabase}=await import('./src/study/course-contract.js');
+  if(!stillCurrent())return;
+  window.createCourseDatabase=createCourseDatabase;
   await import('./src/study/course-sync.js');
   if(!stillCurrent())return;
   await import('./sync.js');

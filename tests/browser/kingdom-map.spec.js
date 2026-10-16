@@ -31,7 +31,7 @@ test('預覽沒有持久化寫入或業務初始化，重新載入清除模擬',
  });await ready(page);await page.locator('[data-select=academy]').click();await page.locator('[data-stage]').selectOption('5');await page.locator('[data-wheel-mode]').selectOption('zoom');await expect(page.locator('[data-status]')).toContainText('5 / 5');
  await page.evaluate(()=>{dispatchEvent(new Event('online'));dispatchEvent(new Event('storage'));document.dispatchEvent(new Event('visibilitychange'));});
  expect(await page.evaluate(()=>({writes:window.auditWrites,same:JSON.stringify(Object.entries(localStorage).sort())===window.auditBefore,business:typeof window.learningDB}))).toEqual({writes:[],same:true,business:'undefined'});
- expect(requests.some(url=>/firebase|auth\.js|workspace\.js|sync\.js|store\.js|theme\.js/.test(url))).toBe(false);await page.reload();await expect(page.locator('[data-building=academy]')).toHaveAttribute('aria-label','奧術學院，模擬階段 1 / 5');await expect(page.locator('[data-stage]')).toBeDisabled();await expect(page.locator('[data-wheel-mode]')).toHaveValue('auto');
+ expect(requests.some(url=>/firebase|auth\.js|workspace\.js|sync\.js|store\.js|theme\.js/.test(url))).toBe(false);await page.reload();await expect(page.locator('[data-building=academy]')).toHaveAttribute('aria-label','奧術學院，來源階段 I');await expect(page.locator('[data-stage]')).toBeDisabled();await expect(page.locator('[data-wheel-mode]')).toHaveValue('auto');
 });
 test('二十次掛載與清理移除場景、observer 及輸入，離開預覽可回到正式介面',async({page})=>{
  await ready(page);const result=await page.evaluate(async()=>{
@@ -66,12 +66,12 @@ test('地圖滑鼠操作不留下上下焦點藍線，Tab 仍有清楚焦點提�
  expect(await map.evaluate(el=>({visible:el.matches(':focus-visible'),outline:getComputedStyle(el).outlineStyle,offset:getComputedStyle(el).outlineOffset}))).toEqual({visible:true,outline:'solid',offset:'-3px'});
  const r=await map.boundingBox();await page.mouse.move(r.x+20,r.y+20);await page.mouse.down();await page.mouse.move(r.x+80,r.y+40,{steps:4});await page.mouse.up();
  expect(await page.evaluate(()=>getSelection().toString())).toBe('');expect(await map.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
- await page.getByRole('button',{name:'全景／重設'}).focus();await page.keyboard.press('Tab');await expect(map).toBeFocused();expect(await map.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');await page.keyboard.press('Tab');await expect(page.locator('[data-building=academy]')).toBeFocused();expect(await page.locator('[data-building=academy] > polygon').first().evaluate(el=>getComputedStyle(el).strokeWidth)).toBe('5px');
+ await page.getByRole('button',{name:'全景／重設'}).focus();await page.keyboard.press('Tab');await expect(map).toBeFocused();expect(await map.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');await page.keyboard.press('Tab');await expect(page.locator('[data-building=academy]')).toBeFocused();expect(await page.locator('[data-building=academy] .ground').first().evaluate(el=>getComputedStyle(el).strokeWidth)).toBe('5px');
 });
 
-test('Chrome wheel 模擬：雙指滑動優先平移，捏合與滑鼠模式縮放',async({page})=>{
+test('Chrome wheel 模擬：普通滑動保留頁面捲動，捏合與明確滑鼠模式縮放',async({page})=>{
  await page.setViewportSize({width:1440,height:1000});await ready(page);const map=page.locator('[data-map]');await page.getByRole('button',{name:'放大',exact:true}).click();const scene=page.locator('[data-scene]');const before=await scene.getAttribute('transform');
- await map.dispatchEvent('wheel',{deltaMode:0,deltaX:24,deltaY:36});await expect(scene).not.toHaveAttribute('transform',before);await expect(page.locator('[data-zoom]')).toHaveText('120%');
+ expect(await map.evaluate(el=>{const event=new WheelEvent('wheel',{deltaMode:0,deltaX:24,deltaY:36,cancelable:true});el.dispatchEvent(event);return event.defaultPrevented;})).toBe(false);await expect(scene).toHaveAttribute('transform',before);await expect(page.locator('[data-zoom]')).toHaveText('120%');
  await map.dispatchEvent('wheel',{deltaMode:0,deltaY:-40,ctrlKey:true});await expect(page.locator('[data-zoom]')).not.toHaveText('120%');
  await page.locator('[data-wheel-mode]').selectOption('zoom');await page.getByRole('button',{name:'全景／重設'}).click();await map.hover();await page.mouse.wheel(0,-100);await expect(page.locator('[data-zoom]')).not.toHaveText('100%');
  await page.locator('[data-wheel-mode]').selectOption('pan');const zoom=await page.locator('[data-zoom]').textContent();await map.dispatchEvent('wheel',{deltaMode:0,deltaX:0,deltaY:100});await expect(page.locator('[data-zoom]')).toHaveText(zoom);
@@ -88,7 +88,7 @@ test('滑鼠冷啟動點擊地圖與建築沒有原生矩形框，選取與 Tab 
 
  const r=await map.boundingBox();await page.mouse.click(r.x+20,r.y+20);const rootState=await map.evaluate(inspect);await building.click();const buildingState=await building.evaluate(inspect);
  expect(rootState.outline).toBe('none');expect(buildingState.outline).toBe('none');
- await expect(building).toHaveAttribute('aria-pressed','true');await expect(building).toHaveAttribute('tabindex','0');const base=building.locator('> polygon').first();const selected=await base.evaluate(el=>({stroke:getComputedStyle(el).stroke,width:getComputedStyle(el).strokeWidth,dash:getComputedStyle(el).strokeDasharray}));expect(selected.width).toBe('3px');expect(selected.dash).toBe('none');
+ await expect(building).toHaveAttribute('aria-pressed','true');await expect(building).toHaveAttribute('tabindex','0');const base=building.locator('.ground').first();const selected=await base.evaluate(el=>({stroke:getComputedStyle(el).stroke,width:getComputedStyle(el).strokeWidth,dash:getComputedStyle(el).strokeDasharray}));expect(selected.width).toBe('3px');expect(selected.dash).toBe('none');
  await page.getByRole('button',{name:'全景／重設'}).focus();await page.keyboard.press('Tab');await expect(map).toBeFocused();expect(await map.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('solid');await page.keyboard.press('Tab');await expect(building).toBeFocused();expect(await building.evaluate(el=>getComputedStyle(el).outlineStyle)).toBe('none');
  const keyboard=await base.evaluate(el=>({stroke:getComputedStyle(el).stroke,width:getComputedStyle(el).strokeWidth,dash:getComputedStyle(el).strokeDasharray}));expect(keyboard.width).toBe('5px');expect(keyboard.stroke).not.toBe(selected.stroke);expect(keyboard.dash).not.toBe('none');
  await page.keyboard.press('Tab');await expect(page.locator('[data-building=keep]')).toBeFocused();await expect(building).toHaveAttribute('aria-pressed','true');expect(await base.evaluate(el=>getComputedStyle(el).strokeWidth)).toBe('3px');

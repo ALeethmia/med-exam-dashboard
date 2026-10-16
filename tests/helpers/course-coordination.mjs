@@ -1,0 +1,2 @@
+const scopes=new WeakMap();
+export function testCoordination(scope={}){if(!scopes.has(scope))scopes.set(scope,{tokens:new Map(),tail:Promise.resolve()});const state=scopes.get(scope),tokens=state.tokens;return {run(id,work){const result=state.tail.then(()=>{const outcome=work(tokens.get(id));if(outcome.token===null)tokens.delete(id);else tokens.set(id,outcome.token);return outcome.result;});state.tail=result.catch(()=>{});return result;},close(){}};}

@@ -1,117 +1,72 @@
+import {testCoordination} from '../helpers/course-coordination.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createCourseSync,COURSE_SYNC_PATH,COURSE_JOURNAL_PREFIX} from '../../src/study/course-sync.js';
+import {createCourseSync,COURSE_JOURNAL_PREFIX,COURSE_SNAPSHOT_PREFIX,courseDocumentPath} from '../../src/study/course-sync.js';
+import {emptyCourseDocument,applyCourseRequest} from '../../src/study/course-contract.js';
 import {createAccountStorage} from '../../account-storage.js';
 import {createMockDatabase} from '../fixtures/mock-database.js';
-const wait=()=>new Promise(r=>setTimeout(r,10));
-function memory(){const values=new Map();return {getItem:k=>values.get(k)??null,setItem(k,v){values.set(k,String(v));},removeItem:k=>values.delete(k),key:i=>[...values.keys()][i]??null,get length(){return values.size;}};}
-function mutex(){let tail=Promise.resolve();return {request(name,opts,fn){const result=tail.then(fn);tail=result.catch(()=>{});return result;}};}
-function setup({db=createMockDatabase({}, {delay:0}),backing=memory(),locks=mutex(),id='A',date=false}={}){
- const account=createAccountStorage(backing);account.bind('synthetic-UID');const storage=account.view();let n=0,online=true,valid=true;
- const dates=new Map(),engine=createCourseSync({storage,uid:'synthetic-UID',valid:()=>valid&&account.read().bound,ready:()=>online,locks,newId:()=>id+'-'+(++n),events:new EventTarget(),prepareDates:changes=>date?Object.fromEntries(Object.entries(changes).filter(([,v])=>v).map(([p])=>[p,'2026-10-15'])):{},acceptDates:input=>{for(const [path,day] of Object.entries(input))if(!dates.has(path))dates.set(path,day);return true;}});
- engine.attach(db);return {engine,db,storage,backing,dates,online:value=>online=value,stop(){valid=false;engine.close();},close:()=>engine.close()};
+const uid='synthetic-A',path=courseDocumentPath(uid),tick=()=>new Promise(r=>setTimeout(r,10));
+function memory(){const map=new Map();return {getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,String(v)),removeItem:k=>map.delete(k),key:i=>[...map.keys()][i]??null,get length(){return map.size;}};}
+const seed=(doc=emptyCourseDocument())=>({users:{[uid]:{learningV3:doc}},videos:{legacy:true},gamification:{v1:{awards:{old:{xp:20}}}},otherUsers:{keep:true}});
+function setup({db=createMockDatabase(seed(),{delay:0}),backing=memory(),id='A',localOnly=false,locks}={}){
+ const account=createAccountStorage(backing);account.bind(uid);const storage=account.view();let n=0,online=true,valid=true;
+ const engine=createCourseSync({coordination:testCoordination(backing),storage,uid,localOnly,locks,valid:()=>valid,ready:()=>online,newId:()=>id+'-'+(++n),events:new EventTarget(),prepareDates:changes=>Object.fromEntries(Object.entries(changes).filter(([,v])=>v).map(([p])=>[p.replace('/','__'),'2026-10-15']))});engine.attach(localOnly?null:db);
+ return {engine,db,backing,storage,account,online:value=>online=value,close(){valid=false;engine.close();}};
 }
-const progress=h=>h.db.inspect().tree.videos||{};
-const updates=h=>h.db.inspect().writes.filter(w=>w.method==='update');
-const completed=h=>assert.equal(h.engine.inspect().pending.length,0);
-test('single and chapter groups retain one multi-location update; no-op creates no write/date',async()=>{
- const h=setup({date:true});try{
- h.engine.enqueue({'videos/1':true,'videos/2':true},{baseline:{}});await h.engine.pump();completed(h);assert.deepEqual(progress(h),{1:true,2:true});assert.equal(updates(h).length,1);assert.equal(h.dates.size,2);
- const receipt=h.engine.enqueue({'videos/1':true},{baseline:{'videos/1':true}});assert.equal(receipt.noop,true);await h.engine.pump();assert.equal(updates(h).length,1);assert.equal(h.dates.size,2);
- h.engine.enqueue({'videos/1':false,'videos/2':false},{baseline:{'videos/1':true,'videos/2':true}});await h.engine.pump();completed(h);assert.deepEqual(progress(h),{1:false,2:false});assert.equal(updates(h).length,2);
- }finally{h.close();}
+const doc=h=>h.db.inspect().tree.users[uid].learningV3;
+const empty=h=>assert.equal(h.engine.inspect().pending.length,0);
+function faultDB(raw,{before=false,after=false,hold=false}={}){let fail=true,release;return {...raw,ref(p=''){const ref=raw.ref(p);return p===path?{...ref,async transaction(fn,...args){if(fail){fail=false;if(hold)await new Promise(r=>release=r);if(before)throw Error('network');const result=await ref.transaction(fn,...args);if(after)throw Error('lost acknowledgement');return result;}return ref.transaction(fn,...args);}}:ref;},release:()=>release?.()};}
+test('single/chapter operations are one atomic bounded document commit, including original first date',async()=>{
+ const h=setup();try{h.engine.enqueue({'videos/1':true,'physiology/fc_p_1_a':true});await h.engine.pump();empty(h);assert.equal(doc(h).clock,1);assert.equal(doc(h).courses.videos[1],true);assert.equal(doc(h).firstCompletion.videos__1.day,'2026-10-15');assert.equal(h.db.inspect().writes.length,1);assert.equal(h.db.inspect().writes[0].path,path);assert.deepEqual(h.db.inspect().tree.videos,{legacy:true});assert.equal(h.db.inspect().tree.gamification.v1.awards.old.xp,20);}finally{h.close();}
 });
-test('offline queued operations and refresh before dispatch recover automatically',async()=>{
- const h=setup();h.online(false);h.engine.enqueue({'videos/1':true});await h.engine.pump();assert.equal(updates(h).length,0);assert.equal(h.engine.inspect().pending[0].phase,'queued');h.close();
- const next=setup({db:h.db,backing:h.backing,id:'B'});try{await next.engine.pump();completed(next);assert.equal(progress(next)[1],true);assert.equal(updates(next).length,1);}finally{next.close();}
+test('same value save is a no-op, and cancel/recheck cannot duplicate first date or XP',async()=>{
+ const h=setup();try{h.engine.enqueue({'videos/1':true});await h.engine.pump();const date=doc(h).firstCompletion.videos__1;assert.equal(h.engine.enqueue({'videos/1':true}).noop,true);for(const value of [false,true]){h.engine.enqueue({'videos/1':value});await h.engine.pump();}empty(h);assert.deepEqual(doc(h).firstCompletion.videos__1,date);assert.equal(doc(h).clock,3);assert.equal(h.db.inspect().tree.gamification.v1.awards.old.xp,20);}finally{h.close();}
 });
-test('true → false → true retains immutable identities; original success cannot delete later requests',async()=>{
- const raw=createMockDatabase({}, {delay:0});let release,first=true;
- const db={...raw,ref(path=''){const ref=raw.ref(path);return {...ref,update:patch=>{if(first){first=false;return new Promise(resolve=>{release=async()=>{await ref.update(patch);resolve();};});}return ref.update(patch);}};}};
- const h=setup({db});try{
- h.engine.enqueue({'videos/1':true});await wait();h.engine.enqueue({'videos/1':false});h.engine.enqueue({'videos/1':true});assert.equal(h.engine.inspect().pending.length,3);
- h.online(false);const attempt=h.engine.pump();await release();await attempt;assert.equal(h.engine.inspect().pending.length,2);assert.equal(updates(h).length,1);
- h.online(true);await h.engine.pump();completed(h);assert.equal(progress(h)[1],true);assert.equal(updates(h).length,3);
- }finally{h.close();}
+test('offline and refresh preserve queued groups and automatically recover on reconnect',async()=>{
+ const h=setup();h.online(false);h.engine.enqueue({'videos/1':true,'videos/2':true});await h.engine.pump();assert.equal(doc(h).clock,0);h.close();const next=setup({db:h.db,backing:h.backing,id:'next'});try{await new Promise(r=>setTimeout(r,3100));await next.engine.pump();empty(next);assert.equal(doc(next).clock,1);}finally{next.close();}
 });
-test('original success followed by local acknowledgement failure retries only local work',async()=>{
- const h=setup();const set=h.storage.setItem; // facade is immutable; fault the backing implementation
- const original=h.backing.setItem;let fail=true;
- h.backing.setItem=function(key,value){if(key.includes(COURSE_JOURNAL_PREFIX)&&JSON.parse(value).phase==='acknowledged'&&fail)throw Error('quota');return original.call(this,key,value);};
- try{h.engine.enqueue({'videos/1':true});await h.engine.pump();assert.equal(updates(h).length,1);assert.equal(h.engine.inspect().pending.length,1);fail=false;await h.engine.pump();completed(h);assert.equal(updates(h).length,1);assert.equal(JSON.parse(h.storage.getItem('med_exam_videos_cloud'))[1],true);}finally{h.close();}
+for(const after of [false,true])test('unknown result '+(after?'after':'before')+' commit automatically retries the same CAS without duplicate effects',async()=>{
+ const raw=createMockDatabase(seed(),{delay:0}),h=setup({db:faultDB(raw,{before:!after,after})});try{await tick();h.engine.enqueue({'videos/1':true});await h.engine.pump();await h.engine.pump();empty(h);assert.equal(doc(h).clock,1);assert.equal(h.engine.inspect().unknown,false);assert.equal(doc(h).firstCompletion.videos__1.day,'2026-10-15');}finally{h.close();}
 });
-test('reload after successful remote commit but failed local settlement uses transaction receipt, never Boolean cache',async()=>{
- const h=setup();const remove=h.backing.removeItem;h.backing.removeItem=()=>{throw Error('disk');};h.engine.enqueue({'videos/1':true});await h.engine.pump();assert.equal(updates(h).length,1);h.close();h.backing.removeItem=remove;
- const next=setup({db:h.db,backing:h.backing,id:'B'});try{await next.engine.pump();completed(next);assert.equal(updates(next).length,1);}finally{next.close();}
+test('original pending Promise is not duplicated by this live sender; ABA generations all settle',async()=>{
+ const db=faultDB(createMockDatabase(seed(),{delay:0}),{hold:true}),h=setup({db});try{h.engine.enqueue({'videos/1':true});await tick();h.engine.enqueue({'videos/1':false});h.engine.enqueue({'videos/1':true});assert.equal(h.engine.inspect().pending.length,3);db.release();await h.engine.pump();empty(h);assert.equal(doc(h).clock,3);assert.equal(doc(h).courses.videos[1],true);}finally{h.close();}
 });
-test('same UID tabs share append-only journal and origin lock, without lost courses',async()=>{
- const backing=memory(),locks=mutex(),db=createMockDatabase({}, {delay:0}),a=setup({backing,locks,db}),b=setup({backing,locks,db,id:'B'});
- try{a.engine.enqueue({'videos/1':true});b.engine.enqueue({'videos/2':true});await Promise.all([a.engine.pump(),b.engine.pump()]);completed(a);assert.deepEqual(progress(a),{1:true,2:true});assert.equal(updates(a).length,2);}finally{a.close();b.close();}
+test('original success with local settlement failure retries local work only',async()=>{
+ const h=setup(),set=h.backing.setItem;let fail=true;try{await tick();h.backing.setItem=(key,value)=>{if(fail&&key.includes(COURSE_JOURNAL_PREFIX)&&JSON.parse(value).phase==='acknowledged')throw Error('quota');return set(key,value);};h.engine.enqueue({'videos/1':true});await h.engine.pump();assert.equal(doc(h).clock,1);fail=false;const count=h.db.inspect().writes.length;await h.engine.pump();empty(h);assert.equal(h.db.inspect().writes.length,count);}finally{h.close();}
 });
-test('cross-device revision conflicts retain the whole group; explicit reapply is atomic',async()=>{
- const db=createMockDatabase({videos:{1:false,2:false}},{delay:0}),a=setup({db}),b=setup({db,id:'B'});await wait();b.online(false);
- try{b.engine.enqueue({'videos/1':true,'videos/2':true},{baseline:{'videos/1':false,'videos/2':false}});a.engine.enqueue({'videos/1':true},{baseline:{'videos/1':false}});await a.engine.pump();completed(a);
- b.online(true);await b.engine.pump();assert.equal(updates(b).length,1);assert.equal(b.engine.inspect().pending[0].phase,'review');assert.deepEqual(progress(b),{1:true,2:false});
- await b.engine.resolve('videos/1',true);await b.engine.pump();completed(b);assert.deepEqual(progress(b),{1:true,2:true});assert.equal(updates(b).length,2);
- }finally{a.close();b.close();}
+test('refresh after acknowledgement loss and cleanup failure safely recovers from server revision',async()=>{
+ const h=setup(),remove=h.backing.removeItem;h.backing.removeItem=key=>{if(key.includes(COURSE_JOURNAL_PREFIX))throw Error('disk');return remove(key);};h.engine.enqueue({'videos/1':true});await h.engine.pump();h.close();h.backing.removeItem=remove;
+ const next=setup({db:h.db,backing:h.backing,id:'next'});try{await new Promise(r=>setTimeout(r,3100));await next.engine.pump();empty(next);assert.equal(doc(next).clock,1);}finally{next.close();}
 });
-test('rejection before or after server commit never blindly resends; positive receipt recovers post-commit',async()=>{
- for(const after of [false,true]){
-  const raw=createMockDatabase({}, {delay:0});const db={...raw,ref(path=''){const ref=raw.ref(path);return {...ref,async update(patch){if(after)await ref.update(patch);throw Error('permission/network/timeout');}};}};
-  const h=setup({db});try{h.engine.enqueue({'videos/1':true});await h.engine.pump();if(!after)assert.equal(h.engine.inspect().pending[0].phase,'sending');await h.engine.pump();assert.equal(updates(h).length,after?1:0);if(after)completed(h);else {assert.equal(h.engine.inspect().unknown,true);assert.match(h.engine.inspect().error,/未知/);}}finally{h.close();}
- }
+test('same UID tabs without Web Locks append independently and preserve unrelated courses',async()=>{
+ const backing=memory(),db=createMockDatabase(seed(),{delay:0}),a=setup({backing,db}),b=setup({backing,db,id:'B'});try{a.engine.enqueue({'videos/1':true});b.engine.enqueue({'videos/2':true});await Promise.all([a.engine.pump(),b.engine.pump()]);empty(a);assert.deepEqual(doc(a).courses.videos,{1:true,2:true});assert.equal(doc(a).clock,2);}finally{a.close();b.close();}
 });
-test('matching cached true cannot acknowledge an uncertain batch without its exact receipt',async()=>{
- const h=setup();h.online(false);h.engine.enqueue({'videos/1':true});await h.engine.pump();const row=h.engine.inspect().pending[0];h.storage.setItem(COURSE_JOURNAL_PREFIX+row.id,JSON.stringify({...row,phase:'sending'}));h.db.replace({videos:{1:true}});h.online(true);
- try{await h.engine.pump();assert.equal(h.engine.inspect().unknown,true);assert.equal(updates(h).length,0);assert.equal(h.engine.inspect().pending.length,1);}finally{h.close();}
+test('cross-device stale whole batch needs one explicit choice; reapply uses a new unique identity',async()=>{
+ const db=createMockDatabase(seed(),{delay:0}),a=setup({db}),b=setup({db,id:'B'});try{await tick();b.online(false);const old=b.engine.enqueue({'videos/1':true,'videos/2':true});a.engine.enqueue({'videos/1':true});await a.engine.pump();b.online(true);await b.engine.pump();assert.equal(b.engine.inspect().pending[0].phase,'review');await b.engine.resolve('videos/1',true);await b.engine.pump();empty(b);assert.equal(doc(b).courses.videos[2],true);assert.notEqual(doc(b).versions.videos__1,old.id);}finally{a.close();b.close();}
 });
-test('failed local batch save exposes no partial request, no date and no remote call',async()=>{
- const h=setup({date:true});h.backing.setItem=()=>{throw Error('quota');};try{assert.throws(()=>h.engine.enqueue({'videos/1':true,'videos/2':true}),/本機保存失敗/);await h.engine.pump();assert.equal(h.engine.inspect().localError,true);completed(h);assert.equal(updates(h).length,0);assert.equal(h.dates.size,0);}finally{h.close();}
+test('a delayed old request cannot pass stale bases after a newer valid edit, including true-false-true',async()=>{
+ const h=setup();try{h.online(false);h.engine.enqueue({'videos/1':true});const old=h.engine.inspect().pending[0];let state=applyCourseRequest(emptyCourseDocument(),old);const newer={...old,id:'newer',changes:{'videos/1':false},bases:{'videos/1':{value:true,version:old.id}}};state=applyCourseRequest(state,newer);assert.deepEqual(applyCourseRequest(state,old),state);assert.equal(state.courses.videos[1],false);}finally{h.close();}
 });
-test('UID or epoch invalidation blocks old acknowledgement and later writes',async()=>{
- const raw=createMockDatabase({}, {delay:0});let release;const db={...raw,ref(path=''){const ref=raw.ref(path);return {...ref,update:patch=>new Promise(resolve=>release=async()=>{await ref.update(patch);resolve();})};}};
- const h=setup({db});h.engine.enqueue({'videos/1':true});await wait();h.stop();await release();await h.engine.pump();assert.equal(h.engine.inspect().pending.length,1);assert.throws(()=>h.engine.enqueue({'videos/2':true}),/登入/);assert.equal(updates(h).length,1);
+test('manual dates share the course CAS writer; tombstones survive automatic first-date retries',async()=>{
+ const h=setup();try{h.engine.enqueue({'videos/1':true});await h.engine.pump();h.engine.setDate('videos__1','2026-10-14');await h.engine.pump();assert.equal(doc(h).firstCompletion.videos__1.day,'2026-10-14');h.engine.setDate('videos__1',null);await h.engine.pump();for(const value of [false,true]){h.engine.enqueue({'videos/1':value});await h.engine.pump();}empty(h);assert.equal(doc(h).firstCompletion.videos__1.day,null);}finally{h.close();}
 });
-test('missing Web Locks fails closed with a recoverable local request',async()=>{
- const h=setup({locks:{}});try{h.engine.enqueue({'videos/1':true});await h.engine.pump();assert.equal(updates(h).length,0);assert.match(h.engine.inspect().error,/多分頁/);assert.equal(h.engine.inspect().pending.length,1);}finally{h.close();}
+test('failed local chapter commit exposes no partial intent/date or remote mutation',async()=>{
+ const h=setup();try{h.backing.setItem=()=>{throw Error('quota');};assert.throws(()=>h.engine.enqueue({'videos/1':true,'videos/2':true}),/本機保存失敗/);await h.engine.pump();assert.equal(doc(h).clock,0);assert.equal(Object.keys(doc(h).firstCompletion).length,0);empty(h);}finally{h.close();}
 });
-test('200 rounds of save/retry/reload preserve dates, historical XP and finish without pending',async()=>{
- const db=createMockDatabase({gamification:{v1:{awards:{historical:{xp:20,day:'2026-10-01'}}}}},{delay:0});let h=setup({db,date:true});try{
- for(let n=0;n<200;n++){
-  const value=n%2===0;h.engine.enqueue({'videos/1':value,'videos/2':value},{baseline:{'videos/1':n>0?!value:null,'videos/2':n>0?!value:null}});await h.engine.pump();completed(h);await h.engine.pump();
-  if(n%20===19){h.close();h=setup({db,backing:h.backing,date:true,id:'round-'+n});await wait();}
- }
- assert.equal(updates(h).length,200);assert.deepEqual(db.inspect().tree.gamification.v1.awards,{historical:{xp:20,day:'2026-10-01'}});assert.deepEqual(progress(h),{1:false,2:false});completed(h);
- }finally{h.close();}
+test('UID/epoch invalidation prevents old callbacks from settling or submitting new work',async()=>{
+ const db=faultDB(createMockDatabase(seed(),{delay:0}),{hold:true}),h=setup({db});h.engine.enqueue({'videos/1':true});await tick();h.close();db.release();await h.engine.pump();assert.equal(doc(h).clock,0);assert.throws(()=>h.engine.enqueue({'videos/2':true}),/登入/);assert.equal(h.engine.inspect().pending.length,1);
+});
+test('reset generation fences delayed old writes; old intents are retained separately and cannot block new work',async()=>{
+ const h=setup();h.online(false);h.engine.enqueue({'videos/1':true});const old=h.engine.inspect().pending[0],reset={...emptyCourseDocument('reset-uuid'),era:1};h.db.replace(seed(reset));await tick();h.online(true);await h.engine.pump();empty(h);assert.equal(h.engine.inspect().retired,1);assert.deepEqual(applyCourseRequest(reset,old),reset);h.engine.enqueue({'videos/2':true});await h.engine.pump();empty(h);assert.deepEqual(doc(h).courses.videos,{2:true});h.close();
+});
+test('200 rounds/reloads keep bounded metadata/snapshots and never accumulate pending or repeat dates',async()=>{
+ let h=setup();try{for(let i=0;i<200;i++){h.engine.enqueue({'videos/1':i%2===0,'videos/2':i%2===0});await h.engine.pump();empty(h);if(i%20===19){h.close();h=setup({db:h.db,backing:h.backing,id:'round-'+i});await tick();}}assert.equal(doc(h).clock,200);assert.equal(Object.keys(doc(h).versions).length,2);assert.equal(Object.keys(doc(h).firstCompletion).length,2);assert.equal(doc(h).receipts,undefined);assert.equal(doc(h).gate,undefined);const snapshots=Array.from({length:h.storage.length},(_,i)=>h.storage.key(i)).filter(k=>k.startsWith(COURSE_SNAPSHOT_PREFIX));assert(snapshots.length<=2);assert.equal(h.db.inspect().tree.gamification.v1.awards.old.xp,20);}finally{h.close();}
 });
 
-test('a delayed pre-commit root callback cannot regress the next local base revision',async()=>{
- const h=setup();try{h.engine.enqueue({'videos/1':true});await h.engine.pump();completed(h);
- // Mock callbacks capture snapshots at scheduling time. Before their delayed delivery,
- // the same origin may have acknowledged and removed the earlier request.
- await wait();h.engine.enqueue({'videos/1':false,'videos/2':true},{baseline:{'videos/1':true}});await h.engine.pump();completed(h);assert.deepEqual(progress(h),{1:false,2:true});assert.equal(updates(h).length,2);
- }finally{h.close();}
-});
+test('lease keeps a live claim stable; crashed sender is safely taken over and late callback cannot recreate it',async()=>{const backing=memory(),raw=createMockDatabase(seed(),{delay:0}),held=faultDB(raw,{hold:true}),a=setup({backing,db:held,id:'lease-A'}),b=setup({backing,db:raw,id:'lease-B'});try{a.engine.enqueue({'videos/1':true});await tick();await b.engine.pump();assert.equal(doc(b).clock,0);await new Promise(r=>setTimeout(r,3100));await b.engine.pump();empty(b);assert.equal(doc(b).clock,1);held.release();await a.engine.pump();empty(a);assert.equal(doc(a).clock,1);}finally{a.close();b.close();}});
 
-test('durable original-day handoff survives a first-date storage failure without repeating Firebase',async()=>{
- const {createCourseDates}=await import('../../course-dates.js');
- const backing=memory(),account=createAccountStorage(backing);account.bind('synthetic-UID');const storage=account.view(),db=createMockDatabase({}, {delay:0});let id=0;
- const dates=createCourseDates({keys:new Set(['videos__1']),storage,localOnly:true,events:new EventTarget(),today:()=> '2026-10-16',newId:()=> 'date-'+(++id)});
- const engine=createCourseSync({storage,uid:'synthetic-UID',valid:()=>true,ready:()=>true,locks:mutex(),newId:()=> 'synthetic-handoff',events:new EventTarget(),prepareDates:()=>({'videos__1':'2026-10-15'}),acceptDates:entries=>{for(const [key,day] of Object.entries(entries))dates.set(key,day,{firstOnly:true});return true;}});engine.attach(db);
- const original=backing.setItem;let fail=true;backing.setItem=function(key,value){if(key.includes('med_exam_course_dates')&&fail)throw Error('quota');return original.call(this,key,value);};
- try{engine.enqueue({'videos/1':true});await engine.pump();assert.equal(dates.records().videos__1,undefined);assert.equal(engine.inspect().pending[0].phase,'acknowledged');assert.equal(db.inspect().writes.filter(w=>w.method==='update').length,1);
- fail=false;await engine.pump();assert.equal(engine.inspect().pending.length,0);assert.equal(dates.records().videos__1.day,'2026-10-15');assert.equal(db.inspect().writes.filter(w=>w.method==='update').length,1);
- const version=dates.records().videos__1._version;dates.set('videos__1','2026-10-16',{firstOnly:true});assert.equal(dates.records().videos__1._version,version);
- }finally{engine.close();dates.dispose();}
-});
+test('single live tab recovers from a never-resolving acknowledgement after commit without inventing success',async()=>{const raw=createMockDatabase(seed(),{delay:0});let first=true,attempts=0;const db={...raw,ref(p){const ref=raw.ref(p);return {...ref,async transaction(...args){attempts++;if(!first)assert.equal(h.engine.inspect().pending.length,1,'timeout must not remove pending');const result=await ref.transaction(...args);if(first){first=false;return new Promise(()=>{});}return result;}};}};const h=setup({db,id:'never-ack'});try{h.engine.enqueue({'videos/1':true});await h.engine.pump();await h.engine.pump();empty(h);assert.equal(attempts,2);assert.equal(doc(h).clock,1);}finally{h.close();}});
 
-test('receipt recovery of an older commit does not resurrect it over a later device value',async()=>{
- const h=setup();const remove=h.backing.removeItem;h.backing.removeItem=()=>{throw Error('disk');};h.engine.enqueue({'videos/1':true});await h.engine.pump();h.close();h.backing.removeItem=remove;
- const peer=setup({db:h.db,id:'peer'});await wait();peer.engine.enqueue({'videos/1':false},{baseline:{'videos/1':true}});await peer.engine.pump();completed(peer);peer.close();
- const restored=setup({db:h.db,backing:h.backing,id:'restored'});try{await wait();await restored.engine.pump();completed(restored);assert.equal(progress(restored)[1],false);assert.equal(JSON.parse(restored.storage.getItem('med_exam_videos_cloud'))[1],false);assert.equal(updates(restored).length,2);}finally{restored.close();}
-});
+test('legacy date pending remains quarantined and byte-for-byte intact through new atomic saves',async()=>{const h=setup();try{const old={videos__1:{value:{day:'2026-01-01',_version:'legacy'},base:null}};h.storage.setItem('med_exam_course_dates_v1',JSON.stringify({records:{},pending:old}));h.engine.enqueue({'videos/1':true});await h.engine.pump();empty(h);assert.deepEqual(JSON.parse(h.storage.getItem('med_exam_course_dates_v1')).pending,old);assert.equal(h.engine.inspect().quarantined,1);assert.equal(doc(h).clock,1);assert.equal(doc(h).firstCompletion.videos__1.day,'2026-10-15');}finally{h.close();}});
 
-test('explicit local mode uses the same atomic local commit and never calls Firebase',async()=>{
- const backing=memory(),account=createAccountStorage(backing);account.bind('local-demo');const storage=account.view();const engine=createCourseSync({storage,uid:'local-demo',valid:()=>true,ready:()=>false,localOnly:true,locks:mutex(),events:new EventTarget()});
- try{engine.enqueue({'videos/1':true,'videos/2':true});await engine.pump();assert.equal(engine.inspect().pending.length,0);assert.deepEqual(JSON.parse(storage.getItem('med_exam_videos_cloud')),{1:true,2:true});const set=backing.setItem;backing.setItem=()=>{throw Error('quota');};assert.throws(()=>engine.enqueue({'videos/1':false}),/本機保存失敗/);assert.equal(JSON.parse(storage.getItem('med_exam_videos_cloud'))[1],true);backing.setItem=set;}finally{engine.close();}
-});
+test('verified delayed server UUID settles only its immutable row after claim takeover; newer ABA survives',async()=>{const raw=createMockDatabase(seed(),{delay:0});let count=0;const db={...raw,ref(p){const ref=raw.ref(p);return {...ref,async transaction(...args){const n=++count,result=await ref.transaction(...args);if(n===1){await new Promise(r=>setTimeout(r,4000));return result;}if(n===2)return new Promise(()=>{});return result;}};}};const h=setup({db,id:'late-server-proof'});try{h.engine.enqueue({'videos/1':true});await h.engine.pump();await new Promise(r=>setTimeout(r,1500));await h.engine.pump();empty(h);assert.equal(doc(h).clock,1);h.engine.enqueue({'videos/1':false});h.engine.enqueue({'videos/1':true});await h.engine.pump();empty(h);assert.equal(doc(h).clock,3);assert.equal(doc(h).courses.videos[1],true);}finally{h.close();}});

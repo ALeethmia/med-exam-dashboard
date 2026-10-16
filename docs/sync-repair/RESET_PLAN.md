@@ -1,30 +1,13 @@
-# One-time reset plan — review only, no execution API
+# 一次性重置：只規劃與合成測試
 
-This repository's cloud data is stored in shared roots. `createResetPlan` is an offline backup/planning helper, not an authorization or reset endpoint. It accepts supplied snapshots, rejects mismatched UID inputs, hashes a canonical backup, and lists scope. `executable` is always false. Its input UID is not a replacement for a verified Firebase Auth callback. The helper has no Firebase import, network operation, Auth deletion, storage clear or event dispatch.
+沒有連線或重置任何真實帳號。`src/study/reset-plan.js` 只有備份範圍、SHA-256 與身分驗證；沒有 Firebase、Auth、storage apply/delete API，輸出固定 `executable:false`。
 
-Candidate user-data paths, subject to independent ownership review:
+1. 先審查／驗收同步契約與伺服器舊 writer 淘汰方案。不能以要求關閉分頁或刷新 Service Worker 作保證。舊課程／日期／v2 路徑必須永久 deny；shared 生活與任務路徑的舊 writer 也須獨立證明已淘汰，否則禁止真實重置。
+2. 取得新的明確執行授權，驗證 Auth UID 等於 owner UID。審查 shared root 子資料的實際歸屬；不能假設 root 全屬於該帳號。
+3. 逐路徑備份四科歷史、獎勵／任務、習慣、日期、運動、容量、行事曆、自訂清單及舊 v2 gate，另備份精確 `users/<UID>/learningV3`。本機只列該 UID prefix 下的全部 key，包含 v1/v2/v3 pending、retired 與 snapshots。不得清空整個 origin、其他 UID 或 Auth persistence。
+4. 驗證備份 checksum、內容、UID，實際演練還原。備份不等於可執行授權。
+5. canonical document **不可刪除後重建成 initial generation**。需以新的唯一 generation、嚴格遞增 era、clock 0 與空進度，原子替換同一 UID document。普通客戶端 Rules 不可改 generation／era 或刪除此 fence。工具中的 `REQUIRES_FRESH_REVIEWED_GENERATION` 只是人工審查佔位符，不能拿來重複使用。
+6. 舊 request 的 generation 不符就不能通過 CAS。清理該 UID 本機歷史 pending 必須是獨立授權重置的一部分；正常同步期間不刪歷史 pending。其他 UID、靜態課程定義、正式網站版本及 Auth 身分均保留。
+7. 真實執行前仍需明確的還原方法與驗證門檻。這輪只在獨立 Emulator 模擬 fence、延遲舊 request、重置後重新建立進度與 reload，不提供真實執行工具。
 
-- `/videos`, `/biochem`, `/physiology`, `/pharmacology`
-- `/gamification/v1/days`, `/gamification/v1/awards`
-- `/gamification/v2/timeTasks`, `/gamification/v3/planner/tasks`
-- `/habits`, `/custom_events`, `/checklist`
-- `/questOS/v1/courseFirstCompletion`, `/questOS/v1/training`
-- `/questOS/v1/adaptiveStudy/settings`, `/questOS/v1/courseSyncV2`
-
-Do not delete `/`, `/users`, `/questOS`, or `/gamification` wholesale. Unknown children, static definitions, other users, Auth and rules must be preserved. The backup includes all existing candidate leaves, not just nonempty records; an operator must also export the complete database for independent completeness/scope comparison. A checksum verifies byte integrity, not server freshness or ownership.
-
-Local scope is the exact prefix `becoming_uid_v1:<encoded verified UID>:` on every participating origin/device: course projections, dates, XP/reward caches, planner, habits/life/training, settings, pending, journal, revision caches, other user-created records and UI caches. Global legacy `med_exam_*` keys are **not automatically deleted**: their ownership is unproven. Review and quarantine any that can still feed this UID, separately from other users' data. Root `med_exam_theme` and other UID prefixes remain untouched. Current code does not automatically import global legacy keys.
-
-## Future execution sequence
-
-1. Finish the blocking sync recovery/fencing work, pass review, deploy the fix through a separately authorized production process, and obtain the user's acceptance. This Draft does none of these steps.
-2. Inventory every device/origin/tab and all writers, including dates, tasks, life, habits and settings, not just course sync. Establish a verified maintenance barrier before backup. The current app has no global reset barrier; do not improvise one using a flag that older clients ignore.
-3. Resolve every in-flight SDK call. A missing receipt is an explicit stop condition. Do not treat timeout, logout, goOffline, or rejection alone as proof that a delayed write cannot arrive. Retire/fence older clients and prove they cannot write.
-4. Verify the currently authenticated UID and owner rules independently. Review every candidate cloud path and local key. If any cloud path might contain another user's data or static definitions, stop and narrow scope. A plan generated from a snapshot is not permission to delete it.
-5. Under that barrier, obtain a fresh server export and all device-local snapshots. Run `createResetPlan` and `verifyResetBackup`, compare counts/values with independent exports, and perform a restore rehearsal in a disposable emulator. Keep the complete backup off the account being reset. Record the accepted digest/path manifest and restore result.
-6. Present the final concrete plan and verified backup summary to the user and obtain **new, explicit execution authorization**. No authorization for this step has been given in the present task.
-7. An operator may then use only the reviewed exact paths in one atomic cloud update, and clear only the approved UID-local keys on each device. No reset implementation is shipped here. Keep writers fenced through cloud verification, local verification and all-device restart. Record external maintenance phases (prepared / backed-up / authorized / cloud-cleared / devices-cleared / verified); interruption never means complete.
-8. Verify null/initial values directly on the server and absence of the approved local records. Load the fixed client from a clean controlled session; check initial course counts, no dates/pending/rewards, lord level 1 and initial buildings. No completion or XP event should be emitted by reset itself.
-9. Use a synthetic account first to rehearse refresh, signout/in and offline/reconnect cycles, then allow the accepted real account to resume. Verify other UID/static hashes unchanged. If anything fails, retain the barrier and restore only the reviewed scoped backup; do not resume writers with a partial reset.
-
-No real backup was read or produced, no real reset was attempted, and no production data/rules were changed in this work.
+課程契約的 generation 能防止課程復活；它不能自動淘汰仍可寫 shared 非課程 root 的舊程式。因此不能把本輪合成課程 reset PASS 說成整個真實帳號已可安全重置。
