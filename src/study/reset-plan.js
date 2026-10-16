@@ -13,7 +13,7 @@ export async function createResetPlan({verifiedUID,ownerUID,cloudSnapshot,localS
  const cloud=Object.fromEntries(allowedPaths.filter(path=>at(cloudSnapshot,path)!==undefined).map(path=>[path,at(cloudSnapshot,path)]));
  const backup={format:'becoming-reset-review-v1',uid:verifiedUID,cloud,local};const serialized=canonical(backup),sha256=await digest(serialized);
  const prior=at(cloudSnapshot,canonicalPath);const replacement={...emptyCourseDocument('REQUIRES_FRESH_REVIEWED_GENERATION'),era:(prior?.era||0)+1};
- const blockers=['The current owner-only schema uses shared root paths; UID ownership of every cloud child requires independent review.','Production fix must be deployed and accepted before reset.','Server-enforced retirement is required: old course/date roots must deny all writes; canonical reset must rotate generation and increment era. Candidate Rules retire all seven shared writers; live enforcement and atomic rotation of lifeControl plus the course fence must be verified before reset.','A fresh explicit execution authorization is required.'];
+ const blockers=['The current owner-only schema uses shared root paths; UID ownership of every cloud child requires independent review.','Blank initialization requires independent cutover and reset authorization; keep client writes frozen until fences and active Rules are ready.','Server-enforced retirement is required: old course/date roots must deny all writes; canonical reset must rotate generation and increment era. Candidate Rules retire all seven shared writers; live enforcement and atomic rotation of lifeControl plus the course fence must be verified before reset.','A fresh explicit execution authorization is required.'];
  if(unsettledWrites)blockers.push('Unsettled or unknown writes remain: '+unsettledWrites);
  return {executable:false,uid:verifiedUID,canonicalFence:{path:canonicalPath,replacement},lifeFence:{path:lifeControlPath,replacement:{schema:1,generation:'REQUIRES_FRESH_REVIEWED_GENERATION',era:(at(cloudSnapshot,lifeControlPath)?.era||0)+1}},cloudPaths:Object.keys(cloud).map(key=>'/'+key),localKeys:Object.keys(local).sort(),untouchedCloudRoots:Object.keys(cloudSnapshot).filter(key=>!allowedPaths.some(path=>path===key||path.startsWith(key+'/'))).sort(),backup:{serialized,sha256},blockers};
 }
@@ -23,4 +23,25 @@ export async function verifyResetBackup({serialized,sha256}={},expectedUID){
  const prefix='becoming_uid_v1:'+encodeURIComponent(expectedUID)+':';
  if(Object.keys(backup.cloud||{}).some(key=>![...RESET_CLOUD_PATHS,courseDocumentPath(expectedUID),'users/'+encodeURIComponent(expectedUID)+'/lifeControl','users/'+encodeURIComponent(expectedUID)+'/lifeV1'].includes(key))||Object.keys(backup.local||{}).some(key=>!key.startsWith(prefix)))throw Error('reset/backup-scope');
  return backup;
+}
+
+// Review artifact only: never applies changes, authenticates, or contacts a server.
+export async function createBlankAccountPlan(options={}){
+ const {cloudSnapshot,reviewedLegacyPaths=[],courseGeneration=crypto.randomUUID(),lifeGeneration=crypto.randomUUID()}=options;
+ const plan=await createResetPlan(options),uid=plan.uid;
+ if(!/^[A-Za-z0-9_-]{1,128}$/.test(uid))throw Error('reset/invalid-owner-uid');
+ const root='users/'+encodeURIComponent(uid),prior=cloudSnapshot.users?.[uid]||{};
+ const fresh=value=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,80}$/.test(value)&&value!=='initial-v3'&&!value.startsWith('REQUIRES_');
+ if(!fresh(courseGeneration)||!fresh(lifeGeneration)||courseGeneration===lifeGeneration||courseGeneration===prior.learningV3?.generation||lifeGeneration===prior.lifeControl?.generation||Object.hasOwn(prior.lifeV1||{},lifeGeneration))throw Error('reset/fresh-generation-required');
+ const nextEra=value=>{if(value===undefined)return 0;if(!Number.isSafeInteger(value)||value<0||value>=Number.MAX_SAFE_INTEGER)throw Error('reset/invalid-era');return value+1;};
+ const existing=RESET_CLOUD_PATHS.filter(path=>at(cloudSnapshot,path)!==undefined&&at(cloudSnapshot,path)!==null);
+ if(existing.some(path=>!reviewedLegacyPaths.includes(path)))throw Error('reset/legacy-ownership-not-reviewed');
+ const course={...emptyCourseDocument(courseGeneration),era:nextEra(prior.learningV3?.era)};
+ const control={schema:1,generation:lifeGeneration,era:nextEra(prior.lifeControl?.era)};
+ // Empty RTDB maps are absent. No sentinel is added to the seven Store schemas.
+ const atomicUpdate={...Object.fromEntries(existing.map(path=>[path,null])),[root+'/learningV3']:course,[root+'/lifeControl']:control,[root+'/lifeV1/'+lifeGeneration]:null};
+ return {...plan,canonicalFence:{path:root+'/learningV3',replacement:course},lifeFence:{path:root+'/lifeControl',replacement:control},
+  requiresAuthorizations:['production-deployment','account-reset'],atomicUpdate,atomicUpdateSha256:await digest(canonical(atomicUpdate)),sourceSnapshotSha256:await digest(canonical(cloudSnapshot)),
+  emptyLifeNamespace:root+'/lifeV1/'+lifeGeneration,
+  blockers:[...plan.blockers,'This blank-start patch abandons legacy progress, including the shared historical XP sources; independent account-reset authorization is mandatory.','Input must be the final frozen server export; offline checks cannot establish provenance, ownership, or global generation uniqueness.']};
 }

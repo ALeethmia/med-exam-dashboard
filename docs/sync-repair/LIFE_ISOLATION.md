@@ -29,18 +29,16 @@
 
 既有 UI mocks 的七組邏輯紀錄由 test-only `life-fixture.js` adapter 對應新協定，保留原先產品行為斷言；它不是 Rules 驗證。SDK Emulator 不使用這個 adapter，直接檢查實際 UID／generation 路徑與拒絕結果。沒有為取得綠燈改用 legacy fallback。
 
-## 未來切換／重置前提
+## 正式切換與空白開始
 
-1. 仍須取得並核對正式 Rules、精確 UID 歸屬、部署／初始化授權；本輪不操作正式系統。
-2. freeze 後備份 legacy scope、該 UID 的 learningV3、lifeControl、lifeV1 與全部 UID local keys，驗 checksum。備份工具仍 `executable:false`，不提供 reset API。
-3. 使用者已選擇未來放棄舊歷史，不需搬移七組資料。管理端初始化新的唯一 life generation／era，再啟用經審查的完整候選 Rules，最後切換網站。不能先上網站而讓客戶端猜 generation。
-4. 真正全帳號 reset 必須在**同一次管理端原子操作**輪換 lifeControl（全新、永不重用的 generation，遞增 era）與課程既有 generation／era fence，不能刪掉 control 或還原成初始 generation。舊 generation 的資料可留作備份，但一般客戶端永遠不能再寫。普通客戶端沒有重置權限。
-5. 仍需正式 smoke、備份／復原演練及該 UID 的獨立明確重置授權。Rules 只驗證 namespace／權限，不能辨認 owner 的任意合法外觀新操作；前輪所述更強威脅模型不因本輪改變。
+唯一操作清單見 [CUTOVER.md](CUTOVER.md)；離線初始化／備份邊界見 [RESET_PLAN.md](RESET_PLAN.md)。七組隔離已完成，不再需要重新設計 shared writer。正式 root-level owner grant 尚未切換；使用者提供的 Console 觀察不能代替獨立驗證的 frozen server backup。
 
-七組程式與候選 Rules 隔離完成，不代表正式 Rules 已生效或已獲准真實 reset。保持 Draft 供再次 Code Review，不能自行 Merge／部署／重置。
+先核對／完整備份，再以正式授權 freeze、取得最終快照。空白初始化另外要求帳號重置授權，原子建立／輪換課程 fence 與 lifeControl，處理已確認歸屬的舊 XP 來源，先安裝完整 active Rules 才切網站。空白 lifeV1 generation 在 RTDB 讀為 null 是正常狀態，control 指向它、第一筆合法資料才建立實體節點。不以 client fallback、預設 generation 或猜測補齊。
 
-本輪本機結果：229 項 Node 全部通過；直接相關 SDK Emulator `--life-only` 14/14（13 組生活隔離情境＋既有 XP／課程不變檢查）通過；build／lint 通過。完整瀏覽器未在本機執行，交由最終 Head CI；CI 同時執行不帶 selector 的全部 78 組 SDK Emulator 場景。最終結果與連結記錄在 PR 描述，保持 Draft 等待 Code Review。
+目前沒有已驗證的新契約前版 rollback；失敗維持 freeze／維護，不能退回 main 舊 writer 或危險 root grant。保留所有成功紀錄與 pending 證據；restore／再次 reset 都需另行授權並防止 generation 重用。詳見操作清單第 9 關。
 
-首次 CI browser 結果為 200 passed／1 failed：登入測試把 DB handle 取得次數固定為一次，新增 control 讀取後合法流程是兩次。只更新該計數並增加實際 UID／generation 綁定斷言；登入前零存取、拒絕帳號、登出與保留原紀錄驗證均保留。僅局部重跑這一項，1 passed；最終完整結果由後續 CI 確認。
+## 測試證據
 
-第二輪 CI：完整 browser 201/201 與完整 SDK Emulator 78/78 通過；最後 Auth／Fixtures step 的 host mock 漏攔截新 test adapter，導致啟動逾時。補齊該 fixture module route，未變更產品程式或弱化斷言；Auth bridge 原 6 項檢查局部重測通過，其餘同 step 驗證另行局部重測，最終 CI 結果見 PR。
+已審查 Head `12f56cece9ac95a2a566b2e4865eef88cff28556` 的 CI：完整 browser 201/201、SDK Emulator 78/78、Auth／Fixtures 及 Node／build／lint 全部通過。七組本機局部 Emulator 14/14；包含 quota、舊 pending、重連、重新登入與跨 UID。測試 adapter 只用於既有 UI mocks，真正 SDK Emulator 直接驗實際路徑及 Rules。
+
+後續空白初始化準備只新增離線計畫與合成驗證，保留原有安全測試；最終 Head 的結果及連結記錄在 PR 描述。本輪沒有部署、真實資料操作或 reset 執行器。保持 Draft，等待 Code Review。

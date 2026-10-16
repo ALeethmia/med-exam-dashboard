@@ -1,93 +1,49 @@
-> 七組 writer 的後續實作與最新切換前提見 [LIFE_ISOLATION.md](LIFE_ISOLATION.md)。下文保留前輪審查脈絡；七組 shared writer 的程式／候選 Rules 阻擋已由該次實作解決，正式切換／重置授權仍未完成。
+# PR #26 正式切換操作清單（準備完成，不是執行授權）
 
-# PR #26：Rules 安全審查與切換準備
+適用基準：已審查 `12f56cece9ac95a2a566b2e4865eef88cff28556` 及本輪離線準備變更。課程同步核心、七組 Store、候選 Rules 契約不變。細節見 [LIFE_ISOLATION.md](LIFE_ISOLATION.md) 與 [RESET_PLAN.md](RESET_PLAN.md)。本文件不是可直接執行的 shell script，以下每關需留下證據；未滿足就停止。
 
-本輪基準 `948ac6fc54e88b17c5ef8df1cfbcb7d1151ecc47`。只修改候選 Rules、測試、離線準備工具與文件；沒有改核心同步契約、正式 Rules、正式資料或網站部署。維持 Draft。
+## 已知事實及證據邊界
 
-## 已核對的環境與未知項
+- 使用者提供的 Console 觀察：正式 Rules 是指定 owner UID 的 root-level 讀寫；舊結構匯出含 physiology、pharmacology、videos、questOS、habits、custom_events、checklist，沒有 learningV3／lifeControl／lifeV1。未取得原始完整檔案供獨立驗證，不推論未列出的根一定不存在，不把此描述當已驗證備份或 UID 歸屬。
+- 最近一次 Codex 唯讀核對：Firebase project `my-exam-1aab9`、instance `my-exam-1aab9-default-rtdb`，正式公開 owner 設定與 `owner-config.js` 相同。Rules GET 403、資料 GET 401，沒有 Firebase 管理身分；不重試未授權存取，不以 SDK 快取作 server 證據。
+- Vercel team `team_OncahZa34WFeSvYfJVYpn82t`、project `prj_GpatjsrrObLmUUXmocuJTvPpfINU`；Production alias `med-exam-dashboard.vercel.app` 指向 `dpl_ZN514Zy33qCBNRnPi72inEUjoa9f`，main `faf357ceab5752c4399bd6712c68a9ad2b1c2587`、READY／PROMOTED。Node 24.x、output `.`、build/install/rootDirectory 為 null。執行前必須重新確認，不能沿用時間較早的 metadata。
+- Git integration 的 Production branch 是 main，auto-assign 開啟。候選 Rules 不會因網站 Push 自動發布；Repository 無 Firebase deploy 設定。不能先 merge main 讓網站早於 Rules 上線。
+- 使用者希望未來放棄舊紀錄，但**尚未授權執行重置或部署**。本輪只有合成資料測試，沒有正式網路資料變更。
 
-- Repository 公開設定：Firebase project `my-exam-1aab9`，Realtime Database `https://my-exam-1aab9-default-rtdb.firebaseio.com`；owner 由 `owner-config.js` 固定，不接受首次登入者自動認領。
-- 唯讀 Vercel API 與 GitHub deployment `7098904740` 核對：Production 為 `dpl_ZN514Zy33qCBNRnPi72inEUjoa9f`、READY、main `faf357ceab5752c4399bd6712c68a9ad2b1c2587`。正式 alias `med-exam-dashboard.vercel.app`；不可變部署 `med-exam-dashboard-diuv4h49g-peterlee0718-9156.vercel.app`。Vercel project `prj_GpatjsrrObLmUUXmocuJTvPpfINU`、team `team_OncahZa34WFeSvYfJVYpn82t`。這是本輪查詢時的觀察，實際執行前須重新比對。
-- `vercel.json` 沒有部署本候選 Rules 的設定；GitHub Actions 只做測試，沒有 Firebase deploy step。沒有 `firebase.json` 或自動 Rules 發布入口。Push 此分支會觸發既有 Preview；不會由本輪工具觸發 Production。
-- **正式 Rules 不在 Repository，這輪沒有讀取正式資料／Rules，也沒有可用的 Firebase 管理身分。** 因此無法聲稱實際正式 ancestor grants、資料完整性／歸屬或備份已驗證。README 以前的 owner-only root grant 只是範例，不能視為 live Rules，也不能再用作 v3 的發布方案。這是正式切換阻擋項，不可用候選測試 PASS 代替。
+## 兩份獨立授權
 
-## 候選 Rules 的保證與邊界
+**部署授權**：明確核准 exact Head、project／instance／UID、Rules hashes、freeze／active Rules 切換、網站切換與最小 smoke 操作。這不授權放棄資料。
 
-`config/firebase/database.rules.candidate.json` 是完整替換候選，不能與舊 root grant 疊加。owner 留為 `__REVIEWED_OWNER_UID__`，不可原樣發布。`tests/fixtures/course-rules.json` 用相同 generator，僅把 owner 綁為合成 `fixture-A`。`database.rules.freeze.candidate.json` 保留相同讀取邊界，關閉所有一般客戶端寫入，可作未來維護／失敗凍結的候選。
+**帳號重置授權**：另行核准空白開始、經歸屬核對的 legacy paths／XP、精確 UID 本機 keys、兩個新 generation／era 及初始化 patch hash。即使舊值留在備份或退役根，改用空白來源也屬實質放棄現有紀錄，不能當一般部署自動執行。現有情境沒有 canonical／control，且不做歷史遷移；缺此授權只能停在準備階段，不得建立空白新來源。
 
-1. root、`users`、`users/$uid`、`questOS`、`gamification` 等祖先沒有 write grant。canonical 僅 owner 且 `auth.uid === $uid` 可讀寫；匿名、其他 UID、集合祖先讀取均拒絕。
-2. 四科舊 root、舊日期、v2 gate 永久拒寫；舊課程／日期也不再作讀取來源。混合合法／已淘汰路徑的 root multi-update 全部失敗，其他分支不會部分寫入。
-3. 每次 Boolean 改動需要對應的新 UUID v4 版本及 clock +1。版本變動必須與同一次原子寫入中真正改變的 Boolean 共用操作 UUID；只換版本、只加 clock 或夾帶日期均不能代替 Boolean 改動。
-4. 批次會包含原本已完成的項目，這些項目的版本仍可更新，但必須共用本批真正 Boolean 改動的 UUID。不能一律要求每個版本更新都翻轉 Boolean，否則會誤擋章節操作。全 115 項混合批次也納入測試。
-5. 日期修改需要新的 `_version` 和 clock +1；刪 day 以保留版本的 tombstone 表示。祖先驗證保留既有課程、版本與日期紀錄，防止 Firebase 對刪除節點略過 `.validate` 造成繞過。
-6. generation／era 建立後不可由一般客戶端改動，整份文件或 fence 不能刪除。首次建立只准 `initial-v3`、era 0、clock 0/1；重置後任意新 generation 必須由另行授權的管理程序建立。clock／era 限制安全整數，clock 只可不變或 +1。
-7. `courses`、四科子容器、`versions`、`firstCompletion` 存在時必須有子節點，不能以 Boolean／字串替換來略過 child validator；空 map 在 RTDB 是不存在節點，正常空文件仍可建立。只接受目前 115 個課程 ID、已知欄位、Boolean、UUID 及日期格式。generator 從現有課程資料導出 allowlist，CI 檢查產物沒有漂移。未來課程增刪要一起審查 Rules；不能任意刪除既有 tombstone。
+## 操作清單
 
-**Rules 不證明呼叫來源或客戶端 CAS 程式曾執行。** Realtime Database Rules 看合併後資料，無法區分 transaction、完整 set 或多路徑 update；只要合併結果完全符合契約，合法子路徑 multi-update 也應通過。Rules 不能證明 UUID 從未在久遠歷史使用過，也不能阻止已獲授權 owner 故意提交一筆結構合法的新操作。與同一 UUID 的合法 Boolean 批次一起更新未改值成員，是現有批次契約允許的行為，不應宣稱任何版本值變動都被拒絕。
+| 關卡 | 順序與必留證據／停止條件 |
+|---|---|
+| 1 正式環境重新確認 | 唯讀確認 team、project、Production deployment／SHA、Firebase project／instance、Auth owner UID 與所有 shared children 歸屬；取得實際 Rules 原文及 hash，比較 root／ancestor grants 與完整候選。檢查是否已有 canonical／control；若與本輪觀察不同，停止並重做初始化審查，不覆寫現有新紀錄。需要 instance Rules／資料讀取與必要 Auth UID 查核權限；不索取帳號密鑰。 |
+| 2 完整備份與驗證 | 從正式伺服器或管理 Console 取得**整個 instance JSON**及獨立 Rules 原文，記錄 instance、匯出時間、UID、位元組數及 SHA-256。驗 JSON 可解析、根／各子路徑數量與 server 證據相符，隔離 Emulator 還原後比對正規化全樹；另備份該 UID 本機 keys，不能把本機檔當 server backup。離線 `verifyResetBackup` 只驗 scoped artifact／hash，不能證明原始匯出完整、最新或屬於該 UID。 |
+| 3 暫停正式資料寫入 | 在已核准維護窗，先提供維護入口，安裝 owner 綁定、經審查的 freeze Rules，完全移除舊 root grant，不與舊規則疊加。確認一般 owner、舊 shared writer 及新版 bucket 寫入都被拒絕。不得以刷新／登出／Service Worker 當凍結。此關屬部署授權中的正式變更。 |
+| 4 最終 frozen snapshot | 確認 freeze 已生效後，再匯出整個 server JSON 與 Rules、產生 hash 並驗證還原。第 2 關快照不能代替這份。比對其他 UID、Auth 與課程定義；列出未知／未定 pending。未來初始化只能由這份 frozen snapshot 產生計畫。 |
+| 5 初始化新版資料 | **部署及獨立重置授權都齊全才可執行。** 用 `createBlankAccountPlan` 離線產生 exact patch，人工／程式核對 UID、legacy 歸屬、全新且永不重用的兩個 generation、era、backup／patch hashes。已授權管理身分在同一次原子 multi-location update 建立空白 learningV3、lifeControl，並處理已核准 legacy roots，包含仍被讀取的歷史 XP days／awards；絕不能逐步刪 fence。`lifeV1/<generation>` 空節點在 RTDB 不存在是正常結果。只處理列明 paths；Auth、其他 UID、course definitions 不在 patch 中。套用後用管理端 server read 比對 patch 效果及 untouched scope。不把離線 helper 當正式 apply 工具。 |
+| 6 安裝正式安全 Rules | 核對 owner 與 hashes，安裝**完整 active 候選**，保持舊四科、日期、v2、七組 shared roots 及歷史 XP 永久 deny 寫；只有 owner／UID／當前 generation 的新路徑可用。控制節點管理端唯寫。不能保留任何較高層 root grant。Rules 必須先於新網站開放；資料尚未準備好就維持 freeze。 |
+| 7 切換新版網站 | 使用已審查 Head 的相同生產設定 build，核對不可變 deployment ID 與 commit，確認 Rules／control 已就緒才指派正式 alias。任何 staging deployment 也需要部署授權；本輪沒有建立。Preview promotion 可能重建，不能宣稱為已測的同一個 production artifact。 |
+| 8 登入／同步驗收 | 在授權範圍內自動核對 Auth UID、control／course generation、空白日期／課程、0 歷史 XP、初始王國、固定課程目錄及其他 UID 不變。另須部署授權明列 synthetic/真實最小 smoke 範圍：課程勾選、日期、任務／習慣、reload／離線重連、多 context、server UUID／clock／pending；讀取成功不能代替寫入證明。新課程／任務依既有產品契約不發 XP，王國依真實課程／活動成長；不能把 XP 維持 0 當失敗。真實 OAuth／手機持久性需要正式驗收，不以模擬 Auth 代替。 |
+| 9 失敗安全停止／復原 | 立即回到已審查 freeze Rules、維護／唯讀狀態，保存 server snapshot、Rules hash、pending／journal 與錯誤證據。不得清 pending、倒退 generation／era、恢復舊 root grant 或開回退役 roots。唯讀查明原因，待修復授權後重試。 |
 
-日期另有一個明確限制：現有 `setDate` 允許對相同日期再次提交新操作，因此「日期不變、`_version` 更新、clock +1」與正常重複日期操作無法區別。沒有 clock 的單獨日期版本修改會拒絕；有完整合法 clock 的相同日期新操作仍允許。若要求連具 owner 權限的惡意客戶端也不能製造合法外觀的操作、重用歷史 UUID、或改寫上述日期版本，**此威脅模型仍 NO-GO**。最小強化方向是封鎖 canonical 直接寫入，交由受控 server writer 核對 immutable intent／bases／generation 並保存可驗證去重資訊；不能只新增前端版本字串或 client-supplied marker。本輪依「只修改 Rules 候選與測試」的範圍，不擅自增加後端／改寫同步協定。
+## 復原能力與限制
 
-## 舊 writer 實際隔離範圍
+目前**沒有已獨立驗證、相容新資料契約的前一版回復 build**；main `faf357c` 依舊契約寫入，不能作為可寫 rollback。預設安全停止方案是保持 freeze、維護入口，不開放正常編輯；可保留現有網站供唯讀觀察，但不能宣稱它能正常同步。正式切換前需預備並驗證維護入口；它尚未被部署。
 
-| 路徑 | 新版用途／來源 | 候選 Rules 對舊程式的效果 |
-|---|---|---|
-| `videos`、`biochem`、`physiology`、`pharmacology` | 新版經 facade 讀 canonical；`course-sync.js` 唯一 writer | 永久 deny，不能重建舊進度 |
-| `questOS/v1/courseFirstCompletion`、`courseSyncV2` | 舊日期與 gate 已退役 | 永久 deny，包括 ancestor／混合 multi-update |
-| `gamification/v1/days`、`awards` | `workspace.js` 歷史唯讀 | 保留 owner 讀；永久 deny 寫，防舊 XP 帳本復活 |
-| `habits` | `life-store.js`、原頁習慣 | owner 可寫，舊 writer 仍可能競爭 |
-| `questOS/v1/training` | `life-store.js` | owner 可寫，舊 writer 仍可能競爭 |
-| `questOS/v1/adaptiveStudy/settings` | `adaptive-store.js` | owner 可寫，舊 writer 仍可能競爭 |
-| `gamification/v2/timeTasks` | `time-tasks.js` | owner 可寫，舊版可能帶入獎勵欄位 |
-| `gamification/v3/planner/tasks` | `daily-planner.js` | owner 可寫，舊版可能帶入任務獎勵欄位 |
-| `custom_events`、`checklist` | 原頁行事曆與清單，經 `sync.js` | owner 可寫，舊 writer 仍可能競爭 |
-| 王國／建築／領主等級 | 既有課程、任務、生活投影 | 沒有另一份王國 cloud writer；以上來源變動仍會影響投影 |
+若日後有同一新契約的已測 build，可在保持退役路徑 deny 的前提下切回，保留切換後成功資料。備份還原必須另行授權：先 freeze、保全最新成功紀錄，不能把較舊全庫備份直接蓋回，也不能重用 generation。若要重新空白開始，須再次核准 reset，原子輪換 lifeControl 與 learningV3 generation／era。沒有安全合併證據時就維持維護，不冒險還原。
 
-測試實際讓 owner 的獨立舊式 SDK 對七組 shared paths 寫入並由 Emulator 管理端驗證，證明風險存在。沒有假設新版本、重新登入、刷新或 Service Worker 能使全部舊分頁失效。歷史 pending 繼續隔離保留，不重送、不丟棄、不按 Boolean 判成功。
+## 候選 Rules 的既有邊界
 
-### 全帳號重置的最小前提（已由後續隔離實作接續）
+- 以完整替換消除 ancestor grants；課程 Boolean／版本／clock 原子契約與首次日期 tombstones 不變。115 項 allowlist、批次、跨 UID、子路徑與 freeze 防護已有 Emulator 測試，本輪不重審同步核心。
+- Rules 不能證明是 transaction 呼叫、驗證 UUID 在全歷史未曾用過，或阻止已授權 owner 提交結構合法的新操作。相同日期＋新版本／clock 的合法再次操作仍允許。需要防惡意 owner 的更強契約仍須 server writer，不是本輪部署準備範圍。
+- 七組隔離已在程式及候選 Rules 完成；不再把 shared writer 當尚待開發項目。但未安裝正式 Rules 前，舊 root grant 仍是正式切換阻擋。
 
-課程 fence 可阻止課程舊請求，但不足以保護上述七組 shared roots。可評估小範圍 DB facade 映射，把這七組 writer／reader 改到 `users/<uid>/lifeV1/<generation>/...`，由管理端唯寫的 account control 指定目前 generation；Rules 要求 `$generation` 等於目前 control，永久 deny shared 舊路徑與所有舊 generation 的寫入。重置時原子輪換 control 與課程 generation／era；舊頁面即使仍登入、持有舊 pending，也只能命中被拒絕的舊位置。需要測試 session／本機 cache 隔離及七組產品流程後才能採用，不能只改路徑字串就宣稱完成。受控 server writer 也是替代方案，單純 revoke token 不足以長期隔離同 UID 舊程式重新登入。
+## 本輪證據與剩餘阻擋
 
-後續已實作此 facade 與 control，七組舊路徑在候選 Rules 永久 deny，詳見 LIFE_ISOLATION.md。**正式 Rules 尚未切換，真實重置仍未授權；不可刪資料再開回舊 Rules。**
+`createBlankAccountPlan` 僅產生 `executable:false` artifact，沒有 SDK、Auth、網路或 apply 能力。直接單元測試與 loopback Emulator 的 `--blank-only` 驗證空白初始化、freeze、其他 UID／靜態資料、實際登入流程（合成 Auth）、課程／日期／任務／習慣、XP 與王國；完整回歸由最終 Head CI 執行。結果連結以 PR 描述為準。
 
-## 可執行的切換順序（本輪只準備，沒有執行）
-
-### 0. Codex 現在可自動完成
-
-```sh
-node scripts/course-rules-candidate.mjs --check
-node scripts/course-rules-candidate.mjs --prepare
-npm test
-npm run lint
-npm run build
-B2B1_EMULATOR_JAR="$PWD/work/firebase/database.jar" FIREBASE_SDK_DIR="$PWD/work/firebase" node tests/sync-queue/durable-course-emulator.mjs
-```
-
-`--prepare` 只在 `work/course-cutover/` 產生綁定 `owner-config.js` 的兩份候選與 SHA-256 manifest（含 Head 與 worktreeDirty；未提交工作另列阻擋），固定 `executable:false`、列出未完成阻擋；沒有網路、deploy、Auth 或資料刪寫 API。Emulator runner 只接受 checksum 固定的 SDK 9.22.0／Emulator 4.11.2，自己建立 loopback 連線，不接受遠端 Database URL。CI 自動下載並驗證依賴。正式執行前必須重新準備 packet，核對 exact Head、CI、UID、Rules hash。
-
-### 1. 未來取得明確正式切換授權後：先檢查、備份、凍結
-
-1. Codex 重新讀取唯讀部署 metadata，驗證 team／project、Production SHA、Firebase project／instance／UID，取得 live Rules 與精確 scope 的 server backup，保存 checksum。正式 Rules 的有效 ancestor grants、現有資料 schema、shared roots 的歸屬需與本候選逐一比對；不匹配就停止。不能把 localStorage 或 Firebase SDK 快取當 server backup。
-2. 準備同一 v3 契約的待發布 build、維護頁及回復 build，固定不可變 deployment ID，先在隔離環境完成全部流程。不要先 merge main 觸發正式 Git 自動發布；未來若用 CLI，先 stage Production build 而不指派正式 domain，驗證後才 promote。Preview promote 可能重新 build，不能把其結果當同一個已驗證 build。
-3. 在短暫維護窗先啟用經審查的 freeze Rules（所有客戶端寫入關閉）。只換網站／要求關頁無法凍結舊客戶端。待凍結生效後重新取得 frozen server snapshot；以這份快照作初始化依據。之前取得的備份不能代替最後 frozen snapshot。一般使用者既有離線 pending 保留，不自動合併或清除。
-
-### 2. 建立 canonical 並啟用 Rules，然後切網站
-
-4. **先決定初始資料，不能直接把新路徑空白當成功切換。** 如保留既有進度，另行審查並授權一次性 server-side provisioning：從 frozen snapshot 映射固定 115 個 Boolean／首次日期、配置合法版本；來源日期衝突需明確核對，不從 pending 或相同 Boolean 推論。若選擇空白開始，須先取得明確的重置授權且滿足相應隔離條件；本輪沒有這項授權。已有 canonical 則保留其 generation／era 與全部版本，不可覆寫或倒退。
-5. 驗證初始化 checksum、日期、115 項 scope 與其他 UID 不變。啟用完整審查後的 active Rules，永久 deny 舊四科／日期／v2／歷史 XP 帳本；不可保留或重新加上 root write grant。正式 Rules 先於新網站開放寫入。此時舊頁面課程寫入失敗，新 canonical 不受影響。
-6. promote 經測試的 v3 build 到正式 alias，核對 live build SHA／UID／canonical path 與 Rules hash。七組 shared 生活／任務路徑若仍保留寫入，這次只能稱「課程切換」，不能宣稱「全帳號 reset 已安全」。
-
-### 3. 同步驗收與復原
-
-7. Codex 先做授權範圍內的唯讀驗收：cold load／reload、四科／日期與 frozen server snapshot 一致、無跨 UID、無舊課程寫入、歷史 XP 與王國來源一致，pending 不憑快照清除。唯讀檢查不能證明正式寫入成功。
-8. 要驗證正式寫入，未來部署授權需明確包含一組最小 smoke 操作。可選已有首次日期且無 pending 的已完成課程，於兩個登入 context 做 false → true、離線重連／reload，核對 server operation UUID、clock +1、pending 自動清除、首次日期與 XP 未改變。Codex 可自動執行及比較；不需使用者手動逐項測試，但不能在本輪未授權時操作真實進度。兩 context 驗證邏輯同步；真實手機與 OAuth 裝置持久性仍需實機驗收，不與 Emulator 混稱。
-9. 驗收失敗立即套用 freeze Rules、保留 journal／server snapshot 與故障證據，不清 pending、不旋轉 generation、不把歷史資料覆蓋回正在寫入的 DB。若有已測 v3 回復 build，可在維持退役路徑 deny 的前提下切回；目前 main `faf357c` 仍用舊課程契約，**不是可恢復寫入的 rollback**。沒有相容 build 就維持維護／唯讀並修復後重試。絕不回復舊 root grant 或重新開放已淘汰路徑。
-10. 備份還原只有在 freeze 生效、另行授權並確認不會抹除成功新紀錄時才能執行；不能直接倒退 generation／era。需要 reset／restore 時維持唯一新 generation 和遞增 era，舊請求不得復活。
-
-### 4. 何時可進入真實全帳號重置
-
-只有在七組 shared writer 已完成 server-side 隔離、含舊分頁／重新登入／離線 pending 的測試通過、live Rules 與 ownership／backup／restore 演練通過、課程正式 smoke 通過，並取得該 UID 的**獨立明確重置授權**後，才可依 `RESET_PLAN.md` 進行。清本機只能精確刪該 UID 的已核准鍵，不刪 Auth／其他 UID／整個 origin。本輪尚未達成，也沒有 reset 執行器。
-
-## 結論
-
-候選 Rules 可供再次 Code Review 與正式 Rules 差異審查；尚不能宣稱 Production 已獲保護。正式切換需 live Rules／資料初始化審查及部署授權；全帳號重置另受七組 shared writer 阻擋。對「惡意 owner 仍不可提交合法外觀操作」的更強要求，現有純客戶端契約有上述根本限制，不能以測試通過隱藏。
+正式部署執行仍 NO-GO：原始 live Rules／完整 frozen backup／ownership 尚未獨立驗證，沒有正式管理執行權限、兩份授權、production smoke 或相容 rollback build。可以提交**部署授權審查**；審查須把上述關卡與獨立 reset 決策列為前置條件，不能直接開始部署。真實重置不因 CI 綠燈自動獲准。

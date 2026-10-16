@@ -38,3 +38,18 @@ test('synthetic empty account returns initial kingdom and accepts fresh progress
 });
 
 test('canonical backup is UID-exact and reset plan rotates generation/era rather than deleting the fence',async()=>{const cloud=fixture();cloud.users[uid]={learningV3:{schema:3,generation:'old',era:7,clock:42,courses:{videos:{1:true}},versions:{videos__1:'old-op'},firstCompletion:{}}};const before=structuredClone(cloud);const plan=await createResetPlan({verifiedUID:uid,ownerUID:uid,cloudSnapshot:cloud,localSnapshot:{}});assert(plan.cloudPaths.includes('/users/'+uid+'/learningV3'));const backup=await verifyResetBackup(plan.backup,uid);assert.deepEqual(backup.cloud['users/'+uid+'/learningV3'],before.users[uid].learningV3);assert.equal(plan.canonicalFence.replacement.era,8);assert.notEqual(plan.canonicalFence.replacement.generation,'old');assert.equal(plan.executable,false);assert.deepEqual(cloud,before);});
+
+test('blank-start artifact is inert, requires ownership, and atomically plans both fences and retired XP',async()=>{
+ const {createBlankAccountPlan}=await import('../../src/study/reset-plan.js');
+ const cloud=fixture(),before=structuredClone(cloud),options={verifiedUID:uid,ownerUID:uid,cloudSnapshot:cloud,localSnapshot:{[prefix+'pending']:'keep'},reviewedLegacyPaths:RESET_CLOUD_PATHS,courseGeneration:'fresh-course',lifeGeneration:'fresh-life'};
+ await assert.rejects(createBlankAccountPlan({...options,reviewedLegacyPaths:[]}),/ownership/);
+ const plan=await createBlankAccountPlan(options);assert.equal(plan.executable,false);assert.deepEqual(plan.requiresAuthorizations,['production-deployment','account-reset']);
+ assert.deepEqual(plan.canonicalFence.replacement,plan.atomicUpdate['users/'+uid+'/learningV3']);assert.deepEqual(plan.lifeFence.replacement,plan.atomicUpdate['users/'+uid+'/lifeControl']);assert.match(plan.atomicUpdateSha256,/^[a-f0-9]{64}$/);assert.match(plan.sourceSnapshotSha256,/^[a-f0-9]{64}$/);
+ assert.equal(plan.atomicUpdate['gamification/v1/awards'],null);assert.equal(plan.atomicUpdate['users/'+uid+'/lifeV1/fresh-life'],null);
+ assert.deepEqual(plan.atomicUpdate['users/'+uid+'/lifeControl'],{schema:1,generation:'fresh-life',era:0});assert.equal(plan.atomicUpdate['users/'+uid+'/learningV3'].clock,0);
+ assert(!Object.keys(plan.atomicUpdate).some(p=>p.includes('synthetic-reset-B')||p.includes('courseDefinitions')));assert.deepEqual(cloud,before);assert.equal(await verifyResetBackup(plan.backup,uid).then(b=>b.local[prefix+'pending']),'keep');
+ cloud.users[uid]={learningV3:{generation:'prior-course',era:4},lifeControl:{generation:'prior-life',era:8},lifeV1:{used:{habits:{old:true}}}};
+ const rotated=await createBlankAccountPlan(options);assert.equal(rotated.atomicUpdate['users/'+uid+'/learningV3'].era,5);assert.equal(rotated.atomicUpdate['users/'+uid+'/lifeControl'].era,9);
+ for(const overrides of [{courseGeneration:'prior-course'},{courseGeneration:'initial-v3'},{lifeGeneration:'used'},{lifeGeneration:'prior-life'},{lifeGeneration:'fresh-course'}])await assert.rejects(createBlankAccountPlan({...options,...overrides}),/fresh-generation/);
+ cloud.users[uid].lifeControl.era=Number.MAX_SAFE_INTEGER;await assert.rejects(createBlankAccountPlan(options),/invalid-era/);
+});

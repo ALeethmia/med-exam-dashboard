@@ -1,5 +1,6 @@
 // Standalone synthetic integration. Starts its OWN ephemeral loopback emulator; no remote URL option.
 import assert from 'node:assert/strict';
+import {verifyBlankAccount} from './blank-account-emulator.mjs';
 import {verifyLifeIsolation} from './life-isolation-emulator.mjs';
 import {verifyCourseRules,createRulesAttacker} from './course-rules-attacks.mjs';
 import {readFileSync,existsSync} from 'node:fs';
@@ -23,6 +24,7 @@ try{
  const endpoint=p=>origin+'/'+p+'.json?ns='+ns;
  await new Promise((resolve,reject)=>{let n=0;const tryRead=()=>fetch(endpoint('')).then(()=>resolve(),()=>{if(++n>100)reject(Error('Emulator HTTP not ready'));else setTimeout(tryRead,100);});tryRead();});
  async function admin(p,value){const r=await fetch(endpoint(p),{method:'PUT',headers:{Authorization:'Bearer owner','Content-Type':'application/json'},body:JSON.stringify(value)});assert(r.ok);}
+ async function adminUpdate(patch){const r=await fetch(endpoint(''),{method:'PATCH',headers:{Authorization:'Bearer owner','Content-Type':'application/json'},body:JSON.stringify(patch)});assert(r.ok);}
  async function read(p){const r=await fetch(endpoint(p),{headers:{Authorization:'Bearer owner'}});assert(r.ok);return r.json();}
  await admin('.settings/rules',JSON.parse(readFileSync(new URL('../fixtures/course-rules.json',import.meta.url))));
  const initial={schema:3,generation:'initial-v3',era:0,clock:0,courses:{},versions:{},firstCompletion:{}};
@@ -49,6 +51,7 @@ try{
  async function load(){await page.goto(base);await page.waitForFunction(()=>window.updateWorkspace&&window.i3Runtime.read().status==='ready');}
  async function drain(){try{await page.waitForFunction(()=>!window.courseSync.inspect().pending.length,null,{timeout:15000});}catch(error){console.log('DRAIN',JSON.stringify(await page.evaluate(()=>({sync:courseSync.inspect(),runtime:i3Runtime.read()}))));console.log('DOC',JSON.stringify(await read(domain)));throw error;}}
  let count=0;async function check(name,fn){const start=Date.now();await fn();count++;console.log('PASS '+name+' ('+(Date.now()-start)+'ms)');}
+ if(!process.argv.includes('--blank-only')){
  await load();await createRulesAttacker(page);
  if(!process.argv.includes('--life-only')){
  await check('Rules reject forged initialization and malformed containers before the first legitimate operation',async()=>{
@@ -111,5 +114,7 @@ try{
  await check('history/XP stay unchanged; no external requests, receipt growth, gate or console exception',async()=>{
   assert.deepEqual(await read('gamification'),history.gamification);const current=await read(domain);assert.equal(current?.gate,undefined);assert.equal(current?.receipts,undefined);assert.equal(external,0);assert.deepEqual(errors,[]);
  });
+ }
+ await verifyBlankAccount({browser,base,read,admin,adminUpdate,check});
  console.log('Durable course Emulator checks passed: '+count+' (real product UI + SDK 9.22.0 + Emulator 4.11.2; synthetic identities/rules only).');
 }finally{clearTimeout(all);await browser?.close();if(server)await new Promise(r=>server.close(r));child.kill('SIGTERM');}
