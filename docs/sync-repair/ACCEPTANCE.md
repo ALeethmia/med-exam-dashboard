@@ -8,7 +8,7 @@ Reviewed input: `00c28dea082707affef25726cc5c7605cee7b446`。比較基準 main: 
 
 課程完成與首次日期合併成 `users/<UID>/learningV3` 的一筆 transaction。它只包含該 UID 的四科課程、每課最後操作 UUID、首次日期／移除 tombstone、generation、era、clock；不再 transaction 資料庫根節點，也不讀寫 XP、任務、習慣或行事曆。章節跨科整批仍是一個 transaction。正常目錄 115 個課程，伺服器 metadata 隨課程數成長，不隨修改次數成長。
 
-每筆新操作先用獨立 localStorage key 持久保存不可變的內容與 base revisions。不同分頁不再覆寫同一個 journal JSON。發送者透過短 IndexedDB critical section 取得帶 UUID 的 3 秒 claim；Web Locks 只減少重複工作。SDK 呼叫期間不佔用 IDB transaction。其他分頁不能反覆搶走有效 claim，且租約到期只允許接管同一筆 CAS，絕不表示成功。遲到回覆仍須匹配 UID/session 以及仍存在的同一筆 journal。若 claim 已移交，只有 committed server snapshot 證明整批欄位全為該不可變操作 UUID，才可結案；其他回覆仍須匹配發送 claim。結案與 review 決策共用短本機互斥區，不會復活已刪除的 journal，也不會刪除後續 UUID。
+每筆新操作先用獨立 localStorage key 持久保存不可變的內容與 base revisions。不同分頁不再覆寫同一個 journal JSON。發送者透過短 IndexedDB critical section 取得帶 UUID 的 3 秒 claim；Web Locks 只減少重複工作；排程鎖使用 ifAvailable，舊分頁一直持鎖時仍走 IDB／CAS，不會等待網路鎖。SDK 呼叫期間不佔用 IDB transaction。其他分頁不能反覆搶走有效 claim，且租約到期只允許接管同一筆 CAS，絕不表示成功。遲到回覆仍須匹配 UID/session 以及仍存在的同一筆 journal。若 claim 已移交，只有 committed server snapshot 證明整批欄位全為該不可變操作 UUID，才可結案；其他回覆仍須匹配發送 claim。結案與 review 決策共用短本機互斥區，不會復活已刪除的 journal，也不會刪除後續 UUID。
 
 SDK rejection 或 3 秒內沒有回覆都不能判定伺服器是否已寫入。停止等待只排程同一 CAS 的安全重試；舊 SDK 呼叫仍受不可變 bases、操作 UUID 與 session fence 約束，單一分頁也不會永遠等在原 Promise。重試相同不可變操作時，伺服器 transaction 檢查目前 revisions：
 
@@ -29,7 +29,7 @@ confirmed snapshots 以 era/clock 選最新，正常保留最近兩份；延遲 
 
 **重新整理、Service Worker 更新或頁面廣播不能淘汰舊客戶端。** 安全切換需要伺服器 root deny，移除所有 ancestor write grants，對新 UID document 和既有非課程路徑逐一授權，並永久拒絕舊四科、舊日期及 v2 gate 路徑的寫入。`tests/fixtures/course-rules.json` 只適用合成 UID `fixture-A` 的隔離 Emulator；不是可直接部署的正式 Rules。
 
-還有一個重置限制：舊非課程程式仍使用相同 shared 生活／任務路徑，無法只靠前端版本保證它們不在重置後回寫。真實全帳號重置必須先獨立證明這些 writer 已被伺服器淘汰，或另行審查其寫入契約。這輪不擴張成所有生活資料的架構遷移。正式切換、初始化／重置 fence 與真實重置皆仍 NO-GO。
+還有一個重置限制：舊非課程程式仍使用相同 shared 生活／任務路徑，無法只靠前端版本保證它們不在重置後回寫。真實全帳號重置必須先獨立證明這些 writer 已被伺服器淘汰，或另行審查其寫入契約。若要保證全帳號重置，必要方向是讓生活／任務寫入也使用受伺服器驗證的 UID＋generation 新路徑（或受控 server writer），並永久 deny 舊 shared roots；相同 UID、相同舊路徑的請求無法僅憑前端版本分辨。這輪不擴張成所有生活資料的架構遷移。正式切換、初始化／重置 fence 與真實重置皆仍 NO-GO。
 
 ## 驗證與界線
 
@@ -52,10 +52,10 @@ Emulator 使用 checksum 固定的 SDK 9.22.0／Database Emulator 4.11.2，僅 l
 
 ## 最終本機結果
 
-- 完整 Playwright：200 passed / 0 failed / 0 skipped（2 workers，同一容器）。
+- 完整 Playwright：201 passed / 0 failed / 0 skipped（2 workers，同一容器）。
 - npm test：全部通過；展開執行 223 項檢查。
 - build、lint：通過。
 - 真實 Becoming + SDK Emulator：11 / 11；既有 Adapter SDK Emulator：5 / 5。
 - canonical auth：6；review browser：48；failure/batch：8；learning：14，均通過。
 - 相容網址：32；browser module/layout：18，無錯誤。
-- CI 已從子集提升為完整 200 項瀏覽器套件；新 Head 的 CI 結果以 PR checks 為準。
+- CI 已從子集提升為完整 201 項瀏覽器套件；新 Head 的 CI 結果以 PR checks 為準。

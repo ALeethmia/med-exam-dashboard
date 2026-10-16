@@ -100,8 +100,9 @@ export function createCourseSync({storage,uid,valid,ready,locks,localOnly=false,
  }
  async function drain(){
   const run=async()=>{if(!alive())return;if(!rows().length&&!localError)lastError='';if(rows().length)await coordinate.prune?.();const blocked=new Set();for(const row of rows()){if(!alive())return;const paths=[...Object.keys(row.changes).map(courseToken),...Object.keys(row.manualDates||{})];if(row.phase==='review'){paths.forEach(path=>blocked.add(path));continue;}if(paths.some(path=>blocked.has(path)))continue;if(!await attempt(row)){const review=rows().find(current=>current.id===row.id)?.phase==='review';if(review){paths.forEach(path=>blocked.add(path));continue;}return;}}};
-  // Cloud CAS supplies correctness without Web Locks. Locks only avoid redundant requests.
-  if(locks?.request)await locks.request('becoming-course-sync:'+uid,{mode:'exclusive'},run);
+  // Never wait behind a frozen tab's network scheduling lock. The short local
+  // coordinator and server CAS also protect run() when ifAvailable supplies null.
+  if(locks?.request)await locks.request('becoming-course-sync:'+uid,{mode:'exclusive',ifAvailable:true},run);
   else await run();
  }
  function pump(){if(running){requested=true;return running;}

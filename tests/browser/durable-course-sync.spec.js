@@ -9,6 +9,12 @@ async function init(context,page){
  });
 }
 const empty=page=>expect.poll(()=>page.evaluate(()=>engine.inspect().pending.length)).toBe(0);
+test('an unresponsive tab holding the scheduling Web Lock cannot block an active writer',async({context,page})=>{
+ await init(context,page);const holder=await context.newPage();await holder.goto('/durable-course-fixture');
+ await holder.evaluate(()=>{window.held=navigator.locks.request('becoming-course-sync:synthetic-browser-UID',async()=>{window.holding=true;await new Promise(resolve=>window.releaseLock=resolve);});});await holder.waitForFunction(()=>window.holding);
+ await page.evaluate(()=>engine.enqueue({'videos/1':true}));await empty(page);expect(await page.evaluate(()=>raw.inspect().tree.users['synthetic-browser-UID'].learningV3.clock)).toBe(1);
+ await holder.evaluate(async()=>{releaseLock();await held;});await page.evaluate(()=>engine.close());await holder.close();
+});
 test('native IndexedDB fallback handles same UID two-tab takeover and late callbacks without Web Locks',async({context,page})=>{
  await context.addInitScript(()=>Object.defineProperty(navigator,'locks',{value:undefined}));await init(context,page);await page.evaluate(()=>{holdFirst=true;engine.enqueue({'videos/1':true,'videos/2':true});});await expect.poll(()=>page.evaluate(()=>typeof release)).toBe('function');
  const opened=context.waitForEvent('page');await page.evaluate(()=>window.open('/durable-course-fixture'));const other=await opened;
