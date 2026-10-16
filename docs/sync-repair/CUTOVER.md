@@ -64,3 +64,36 @@
 安全停用：先完成 server 初始化與 active Rules／control／fence 驗收，再取得正常 artifact 切換授權，核對同一新同步契約與 config=false，切回後**完整 reload**。不在既有維護頁熱啟動，不讓使用者以 query 或 localStorage 繞過；既有 201 項產品回歸及正式 smoke 繼續適用。局部 disabled 測試只證明原 local flow 能恢復，真實 OAuth／server 寫入仍須授權的正式 smoke，不可混稱。
 
 限制：這是新頁面的啟動阻擋，不能停止已開啟的舊分頁、繞過網站的舊程式或管理身分。**freeze Rules 仍是實際 server 保護**，不可用畫面或要求重新整理代替。維護 artifact 也不是可寫 rollback build；故障時保持 freeze／維護並保全資料，未核准前不恢復寫入。若 config/module 載入失敗，入口不會繼續初始化 writers；仍需監測畫面是否成功載入。
+
+## 最終離線切換演練與正式執行入口
+
+基準 `493734c7d297729d9f85dfebe14f344b48efb2aa`。`scripts/emulator-cutover.mjs` 是 **Emulator-only execution helper**，不是正式 apply 腳本；既有 runner 自建 loopback Java Emulator，再呼叫它。只接受 HTTP、明確 port 的 `127.0.0.1`／`[::1]` 與 `demo-*` namespace，拒絕正式 hostname、HTTPS、userinfo、額外 path/query/hash、非 demo namespace，HTTP 不跟隨 redirect。固定使用 Emulator 的合成 owner header，不讀入正式金鑰／Google credential。UID 僅接受 `fixture-*`。不要把 loopback 位址接到任何正式資料庫代理或 tunnel。
+
+```sh
+B2B1_EMULATOR_JAR="$PWD/work/firebase/database.jar" FIREBASE_SDK_DIR="$PWD/work/firebase" node tests/sync-queue/durable-course-emulator.mjs --cutover-only
+```
+
+沒有遠端 URL／credential／正式 apply 的 CLI 參數；直接執行 helper 檔不會變更資料。`createBlankAccountPlan` 仍固定 `executable:false`；只有上述受限的演練流程在可拋棄 Emulator 套用合成 patch。合成 snapshot 的 schema／歸屬可在測試中明確知道，不能把這份 test assertion 當真實 owner 證據。
+
+成功順序：freeze 並讀回 Rules → frozen 全樹快照／hash／bytes → 在同一 Emulator 的**另一個 disposable namespace**驗證還原及全樹相等（不清空 source）→ 產生離線計畫並核對 source／patch hashes → 套用前再核對 source 未變 → 一次原子 PATCH 初始化 → 逐 leaf 比較整樹變更 → active Rules 並讀回確認 → 真正 Becoming 頁面合成 Auth 登入、課程首次日期、離線 pending／reload／server clock、生活保存。Rules hashes、完整合成 backup、plan 與 stage list 由 helper 回傳，固定標示 `productionExecutable:false`。
+
+在 freeze、snapshot、restore、initialized、active、smoke 六點分別注入失敗：catch 只重新安裝 freeze，不回復舊 Rules 或舊資料；讀回確認後才回報 `stopped-frozen`。實際 owner SDK 對 legacy／新 bucket 都拒寫，其他 UID／靜態定義不變；smoke 後故障仍保留已成功的新資料。若連 freeze request／讀回都失敗，回報 **`freeze-unconfirmed`**，不得聲稱已安全。管理身分仍可越過 freeze，因此外部 admin 操作必須禁止並監測；初始化前 source 改變就停止，不自動重試 reset。stage list 只表示已確認的步驟；如果 PATCH 回應遺失，不可由 stage 名稱推論未提交，必須在 freeze 下讀 server 比對已核准 patch，保留未知結果而不重做初始化。
+
+本機只跑直接 tool 單元與 `--cutover-only`；CI 預設保留原 82 組 Emulator 情境，加此成功／六點故障矩陣兩組（84）。URL／redirect／backup checksum／freeze-unconfirmed 另有直接單元測試。合成 Auth 不等於真實 OAuth／手機驗收；真實備份內容與 `.priority` 等未測 metadata 仍依 RESTORE_DRILL 的限制獨立驗證。
+
+### 最短正式清單及人工關卡
+
+1. **人工確認** owner Auth UID、legacy 每個刪除路徑歸屬、原始 Console 匯出／Rules 的來源及完整性；離線工具只能驗檔案與 hash，不能代替使用者確認歷史資料歸屬。
+2. **人工分別授權** exact Head 的部署（含 freeze／active Rules／維護及正常網站切換／指定 smoke），以及該 UID 空白開始的獨立 reset（精確 paths／local keys、雙 generation／era、source／patch hashes）。未授權 reset，不可在部署中初始化空白來源。
+3. 凍結前完整備份並在隔離環境還原 → 經授權 freeze → 驗證一般 writer 拒寫 → 取得並驗證最終 frozen server snapshot。
+4. 從最終 snapshot 重新準備 artifact；**人工核准** backup／Rules／patch hashes 與 scope，固定維護、正常 build 的不可變 ID。任何 drift 都停止，不能拿本輪合成 artifact 套正式資料。
+5. 已審查的一次性管理入口只套用核准的原子 patch，核對其他 UID／靜態資料與 fence；再 active Rules → 經授權切網站 → 指定最小正式 smoke。Codex 可自動比較技術證據，不需使用者逐項點選測試。
+6. 任一失敗維持／重設 freeze 與既有維護入口；保留成功新資料與 pending，不倒退 fence、不開舊 root grant。不能確認 freeze 時立即停止所有後續步驟並請管理者核對。還原／再次 reset 須另一份明確授權。
+
+### 最小權限與尚缺工具
+
+最小可行正式方式：管理者現有 Firebase Console 負責 Rules／匯出，搭配**另行審查的一次性受管 Admin SDK 工作**，只做 frozen snapshot 核對、單次 root multi-location update、server 驗證及退出。不能用 Console 的整根 Import 覆蓋全庫來代替 atomic patch，也不能把 Emulator helper 換 URL 後當正式工具。
+
+需要該 instance 的 Rules／全資料唯讀、經授權階段的 Rules 管理與資料原子寫入權限，以及 Auth UID 查核的唯讀能力；**不需要 Auth 建立／刪除／改密碼或整個專案 Owner**。資料管理身分通常越過 Rules，無法靠前端 Rules 將其限制為單一 UID，所以受管入口必須自己鎖 instance／UID／path allowlist／patch hash，留下操作記錄並於維護窗限制其他 admin。透過既有 Console 權限或短效受管身分提供，不在聊天貼金鑰，不建立長效 service-account key。
+
+該正式管理工作與正式權限目前**尚未提供／核准**；本輪刻意不建立可誤執行正式 reset 的通用腳本。這是正式操作入口及授權前提，不能宣稱已可直接切換。現有同步／隔離核心本輪沒有改動，沒有發現需要重大重構的新增程式阻擋。既有維護 Preview 保持原狀，分支 Git 自動部署持續停用，本輪不部署任何 Preview／Production。
