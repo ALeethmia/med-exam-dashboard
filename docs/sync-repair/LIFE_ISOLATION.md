@@ -42,3 +42,5 @@
 本輪本機結果：229 項 Node 全部通過；直接相關 SDK Emulator `--life-only` 14/14（13 組生活隔離情境＋既有 XP／課程不變檢查）通過；build／lint 通過。完整瀏覽器未在本機執行，交由最終 Head CI；CI 同時執行不帶 selector 的全部 78 組 SDK Emulator 場景。最終結果與連結記錄在 PR 描述，保持 Draft 等待 Code Review。
 
 首次 CI browser 結果為 200 passed／1 failed：登入測試把 DB handle 取得次數固定為一次，新增 control 讀取後合法流程是兩次。只更新該計數並增加實際 UID／generation 綁定斷言；登入前零存取、拒絕帳號、登出與保留原紀錄驗證均保留。僅局部重跑這一項，1 passed；最終完整結果由後續 CI 確認。
+
+第二輪 CI：完整 browser 201/201 與完整 SDK Emulator 78/78 通過；最後 Auth／Fixtures step 的 host mock 漏攔截新 test adapter，導致啟動逾時。補齊該 fixture module route，未變更產品程式或弱化斷言；Auth bridge 原 6 項檢查局部重測通過，其餘同 step 驗證另行局部重測，最終 CI 結果見 PR。
