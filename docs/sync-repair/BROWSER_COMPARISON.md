@@ -108,4 +108,4 @@
 
 原始失敗訊息摘要與機器可讀結果：[BROWSER_COMPARISON.json](BROWSER_COMPARISON.json)。
 
-額外驗證：npm test、build、lint；原生 IDB 多分頁／quota／離線與真實課程操作；合成 SDK Emulator 11 項（含永久無回覆、延遲 proof、Rules 拒絕舊 writer 與 reset fence）；canonical auth 6、review browser 48、failure/batch 8、learning 14。CI 實際結果以 PR checks 對應 Head 為準。
+額外驗證：npm test、build、lint；原生 IDB 多分頁／quota／離線與真實課程操作（含離線完成後改日期、reload 並重連）；合成 SDK Emulator 12 項（含永久無回覆、延遲 proof、Rules 拒絕舊 writer 與 reset fence）；canonical auth 6、review browser 48、failure/batch 8、learning 14。CI 實際結果以 PR checks 對應 Head 為準。

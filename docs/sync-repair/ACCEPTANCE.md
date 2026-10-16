@@ -19,7 +19,7 @@ SDK rejection 或 3 秒內沒有回覆都不能判定伺服器是否已寫入。
 
 只有 committed transaction 的 server snapshot 可以把新 pending 自動當作成功結案；明確放棄衝突操作或由 generation fence 隔離舊操作，均不宣稱寫入成功。快取、Boolean 相等、連線狀態、逾時或普通 value listener 都不作成功證明。成功後先持久保存不可變 confirmed snapshot、更新顯示快取與日期，再刪除 journal；本機結案失敗可以重試，reload 則由同一 CAS 恢復。
 
-confirmed snapshots 以 era/clock 選最新，正常保留最近兩份；延遲 callback 不可把投影倒退。首次日期由原始操作日決定，取消／重勾與重試不重設；手動移除保留 tombstone。沒有新 XP writer，也不重播舊獎勵。
+confirmed snapshots 以 era/clock 選最新，正常保留最近兩份；延遲 callback 不可把投影倒退。離線完成後立刻編輯日期，新的日期 request 以待同步首次日期的投影 UUID 為 base；重連／reload 不會把同裝置的因果修改誤判為跨裝置衝突。首次日期由原始操作日決定，取消／重勾與重試不重設；手動移除保留 tombstone。沒有新 XP writer，也不重播舊獎勵。
 
 ## 舊程式與部署限制
 
@@ -53,9 +53,9 @@ Emulator 使用 checksum 固定的 SDK 9.22.0／Database Emulator 4.11.2，僅 l
 ## 最終本機結果
 
 - 完整 Playwright：201 passed / 0 failed / 0 skipped（2 workers，同一容器）。
-- npm test：全部通過；展開執行 223 項檢查。
+- npm test：全部通過；展開執行 224 項檢查。
 - build、lint：通過。
-- 真實 Becoming + SDK Emulator：11 / 11；既有 Adapter SDK Emulator：5 / 5。
+- 真實 Becoming + SDK Emulator：12 / 12；既有 Adapter SDK Emulator：5 / 5。
 - canonical auth：6；review browser：48；failure/batch：8；learning：14，均通過。
 - 相容網址：32；browser module/layout：18，無錯誤。
 - CI 已從子集提升為完整 201 項瀏覽器套件；新 Head 的 CI 結果以 PR checks 為準。

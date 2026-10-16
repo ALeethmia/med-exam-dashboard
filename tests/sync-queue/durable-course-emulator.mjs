@@ -55,7 +55,11 @@ try{
  });
  await check('offline UI save and reconnect automatically close pending without a review decision',async()=>{
   await page.evaluate(()=>firebase.database().goOffline());await page.waitForFunction(()=>document.querySelector('#sync-status').textContent.includes('離線'));
-  await page.evaluate(()=>setStudyCompletion('biochem','1',true));assert((await page.evaluate(()=>courseSync.inspect().pending)).length>0);await page.evaluate(()=>firebase.database().goOnline());await drain();assert.equal((await read(domain)).courses.biochem[1],true);
+  await page.evaluate(()=>{setStudyCompletion('biochem','1',true);courseDates.set('biochem__1','2026-10-01');});assert((await page.evaluate(()=>courseSync.inspect().pending)).length>0);await page.evaluate(()=>firebase.database().goOnline());await drain();assert.equal((await read(domain)).courses.biochem[1],true);assert.equal((await read(domain)).firstCompletion.biochem__1.day,'2026-10-01');
+ });
+ await check('offline completion and date edit survive reload and reconnect without a false review',async()=>{
+  const clock=(await read(domain)).clock;await page.evaluate(()=>firebase.database().goOffline());await page.waitForFunction(()=>document.querySelector('#sync-status').textContent.includes('離線'));
+  await page.evaluate(()=>{setStudyCompletion('videos','7',true);courseDates.set('videos__7','2026-10-02');});await load();await drain();const doc=await read(domain);assert.equal(doc.clock,clock+2);assert.equal(doc.courses.videos[7],true);assert.equal(doc.firstCompletion.videos__7.day,'2026-10-02');
  });
  await check('acknowledgement lost after server commit and tab refresh cannot duplicate the mutation/date',async()=>{
   const clock=(await read(domain)).clock;await page.evaluate(()=>{const raw=firebase.database(),root='users/fixture-A/learningV3';let first=true;courseSync.attach({ref(path){const ref=raw.ref(path);return path===root?{on:(...a)=>ref.on(...a),off:(...a)=>ref.off(...a),transaction:(...a)=>ref.transaction(...a).then(result=>{if(first){first=false;throw Error('synthetic lost acknowledgement');}return result;})}:ref;}});setStudyCompletion('videos','1',true);});

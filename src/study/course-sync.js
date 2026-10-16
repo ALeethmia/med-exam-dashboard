@@ -117,7 +117,8 @@ export function createCourseSync({storage,uid,valid,ready,locks,localOnly=false,
   if(!Object.keys(manualDates).length&&Object.entries(changes).every(([path,value])=>latest[path]===value))return {saved:true,changes:{},noop:true};
   const bases={},dateBases={};
   for(const path of Object.keys(changes)){const previous=existing.filter(row=>Object.hasOwn(row.changes,path)).at(-1);bases[path]=previous?{value:previous.changes[path],version:previous.id}:{value:latest[path]??null,version:doc.versions[courseToken(path)]??null};}
-  for(const key of Object.keys(manualDates)){const previous=existing.filter(row=>Object.hasOwn(row.manualDates||{},key)).at(-1);dateBases[key]=previous?.id??doc.firstCompletion[key]?._version??null;}
+  const projectedDates=Object.keys(manualDates).length?api.dateRecords():{};
+  for(const key of Object.keys(manualDates))dateBases[key]=projectedDates[key]?._version??null;
   const row={id:newId(),uid,generation:doc.generation,order:Math.max(Date.now(),...existing.map(row=>row.order+1)),phase:'queued',changes:copy(changes),bases,manualDates:copy(manualDates),dateBases,dates:prepareDates(changes)};
   try{persist(row);}catch{localError=true;notify();throw Error('本機保存失敗，進度未變更，請重新操作。');}
   localError=false;lastError='';notify();void pump();return {saved:true,changes:copy(changes),id:row.id};
