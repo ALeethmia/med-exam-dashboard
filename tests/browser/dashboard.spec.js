@@ -290,7 +290,9 @@ test('Google login gates database access and exposes UID without clearing progre
   expect(await page.evaluate(() => window.authTest.reads)).toBe(0);
   await page.locator('#google-sign-in').click();
   await expect(page.locator('#planner-date')).toBeVisible();await expect(page.locator('#task-list input')).toHaveCount(0);
-  expect(await page.evaluate(() => window.authTest.reads)).toBe(1);
+  // One DB handle for server control, then one for the existing learning subscriptions.
+  expect(await page.evaluate(() => window.authTest.reads)).toBe(2);
+  expect(await page.evaluate(() => ({uid:lifeSession.uid,generation:lifeSession.generation}))).toEqual({uid:OWNER_UID,generation:'fixture-life-1'});
   await page.locator('#account-button').click();
   await expect(page.locator('#account-uid')).toHaveValue(OWNER_UID);
   await expect(page.locator('#account-email')).toHaveText('owner@example.test');
