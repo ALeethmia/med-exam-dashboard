@@ -1,6 +1,6 @@
 import {mountResetUI} from './src/ui/reset-ui.js';
 import {projectTask} from './src/planner/task-projection.js';
-import {preserveRewardCache} from './legacy-rewards.js';
+import {preserveRewardCache,rewardNoticeText} from './legacy-rewards.js';
 const learningStorage=window.learningStorage;
 import {showVersion} from './src/ui/version-ui.js';
 import {createCourseDates} from './course-dates.js';
@@ -123,7 +123,7 @@ const brandNote=document.createElement('p');brandNote.className='workspace-note 
 const readAwards=()=>({...game.awards,...timeTasks.awards(),...planner.awards()});
 window.growthPlanner=planner;
 window.courseCatalogKeys=new Set(validItems.keys());
-const legacyNotice=document.createElement('p');legacyNotice.className='workspace-note';legacyNotice.dataset.legacyRewards='';legacyNotice.textContent='歷史 XP 僅供回顧，不影響領主等級。舊待同步獎勵不自動補發。';document.querySelector('.workspace-main').prepend(legacyNotice);
+const legacyNotice=document.createElement('p');legacyNotice.className='workspace-note';legacyNotice.dataset.legacyRewards='';legacyNotice.hidden=true;document.querySelector('.workspace-main').prepend(legacyNotice);
 const plannerUI=createPlannerUI({data,planner,states});
 const lifeUI=createLifeUI({store:life,planner});
 const weekUI=createWeekPlanUI({data,openPlanner:week=>plannerUI.open(week)});
@@ -180,7 +180,7 @@ function renderPlanningSummary() {
 }
 
 function render() {
-  if(typeof planner!=='undefined'){const held=planner.status().held.length+(timeTasks.held?.().length||0);const el=document.querySelector('[data-legacy-rewards]');if(el)el.textContent='歷史 XP 僅供回顧，不影響領主等級。'+(held||preservedRewards||window.becomingStorage?.legacyKeys().length?'偵測到舊獎勵／快取，已隔離保留，未自動補發；需人工核對。':'新任務不再發放 XP。');}
+  if(typeof planner!=='undefined'){const held=planner.status().held.length+(timeTasks.held?.().length||0);const el=document.querySelector('[data-legacy-rewards]');if(el){const text=rewardNoticeText({initialized:!!window.lifeSession?.resetId,held,preservedRewards,legacyKeys:window.becomingStorage?.legacyKeys().length||0,storage:learningStorage});el.textContent=text;el.hidden=!text;}}
   window.SubjectUI?.refreshDates?.();
   const current=states();
   document.getElementById('today-label').textContent=new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(day+'T12:00:00+08:00'));
