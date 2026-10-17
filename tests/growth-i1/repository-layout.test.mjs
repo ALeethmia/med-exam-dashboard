@@ -46,8 +46,8 @@ test('untouched product modules retain layout migration identity',()=>{
    const target=path.posix.normalize(path.posix.join(path.posix.dirname(entry.path),name));
    return prefix+quote+'@/'+(aliases[target]||target)+(query.length?'?'+query.join('?'):'')+quote;
   });
-  // Reviewed maintenance bootstrap has browser coverage; keep its identity check exact.
-  const expected=entry.path==='firebase-entry.js'?'b68855969a2c62f81496f737927a5aad8f1f225896e44fa57f6ebd2fb67477b4':entry.path==='sync.js'?'58a46201a727eb7673258e4f7a052e7cf5f7974cc348857611c0842c6d32507a':entry.sha256;
+  // Reviewed maintenance bootstrap and PR #27 reward notice have behavioral coverage; keep exact hashes.
+  const expected=entry.path==='legacy-rewards.js'?'ccb37d77294d64cb8ff819416660121d91739355abba223d14d98a6803bef015':entry.path==='firebase-entry.js'?'b68855969a2c62f81496f737927a5aad8f1f225896e44fa57f6ebd2fb67477b4':entry.path==='sync.js'?'58a46201a727eb7673258e4f7a052e7cf5f7974cc348857611c0842c6d32507a':entry.sha256;
   assert.equal(hash(normalized),expected,entry.path);
  }
 });
