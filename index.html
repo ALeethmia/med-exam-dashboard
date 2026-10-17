@@ -1120,7 +1120,7 @@
       main.before(shell); shell.append(sidebar, main);
       sidebar.querySelector('nav').append(document.getElementById('main-tabs-header-container'));
       const oldNav = main.querySelector('.overflow-x-auto.pb-1'); if (oldNav) oldNav.remove();
-      for (const id of ['home','stats','calendar','schedule','exercise','focus','progression','kingdom']) {
+      for (const id of ['home','stats','calendar','schedule','exercise','focus','progression','kingdom','settings']) {
         const page = document.createElement('section'); page.id = 'tab-content-' + id; page.className = 'page-stack hidden'; main.append(page);
       }
       const moveCard = (id, page, hops = 0) => {
@@ -1173,6 +1173,7 @@
       {id:'calendar', title:'行事曆', icon:'calendar-days'},
       {id:'stats', title:'成長統計', icon:'chart-no-axes-combined'},
       {id:'kingdom', title:'我的王國', icon:'castle'},
+      {id:'settings', title:'設定', icon:'settings'},
       {id:'physiology', title:'生理學', group:'subjects'},
       {id:'anatomy', title:'解剖學', group:'subjects'},
       {id:'biochem', title:'生化學', group:'subjects'},
@@ -1217,7 +1218,7 @@
         const selected=button.id==='tab-btn-'+tabName || (button.id==='calendar-overview' && tabName==='calendar'); button.classList.toggle('active',selected); button.setAttribute('aria-current',selected?'page':'false');
       }
       document.getElementById('subject-tabs').classList.toggle('hidden',group!=='subjects'); document.getElementById('calendar-tabs').classList.toggle('hidden',group!=='calendar');
-      const titles={home:['今天的任務，從這裡開始。','用自己的節奏，為國考累積每一步。'],plan:['週計畫','掌握當週目標，循序完成 16 週讀書計畫。'],calendar:['行事曆','讓課程、重要日程與休息各有位置。'],stats:['成長統計','從目前完成狀態與真實紀錄，看見下一步。'],kingdom:['我的王國','Aetheria · 現實的成長，點亮另一個世界。'],physiology:['First Choice 生理學','7 大篇章 · 39 小節'],anatomy:['趙俊彥解剖學','15 節課 · 30 講'],biochem:['鐸鐸生化學','8 堂課 · 循序完成與複習'],pharmacology:['子翔藥理學','19 單元 · 38 講'],schedule:['作息與習慣','留出學習、生活與休息的時間。'],exercise:['運動計畫','照顧身體，也照顧讀書的節奏。'],focus:['專注計時','一次只專注眼前這件事。']};
+      const titles={settings:['設定','管理你的 Becoming 資料。'],home:['今天的任務，從這裡開始。','用自己的節奏，為國考累積每一步。'],plan:['週計畫','掌握當週目標，循序完成 16 週讀書計畫。'],calendar:['行事曆','讓課程、重要日程與休息各有位置。'],stats:['成長統計','從目前完成狀態與真實紀錄，看見下一步。'],kingdom:['我的王國','Aetheria · 現實的成長，點亮另一個世界。'],physiology:['First Choice 生理學','7 大篇章 · 39 小節'],anatomy:['趙俊彥解剖學','15 節課 · 30 講'],biochem:['鐸鐸生化學','8 堂課 · 循序完成與複習'],pharmacology:['子翔藥理學','19 單元 · 38 講'],schedule:['作息與習慣','留出學習、生活與休息的時間。'],exercise:['運動計畫','照顧身體，也照顧讀書的節奏。'],focus:['專注計時','一次只專注眼前這件事。']};
       const [title,description]=titles[tabName] || titles.home; document.getElementById('page-title').textContent=title; document.getElementById('page-description').textContent=description; document.getElementById('workspace-crumb').textContent=meta.group ? defaultTabs.find(t=>t.id===meta.group).title+' / '+meta.title : meta.title;
       document.getElementById('workspace-nav').classList.remove('mobile-open'); document.getElementById('mobile-menu').setAttribute('aria-expanded','false');
       window.dispatchEvent(new CustomEvent('workspace-page-change',{detail:{tab:tabName,group}}));

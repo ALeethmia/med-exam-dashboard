@@ -21,6 +21,26 @@ export function makeCourseRules(owner){
  if(!/^[A-Za-z0-9_-]{1,128}$/.test(owner))throw Error('Invalid reviewed owner UID');
  const access=`auth != null && auth.uid === '${owner}'`;
  const n='newData',d='data';
+ // Reset is a narrowly scoped, recent verified-owner write, never an ancestor grant.
+ const reset=(next,prior)=>{
+  const c=at(next,'learningV3'),l=at(next,'lifeControl'),id=val(c,'generation'),receipt=`${next}.child('resetReceipts').child(${id})`;
+  return [access+' && auth.uid === $uid', "root.child('users').child($uid).child('selfResetContract/version').val() === 1", 'auth.token.email_verified === true',
+   'auth.token.auth_time <= now / 1000 && auth.token.auth_time >= now / 1000 - 300',
+   `((!${at(prior,'learningV3')}.exists() && !${at(prior,'lifeControl')}.exists() && ${val(c,'era')} === 0 && ${val(l,'era')} === 0 && ${val(receipt,'previousCourse')} === 'uninitialized' && ${val(receipt,'previousLife')} === 'uninitialized') || (${at(prior,'learningV3')}.exists() && ${at(prior,'lifeControl')}.exists() && ${val(c,'era')} === ${val(prior,'learningV3/era')} + 1 && ${val(l,'era')} === ${val(prior,'lifeControl/era')} + 1 && ${val(receipt,'previousCourse')} === ${val(prior,'learningV3/generation')} && ${val(receipt,'previousLife')} === ${val(prior,'lifeControl/generation')}))`,
+   `${uuid(at(c,'generation'))}`,
+   `${val(c,'schema')} === 3 && ${val(c,'clock')} === 0`,
+   ...['courses','versions','firstCompletion'].map(key=>`!${at(c,key)}.exists()`),
+   `${val(l,'schema')} === 1 && ${at(l,'era')}.isNumber() && ${val(l,'era')} >= 0 && ${val(l,'era')} <= 9007199254740991 && ${val(l,'era')} % 1 === 0`,
+   `${val(l,'generation')} === 'life_' + ${id} && ${val(l,'resetId')} === ${id}`,
+   `!${prior}.child('resetReceipts').child(${id}).exists()`,
+   `!${prior}.child('lifeV1').child('life_' + ${id}).exists()`,
+   `${receipt}.hasChildren(['courseEra','lifeEra','previousCourse','previousLife','at'])`,
+   `${val(receipt,'courseEra')} === ${val(c,'era')} && ${val(receipt,'lifeEra')} === ${val(l,'era')}`,
+   `${val(receipt,'at')} === now`
+  ].join(' && ');
+ };
+ const resetCourse=reset('newData.parent()','data.parent()');
+
  // Deletions skip .validate at the deleted node. Keep all existing tombstones at
  // the non-deletable document ancestor, regardless of set/update target depth.
  const retained=courses.flatMap(c=>['courses/'+c.path+'/'+c.id,'versions/'+c.key,'firstCompletion/'+c.key]).map(p=>`(!${at(d,p)}.exists() || ${at(n,p)}.exists())`);
@@ -28,11 +48,11 @@ export function makeCourseRules(owner){
  const stable=`(data.exists() && ${same(n,d,'generation')} && ${same(n,d,'era')} && (${same(n,d,'clock')} || ${increment(n,d)}))`;
  const doc={
   '.read':access+' && auth.uid === $uid',
-  '.write':access+' && auth.uid === $uid && newData.exists()',
+  '.write':access+" && auth.uid === $uid && newData.exists() && (root.child('users').child($uid).child('lifeControl/schema').val() === 1 || ("+resetCourse+'))',
   '.validate':[
    "newData.hasChildren(['schema','generation','era','clock'])",`${val(n,'schema')} === 3`,`${at(n,'generation')}.isString()`,
    ...['era','clock'].map(p=>`${at(n,p)}.isNumber() && ${val(n,p)} >= 0 && ${val(n,p)} <= 9007199254740991 && ${val(n,p)} % 1 === 0`),
-   `(${initial} || ${stable})`,...retained,
+   `(((${initial} || ${stable}) && ${retained.join(' && ')}) || (${resetCourse}))`,
    ...courses.map(c=>`${at(n,'courses/'+c.path+'/'+c.id)}.exists() === ${at(n,'versions/'+c.key)}.exists()`)
   ].join(' && '),
   schema:{},generation:{},era:{},clock:{},courses:{'.validate':'newData.hasChildren()'},versions:{'.validate':'newData.hasChildren()'},firstCompletion:{'.validate':'newData.hasChildren()'},'$other':{'.validate':false}
@@ -61,9 +81,14 @@ export function makeCourseRules(owner){
  };
  // No ancestor write grants: legacy course, date and v2 roots stay denied.
  const current=`${access} && auth.uid === $uid && root.child('users').child($uid).child('lifeControl/schema').val() === 1 && root.child('users').child($uid).child('lifeControl/generation').val() === $generation`;
- const life={'.read':current};
- for(const bucket of Object.values(LIFE_PATHS)){let node=life;const parts=bucket.split('/');for(const name of parts.slice(0,-1))node=node[name]??={};node[parts.at(-1)]={'.read':current,'.write':current};}
- return {rules:{'.read':false,'.write':false,users:{$uid:{learningV3:doc,lifeControl:{'.read':access+' && auth.uid === $uid','.write':false},lifeV1:{$generation:life}}},
+ const life={'.read':current,'.write':`!newData.exists() && $generation === data.parent().parent().child('lifeControl/generation').val() && (${reset('newData.parent().parent()','data.parent().parent()')})`};
+ for(const bucket of Object.values(LIFE_PATHS)){let node=life;const parts=bucket.split('/');for(const name of parts.slice(0,-1))node=node[name]??={};const depth=parts.length+2,next='newData'+'.parent()'.repeat(depth),prior='data'+'.parent()'.repeat(depth);node[parts.at(-1)]={'.read':current,'.write':current+(['adaptiveStudy/settings','training'].includes(bucket)?` || ($generation === ${next}.child('lifeControl/generation').val() && (${reset(next,prior)}))`:'')};}
+ return {rules:{'.read':false,'.write':false,users:{$uid:{selfResetContract:{'.read':access+' && auth.uid === $uid','.write':false},learningV3:doc,lifeControl:{'.read':access+' && auth.uid === $uid','.write':resetCourse,
+   '.validate':"newData.hasChildren(['schema','generation','era','resetId'])",schema:{},generation:{},era:{},resetId:{},'$other':{'.validate':false}},
+  resetReceipts:{$operation:{'.read':access+' && auth.uid === $uid',
+   '.write':`!data.exists() && $operation === newData.parent().parent().child('learningV3/generation').val() && (${reset('newData.parent().parent()','data.parent().parent()')})`,
+   '.validate':"newData.hasChildren(['courseEra','lifeEra','previousCourse','previousLife','at'])",courseEra:{},lifeEra:{},previousCourse:{},previousLife:{},at:{},'$other':{'.validate':false}}},
+  lifeV1:{$generation:life}}},
   videos:{'.write':false},biochem:{'.write':false},physiology:{'.write':false},pharmacology:{'.write':false},
   gamification:{v1:{days:{'.read':access,'.write':false},awards:{'.read':access,'.write':false}},v2:{timeTasks:{'.read':false,'.write':false}},v3:{planner:{tasks:{'.read':false,'.write':false}}}},
   habits:{'.read':false,'.write':false},custom_events:{'.read':false,'.write':false},checklist:{'.read':false,'.write':false},

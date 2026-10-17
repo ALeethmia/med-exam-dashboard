@@ -1,3 +1,5 @@
+> 本輪新增：[內建重置與最短 Spark 首次切換](SELF_SERVICE_RESET.md)。使用者確認後由 Rules 受限地原子輪換 fence；舊受管工具不再是首次上線的必要前置。以下保留原流程與歷史限制。
+
 # 七組生活資料隔離（PR #26）
 
 基準 `ef4c77618c44e30a9e10d559dc8fffadb8267408`。只加入七組 DB／storage facade、登入時的 generation 綁定及候選 Rules；課程同步核心沒有修改。沒有部署、真實資料讀寫或遷移；以下均為合成帳號測試。

@@ -1,3 +1,5 @@
+> 本輪新增：[內建重置與最短 Spark 首次切換](SELF_SERVICE_RESET.md)。使用者確認後由 Rules 受限地原子輪換 fence；舊受管工具不再是首次上線的必要前置。以下保留原流程與歷史限制。
+
 # PR #26 正式切換操作清單（準備完成，不是執行授權）
 
 適用基準：已審查 `12f56cece9ac95a2a566b2e4865eef88cff28556` 及本輪離線準備變更。課程同步核心、七組 Store、候選 Rules 契約不變。細節見 [LIFE_ISOLATION.md](LIFE_ISOLATION.md) 與 [RESET_PLAN.md](RESET_PLAN.md)。本文件不是可直接執行的 shell script，以下每關需留下證據；未滿足就停止。

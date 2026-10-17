@@ -1,3 +1,4 @@
+import {verifySelfReset} from './self-reset-emulator.mjs';
 // Standalone synthetic integration. Starts its OWN ephemeral loopback emulator; no remote URL option.
 import assert from 'node:assert/strict';
 import {verifyManagedExecutor} from './managed-executor-emulator.mjs';
@@ -41,9 +42,9 @@ try{
   if(file==='/firebase-config.js')return res.end('window.examFirebaseConfig='+JSON.stringify({projectId:ns,databaseURL:'https://'+ns+'.firebaseio.com'})+';');
   if(file==='/owner-config.js')return res.end("export const OWNER_UID='fixture-A';");
   if(file==='/fixture-app.js'||file==='/fixture-db.js')return res.end(readFileSync(sdk+(file==='/fixture-app.js'?'/firebase-app-compat.js':'/firebase-database-compat.js')));
-  if(file==='/fixture-auth.js')return res.end(`Object.defineProperty(window,'workspaceLocalOnly',{get:()=>false,set(){}});const original=firebase.database.bind(firebase);let instance;firebase.database=()=>{if(!instance){instance=original();instance.useEmulator('127.0.0.1',${port},{mockUserToken:{sub:'fixture-A',user_id:'fixture-A'}});}return instance;};let notify;const auth=()=>({onAuthStateChanged(fn){notify=fn;window.lifeAuthFixture=fn;queueMicrotask(()=>fn({uid:'fixture-A',displayName:'Synthetic Emulator'}));},async signOut(){notify(null);}});auth.GoogleAuthProvider=class{};firebase.auth=auth;`);
+  if(file==='/fixture-auth.js')return res.end(`Object.defineProperty(window,'workspaceLocalOnly',{get:()=>false,set(){}});const original=firebase.database.bind(firebase);let instance;firebase.database=()=>{if(!instance){instance=original();instance.useEmulator('127.0.0.1',${port},{mockUserToken:{sub:'fixture-A',user_id:'fixture-A'}});}return instance;};const claims={iss:'https://securetoken.google.com/${ns}',aud:'${ns}',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+3600,sub:'fixture-A',user_id:'fixture-A',email_verified:true,auth_time:Math.floor(Date.now()/1000),firebase:{sign_in_provider:'google.com',identities:{}}};const jwt=()=>[btoa(JSON.stringify({alg:'none',typ:'JWT'})),btoa(JSON.stringify(claims)),''].join('.');const user={uid:'fixture-A',email:'fixture@example.test',displayName:'Synthetic Emulator',async reauthenticateWithPopup(){claims.auth_time=Math.floor(Date.now()/1000);},async getIdTokenResult(){return {token:jwt(),claims};},async getIdToken(){return jwt();}};let notify;const auth=()=>({currentUser:user,onAuthStateChanged(fn){notify=fn;window.lifeAuthFixture=fn;queueMicrotask(()=>fn(user));},async signOut(){notify(null);}});auth.GoogleAuthProvider=class{setCustomParameters(){}};firebase.auth=auth;`);
   try{
-   if(file==='/'||file==='/index.html')return res.end(readFileSync(new URL('index.html',root),'utf8').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js','/fixture-app.js').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js','/fixture-db.js').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js','/fixture-auth.js'));
+   if(file==='/'||file==='/index.html'||file==='/first-start.html')return res.end(readFileSync(new URL(file==='/first-start.html'?'first-start.html':'index.html',root),'utf8').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js','/fixture-app.js').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js','/fixture-db.js').replace('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js','/fixture-auth.js') .replace('<script src="/fixture-auth.js">','<script src="/fixture-db.js"></script><script src="/fixture-auth.js">'));
    if(!/^\/(src|styles|public)\//.test(file)&&!/^\/[a-z][a-z0-9-]*\.js$/.test(file))throw Error('invalid path');
    const path=new URL('.'+file,root);if(!path.href.startsWith(root.href))throw Error('invalid path');return res.end(readFileSync(path));
   }catch{res.statusCode=404;res.end();}
@@ -55,6 +56,7 @@ try{
  async function load(){await page.goto(base);await page.waitForFunction(()=>window.updateWorkspace&&window.i3Runtime.read().status==='ready');}
  async function drain(){try{await page.waitForFunction(()=>!window.courseSync.inspect().pending.length,null,{timeout:15000});}catch(error){console.log('DRAIN',JSON.stringify(await page.evaluate(()=>({sync:courseSync.inspect(),runtime:i3Runtime.read()}))));console.log('DOC',JSON.stringify(await read(domain)));throw error;}}
  let count=0;async function check(name,fn){const start=Date.now();await fn();count++;console.log('PASS '+name+' ('+(Date.now()-start)+'ms)');}
+ if(process.argv.includes('--self-reset-only')){await verifySelfReset({browser,base,origin,namespace:ns,read,admin,check});}else{
  if(!process.argv.includes('--executor-only')&&!process.argv.includes('--blank-only')&&!process.argv.includes('--restore-only')&&!process.argv.includes('--cutover-only')){
  await load();await createRulesAttacker(page);
  if(!process.argv.includes('--life-only')){
@@ -123,5 +125,7 @@ try{
  if(!process.argv.includes('--executor-only')&&!process.argv.includes('--cutover-only'))await verifyBackupRestore({read,admin,check});
  if(!process.argv.includes('--executor-only'))await verifyCutoverRehearsal({browser,base,origin,namespace:ns,check});
  await verifyManagedExecutor({origin,namespace:ns,check});
+ if(!process.argv.some(arg=>arg.endsWith('-only')))await verifySelfReset({browser,base,origin,namespace:ns,read,admin,check});
+ }
  console.log('Durable course Emulator checks passed: '+count+' (real product UI + SDK 9.22.0 + Emulator 4.11.2; synthetic identities/rules only).');
 }finally{clearTimeout(all);await browser?.close();if(server)await new Promise(r=>server.close(r));child.kill('SIGTERM');}

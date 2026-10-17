@@ -1,3 +1,4 @@
+import {mountResetUI} from './src/ui/reset-ui.js';
 import {projectTask} from './src/planner/task-projection.js';
 import {preserveRewardCache} from './legacy-rewards.js';
 const learningStorage=window.learningStorage;
@@ -237,3 +238,5 @@ void timeTasks.retry();void planner.retry();void life.retry();void studySettings
 void showVersion();
 
 window.addEventListener('learning-read-ready',()=>{void planner.retry();void timeTasks.retry();void courseDates.retry();void life.retry();void studySettings.retry();window.retryLearningSync();window.updateWorkspace?.();});
+
+const resetSection=document.createElement('section');resetSection.id='reset-data';resetSection.className='workspace-panel';document.getElementById('tab-content-settings').append(resetSection);mountResetUI();

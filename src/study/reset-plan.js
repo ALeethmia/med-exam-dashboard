@@ -45,3 +45,23 @@ export async function createBlankAccountPlan(options={}){
   emptyLifeNamespace:root+'/lifeV1/'+lifeGeneration,
   blockers:[...plan.blockers,'This blank-start patch abandons legacy progress, including the shared historical XP sources; independent account-reset authorization is mandatory.','Input must be the final frozen server export; offline checks cannot establish provenance, ownership, or global generation uniqueness.']};
 }
+
+// Authenticated self-service plan. Uses the same fences and empty document as cutover;
+// it never includes shared legacy roots, another UID, or administrator credentials.
+export async function createSelfResetPlan({uid,course,life,settings=null,training=null,id=crypto.randomUUID(),allowInitialize=false}={}){
+ if(typeof uid!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(uid)||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(id))throw Error('reset/identity');
+ const initializing=allowInitialize&&course===null&&life===null;
+ if(initializing){course={schema:3,generation:'uninitialized',era:-1};life={schema:1,generation:'uninitialized',era:-1};}
+ if(course?.schema!==3||life?.schema!==1||typeof course.generation!=='string'||typeof life.generation!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(life.generation)||id===course.generation||'life_'+id===life.generation)throw Error('reset/control-unavailable');
+ const next=value=>{if(initializing)return 0;if(!Number.isSafeInteger(value)||value<0||value>=Number.MAX_SAFE_INTEGER)throw Error('reset/era');return value+1;};
+ const root='users/'+uid,receipt={courseEra:next(course.era),lifeEra:next(life.era),previousCourse:course.generation,previousLife:life.generation,at:{'.sv':'timestamp'}};
+ const atomicUpdate={
+  [root+'/learningV3']:{...emptyCourseDocument(id),era:receipt.courseEra},
+  [root+'/lifeControl']:{schema:1,generation:'life_'+id,era:receipt.lifeEra,resetId:id},
+  [root+'/lifeV1/'+life.generation]:null,
+  [root+'/resetReceipts/'+id]:receipt
+ };
+ if(initializing)delete atomicUpdate[root+'/lifeV1/uninitialized'];
+ for(const [bucket,value] of [['adaptiveStudy/settings',settings],['training',training]])if(value!==null)atomicUpdate[root+'/lifeV1/life_'+id+'/'+bucket]=value;
+ return {uid,id,receipt,atomicUpdate,sha256:await digest(canonical(atomicUpdate))};
+}

@@ -1,3 +1,5 @@
+> 本輪新增：[內建重置與最短 Spark 首次切換](SELF_SERVICE_RESET.md)。使用者確認後由 Rules 受限地原子輪換 fence；舊受管工具不再是首次上線的必要前置。以下保留原流程與歷史限制。
+
 # NT$0 受管切換入口（預設停用）
 
 本方案取代舊版 KMS／GCS 前置條件。使用既有 Spark RTDB、免費 Cloud Shell／IAM、離線核准簽章；不建立 KMS、GCS、Cloud Run／Functions、付費備份或計費帳戶，不升級 Blaze。網站與帳號重置仍須分別授權。本輪只用合成資料和本機 Emulator，沒有正式連線、身分取得、資源建立或部署。

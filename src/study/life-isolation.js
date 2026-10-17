@@ -5,7 +5,7 @@ export const lifeGenerationPath=(uid,generation)=>'users/'+encodeURIComponent(ui
 export const isLifeKey=key=>/^(med_exam_(daily_planner_v3|life_v1|adaptive_study_v1|time_tasks_v1|custom_events|checklist_cloud|pending_writes_v1|gamification_v1)(?:_local)?|med_exam_habits_.+)$/.test(key);
 export function validateLifeControl(value){
  if(!value||value.schema!==1||!Number.isSafeInteger(value.era)||value.era<0||typeof value.generation!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(value.generation))throw Error('life/control-unavailable');
- return {schema:1,generation:value.generation,era:value.era};
+ return {schema:1,generation:value.generation,era:value.era,...(value.resetId?{resetId:value.resetId}:{})};
 }
 export function createLifeStorage(storage,generation,{valid=()=>true,onFailure=()=>{}}={}){
  const prefix='life_v1:'+generation+':';
@@ -22,13 +22,13 @@ export function createLifeStorage(storage,generation,{valid=()=>true,onFailure=(
  };
  return Object.freeze({getItem:key=>storage.getItem(mapped(key)),setItem:(key,value)=>mutate('setItem',key,value),removeItem:key=>mutate('removeItem',key),keys,eventKey,key:i=>keys()[i]??null,get length(){return keys().length;}});
 }
-export function createLifeDatabase(database,uid,generation,valid=()=>true){
+export function createLifeDatabase(database,uid,generation,valid=()=>true,retireRewards=false){
  const root=lifeGenerationPath(uid,generation),entries=new Set();
  function map(path){for(const [legacy,bucket] of Object.entries(LIFE_PATHS))if(path===legacy||path.startsWith(legacy+'/'))return root+'/'+bucket+path.slice(legacy.length);return null;}
  const failure=()=>Object.assign(Error('Life binding is no longer writable'),{code:'life/session-stopped'});
  return Object.freeze({canWrite:()=>valid()&&(!database.canWrite||database.canWrite()),goOffline:()=>database.goOffline?.(),ref(path=''){
   if(/^users(\/|$)/.test(path))throw Error('life/direct-path-disabled');
-  const mapped=map(path),ref=database.ref(mapped||path);
+  const mapped=map(path),reward=retireRewards&&/^gamification\/v1(\/|$)/.test(path),ref=database.ref(reward?root+'/retiredRewards'+path.slice('gamification/v1'.length):mapped||path);
   const write=(method,args)=>{
    if(!valid())return Promise.reject(failure());
    if(method==='update'){
@@ -57,7 +57,7 @@ export function openLifeSession({database,uid,storage,valid=()=>true,onRetire=()
    if(control){if(next.generation!==control.generation||next.era!==control.era)retire(Error('life/generation-changed'));return;}
    control=next;settled=true;
    const view=createLifeStorage(storage,control.generation,{valid:writable,onFailure(){storageOK=false;onStorageFailure();}});
-   resolve(Object.freeze({uid,...control,storage:view,valid:writable,close,database:base=>createLifeDatabase(base,uid,control.generation,writable)}));
+   resolve(Object.freeze({uid,...control,storage:view,valid:writable,close,database:base=>createLifeDatabase(base,uid,control.generation,writable,!!control.resetId)}));
   }
   ref.on('value',receive,error=>retire(error));
  });

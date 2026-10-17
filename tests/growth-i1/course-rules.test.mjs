@@ -16,7 +16,7 @@ test('no ancestor grants can reopen retired paths; old shared writers are explic
   assert(!node['.write'],path+' must not have an ancestor grant');
  }
  for(const path of ['videos','biochem','physiology','pharmacology','questOS/v1/courseFirstCompletion','questOS/v1/courseSyncV2'])assert.equal(path.split('/').reduce((node,key)=>node[key],rules)['.write'],false);
- assert.equal(rules.habits['.write'],false);assert.equal(rules.gamification.v3.planner.tasks['.write'],false);assert.equal(rules.users.$uid.lifeControl['.write'],false);assert(rules.users.$uid.lifeV1.$generation.habits['.write']);
+ assert.equal(rules.habits['.write'],false);assert.equal(rules.gamification.v3.planner.tasks['.write'],false);assert.match(rules.users.$uid.lifeControl['.write'],/email_verified === true/);assert.match(rules.users.$uid.lifeControl['.write'],/auth_time/);assert(rules.users.$uid.lifeV1.$generation.habits['.write']);
  assert.equal(rules.gamification.v1.awards['.write'],false);assert.equal(rules.gamification.v1.days['.write'],false);
  const freeze=makeFrozenCourseRules('fixture-A');
  assert.deepEqual(JSON.parse(readFileSync('config/firebase/database.rules.freeze.candidate.json')),makeFrozenCourseRules('__REVIEWED_OWNER_UID__'));

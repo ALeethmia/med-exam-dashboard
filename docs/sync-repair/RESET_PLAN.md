@@ -1,3 +1,5 @@
+> 本輪新增：[內建重置與最短 Spark 首次切換](SELF_SERVICE_RESET.md)。使用者確認後由 Rules 受限地原子輪換 fence；舊受管工具不再是首次上線的必要前置。以下保留原流程與歷史限制。
+
 # 空白帳號初始化與重置（僅離線計畫／合成測試）
 
 正式順序以 [CUTOVER.md](CUTOVER.md) 為唯一操作清單；七組隔離契約見 [LIFE_ISOLATION.md](LIFE_ISOLATION.md)。使用者決定未來不保留舊紀錄，**不等於已授權執行**。本輪不讀寫真實資料，不做 Legacy Migration。
