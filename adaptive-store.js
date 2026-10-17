@@ -14,7 +14,7 @@ export function validateSettings(value) {
   return c;
 }
 export function createStudySettings({db=null,localOnly=false,storage=learningStorage,events=window,onChange=()=>{},newId=()=>crypto.randomUUID()}={}) {
-  const key=STUDY_SETTINGS_KEY+(localOnly?'_local':'');let saved={config:null,pending:null},cloud=null,syncing=false,error='',conflict=false;
+  const key=STUDY_SETTINGS_KEY+(localOnly?'_local':'');let saved={config:null,pending:null},cloud=null,syncing=false,requested=false,error='',conflict=false;
   try{saved={...saved,...JSON.parse(storage.getItem(key)||'{}')};}catch{}
   const config=()=>normalizeSettings(saved.config||{});
   const content=c=>JSON.stringify({...normalizeSettings(c||{}),_version:null});
@@ -30,8 +30,9 @@ export function createStudySettings({db=null,localOnly=false,storage=learningSto
     const allowed={date:slot.date,start:slot.start,end:slot.end};set({fixedOverrides:{...config().fixedOverrides,[id]:allowed}},{expected});
   }
   async function retry() {
-    if(!db||localOnly||syncing||!saved.pending||conflict)return;
-    syncing=true;const intent=JSON.parse(JSON.stringify(saved.pending));
+    if(!db||localOnly||!saved.pending||conflict||db.canWrite&&!db.canWrite())return;
+    if(syncing){requested=true;return;}
+    requested=false;syncing=true;const intent=JSON.parse(JSON.stringify(saved.pending));
     try {
       const ref=db.ref(STUDY_SETTINGS_PATH);if(ref.once)await ref.once('value');
       const result=await ref.transaction(current=>{
@@ -44,7 +45,7 @@ export function createStudySettings({db=null,localOnly=false,storage=learningSto
       else if(saved.pending){saved.pending.base=cloud?._version||null;}
       error='';
     }catch(e){error=String(e?.code||'NETWORK_ERROR').replace(/[^a-zA-Z_-]/g,'').slice(0,60);}
-    finally{syncing=false;notify();}
+    finally{syncing=false;notify();if(requested&&(!db.canWrite||db.canWrite())){requested=false;void retry();}}
     if(saved.pending&&!conflict&&!error)void retry();
   }
   function resolve(keepLocal) {if(!conflict)return;if(keepLocal)saved.pending.base=cloud?._version||null;else{saved.pending=null;saved.config=cloud;}conflict=false;notify();void retry();}

@@ -1,3 +1,4 @@
+import {mountResetUI} from './src/ui/reset-ui.js';
 import {projectTask} from './src/planner/task-projection.js';
 import {preserveRewardCache} from './legacy-rewards.js';
 const learningStorage=window.learningStorage;
@@ -33,9 +34,13 @@ let gameFailed = false;
 const save = () => learningStorage.setItem(GAME_KEY, JSON.stringify(game));
 const db = window.learningDB;
 const states = () => window.readStudyStates();
-const courseDates=createCourseDates({keys:new Set(validItems.keys()),db,lifecycle:window.i3Runtime?.lifecycle,localOnly:window.workspaceLocalOnly,onChange:()=>{window.SubjectUI?.refreshDates?.();window.updateWorkspace?.();}});
+const courseDates=createCourseDates({keys:new Set(validItems.keys()),db,lifecycle:window.i3Runtime?.lifecycle,localOnly:window.workspaceLocalOnly,writer:window.courseSync,onChange:()=>{window.SubjectUI?.refreshDates?.();window.updateWorkspace?.();}});
 window.courseDates={...courseDates,today:()=>dateKey(),day:key=>Object.hasOwn(courseDates.records(),key)?courseDates.records()[key]?.day||null:game.awards[key]?.day||null};
 const initiallyCompleted=new Set(allItems.filter(item=>states()[item.path]?.[item.id]).map(awardKey));
+// A durable course request owns its original day; replaying this handoff is first-only.
+window.prepareCourseDates=changes=>Object.fromEntries(Object.entries(changes).filter(([path,complete])=>complete&&!initiallyCompleted.has(path.replace('/','__'))&&!game.awards[path.replace('/','__')]).map(([path])=>[path.replace('/','__'),dateKey()]));
+window.acceptCourseDates=()=>{window.SubjectUI?.refreshDates?.();return true;};
+void window.courseSync?.pump();
 window.addEventListener('study-completed',event=>{const {path,id,complete}=event.detail,key=path+'__'+id;if(complete&&validItems.has(key)&&!initiallyCompleted.has(key)&&!game.awards[key])courseDates.set(key,dateKey(),{firstOnly:true});});
 
 const timeTasks=createTimeTasks({db,localOnly:window.workspaceLocalOnly,day,onChange:()=>window.updateWorkspace?.()});
@@ -233,3 +238,5 @@ void timeTasks.retry();void planner.retry();void life.retry();void studySettings
 void showVersion();
 
 window.addEventListener('learning-read-ready',()=>{void planner.retry();void timeTasks.retry();void courseDates.retry();void life.retry();void studySettings.retry();window.retryLearningSync();window.updateWorkspace?.();});
+
+const resetSection=document.createElement('section');resetSection.id='reset-data';resetSection.className='workspace-panel';document.getElementById('tab-content-settings').append(resetSection);mountResetUI();

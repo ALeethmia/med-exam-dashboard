@@ -1,9 +1,9 @@
 // 輸入只發送鏡頭與選取意圖；不持有業務 store 或 Firebase。
 // Ordinary wheel scrolling belongs to the page. Ctrl may also represent a trackpad pinch.
-export function wheelIntent(event){
- return (event.ctrlKey||event.metaKey)&&Number.isFinite(event.deltaY)&&event.deltaY!==0?'zoom':'page';
+export function wheelIntent(event,mode='auto'){
+ return (event.ctrlKey||event.metaKey||mode==='zoom')&&Number.isFinite(event.deltaY)&&event.deltaY!==0?'zoom':'page';
 }
-export function bindMapInput(surface,{pan,zoom,reset,select,navigate=()=>{}}){
+export function bindMapInput(surface,{pan,zoom,reset,select,navigate=()=>{},wheelMode=()=> 'auto'}){
  const listeners=[],pointers=new Map();let gesture=null,disposed=false;
  const listen=(type,fn,options)=>{surface.addEventListener(type,fn,options);listeners.push(()=>surface.removeEventListener(type,fn,options));};
  const local=event=>{const r=surface.getBoundingClientRect();return {x:event.clientX-r.left,y:event.clientY-r.top};};
@@ -37,7 +37,7 @@ export function bindMapInput(surface,{pan,zoom,reset,select,navigate=()=>{}}){
  listen('dragstart',event=>event.preventDefault());
  listen('pointercancel',clear);listen('lostpointercapture',event=>{if(pointers.has(event.pointerId))clear();});
  listen('wheel',event=>{
-  if(wheelIntent(event)!=='zoom')return;
+  if(wheelIntent(event,wheelMode())!=='zoom')return;
   if(!event.cancelable)return;
   event.preventDefault();clear();const unit=event.deltaMode===1?16:event.deltaMode===2?surface.clientHeight:1;
   zoom(Math.exp(-Math.max(-300,Math.min(300,event.deltaY*unit))*.002*(event.ctrlKey?1.5:1)),local(event));

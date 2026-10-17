@@ -72,18 +72,7 @@ Vercel 正式部署設定未修改；此分支需先經 PR 審查再合併。靜
 
 Firebase Console 需啟用 Authentication → Google，並在授權網域加入正式網站網域；若測試 Vercel Preview 登入，該預覽網域也須加入。尚未有 Firebase 使用者時，可先在已授權的預覽網域以本人 Google 帳號登入；`OWNER_UID` 留空時，登入畫面只顯示該次登入的 UID，隨即登出，不啟動學習介面或資料庫。將本人 UID 填入 `owner-config.js` 並使用相同 UID 設定 Database Rules 後，再部署正式站。已授權登入後，側欄「帳號與同步」可查看與複製 Firebase UID。登入不會自動變更 Security Rules：目前到期的規則仍須由專案擁有者更新。
 
-單人使用且不變更原有資料路徑時，可將 Realtime Database 根層存取限定為本人 UID（將下列佔位文字換成網站顯示的 UID，檢查既有子路徑是否還有其他授權規則）：
-
-```json
-{
-  "rules": {
-    ".read": "auth != null && auth.uid === 'YOUR_FIREBASE_UID'",
-    ".write": "auth != null && auth.uid === 'YOUR_FIREBASE_UID'"
-  }
-}
-```
-
-此規則由使用者在 Firebase Console 審查並發布，本專案不會部署規則或操作正式資料庫測試。這是單人存取限制，沒有新增多人帳號隔離或資料驗證模型。原公開 Web 設定移至 `firebase-config.js`，API 金鑰第 9 個字元依擁有者核對結果修正為大寫，其餘設定未變；它不是服務帳戶私鑰，也不取代 Security Rules。真實 Google 登入仍須在已授權的部署網域上驗證。
+PR #26 的 v3 同步不能沿用 owner-only root write grant：Firebase 的 ancestor grant 會讓子路徑 deny 失效，舊程式也能繼續覆寫歷史路徑。候選 Rules、隔離測試及部署／復原順序見 [部署前安全審查](docs/sync-repair/CUTOVER.md)。正式 Rules 不在本 Repository，也未於本輪修改；候選檔不可直接部署或與舊 root grant 疊加。正式切換、初始化及真實重置仍需另外審查與授權。
 
 網站端 UID 檢查只限制正常介面流程，不能取代 Database Rules，也不能阻止其他人完成 Google 身分驗證或出現在 Authentication 使用者清單。資料庫必須獨立限制同一個擁有者 UID。`?mode=local` 保留無雲端連線的本機預覽能力。
 

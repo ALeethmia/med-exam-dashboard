@@ -57,20 +57,20 @@ function syncHarness(fail=false) {
   window.attachLearningDB({ref:path=>({on:(e,cb)=>listeners[path]=cb,update:async values=>{writes.push(JSON.parse(JSON.stringify(values)));if(fail)throw new Error('denied');}})});
   return {window,store,listeners,writes,el};
 }
-test('single edits preserve unrelated database fields and pending snapshots',async()=>{
-  const h=syncHarness();h.listeners['.info/connected']({val:()=>true});h.window.persistProgress('videos',{1:true,2:true},[1]);
-  assert.deepEqual(JSON.parse(JSON.stringify(h.window.mergeLearningSnapshot('videos',{3:true}))),{1:true,3:true});
+test('non-course legacy edits preserve unrelated fields; courses use the dedicated writer',async()=>{
+  const h=syncHarness();h.listeners['.info/connected']({val:()=>true});h.window.persistProgress('habits/day',{1:true,2:true},[1]);
+  assert.deepEqual(JSON.parse(JSON.stringify(h.window.mergeLearningSnapshot('habits/day',{3:true}))),{1:true,3:true});
   h.listeners['.info/connected']({val:()=>true}); await new Promise(r=>setImmediate(r));
-  assert.deepEqual(h.writes,[{'videos/1':true}]);assert.deepEqual(JSON.parse(h.store.get('med_exam_pending_writes_v1')),{});
+  assert.deepEqual(h.writes,[{'habits/day/1':true}]);assert.deepEqual(JSON.parse(h.store.get('med_exam_pending_writes_v1')),{});
 });
 test('denied writes stay queued and empty snapshots do not erase pending edits',async()=>{
-  const h=syncHarness(true);h.listeners['.info/connected']({val:()=>true});h.window.persistProgress('physiology',{fc_p_1_a:true},['fc_p_1_a']);
+  const h=syncHarness(true);h.listeners['.info/connected']({val:()=>true});h.window.persistProgress('habits/day',{fc_p_1_a:true},['fc_p_1_a']);
   await new Promise(r=>setImmediate(r));
-  assert.match(h.el.textContent,/同步失敗/);assert.equal(JSON.parse(h.store.get('med_exam_pending_writes_v1'))['physiology/fc_p_1_a'],true);
-  assert.equal(h.window.mergeLearningSnapshot('physiology',null).fc_p_1_a,true);
+  assert.match(h.el.textContent,/同步失敗/);assert.equal(JSON.parse(h.store.get('med_exam_pending_writes_v1'))['habits/day/fc_p_1_a'],true);
+  assert.equal(h.window.mergeLearningSnapshot('habits/day',null).fc_p_1_a,true);
 });
 test('local mode never queues or sends Firebase learning writes',async()=>{
-  const h=syncHarness();h.window.workspaceLocalOnly=true;h.listeners['.info/connected']({val:()=>true});h.window.persistProgress('videos',{1:true},[1]);
+  const h=syncHarness();h.window.workspaceLocalOnly=true;h.listeners['.info/connected']({val:()=>true});h.window.persistProgress('habits/day',{1:true},[1]);
   await new Promise(r=>setImmediate(r));assert.equal(h.writes.length,0);assert.equal(h.el.textContent,'本機模式');
 });
 

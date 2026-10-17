@@ -7,8 +7,26 @@ let started = false;
 let activeUID=null,authEpoch=0;
 async function startLearning(stillCurrent=()=>true) {
   if (started) return;
+  if(!window.workspaceLocalOnly){const {guardPendingReset}=await import('./src/ui/reset-ui.js');if(!stillCurrent()||!await guardPendingReset(window.authenticatedUser))return;}
+  if(!stillCurrent())return;
   started = true;
-  window.learningStorage=window.becomingStorage.view();preserveRewardCache(window.learningStorage);window.SubjectUI?.bindStorage();
+  const accountStorage=window.becomingStorage.view();
+  if(!window.workspaceLocalOnly){
+    const {openLifeSession}=await import('./src/study/life-isolation.js');
+    if(!stillCurrent())return;
+    const lifeOwner=window.becomingStorage.capture(),lifeUID=window.becomingStorage.read().uid;
+    window.lifeSession=await openLifeSession({database:firebase.database(),uid:window.becomingStorage.read().uid,storage:accountStorage,valid:()=>lifeOwner.valid()&&window.authenticatedUser?.uid===lifeUID,
+      onRetire(){window.becomingStorage.unbind();window.i3Runtime?.stop();firebase.database().goOffline?.();location.reload();},
+      onStorageFailure(){window.i3Runtime?.lifecycle.fail('storage/write-failed');}});
+    if(!stillCurrent()){window.lifeSession.close();return;}
+    if(window.i3Runtime?.read().status==='error')window.i3Runtime.begin(window.authenticatedUser);
+  }
+  window.learningStorage=window.lifeSession?.storage||accountStorage;preserveRewardCache(window.learningStorage);window.SubjectUI?.bindStorage();
+  const {createCourseDatabase}=await import('./src/study/course-contract.js');
+  if(!stillCurrent())return;
+  window.createCourseDatabase=createCourseDatabase;
+  await import('./src/study/course-sync.js');
+  if(!stillCurrent())return;
   await import('./sync.js');
   if(!stillCurrent())return;
   const script = document.createElement('script');
@@ -106,8 +124,10 @@ if (window.workspaceLocalOnly) {
       finally { button.disabled = false; }
     };
     auth.onAuthStateChanged(async user => {
+      if(user&&started&&activeUID===user.uid&&window.authenticatedUser?.uid===user.uid&&window.i3Runtime?.read().status!=='signedOut')return;
       const epoch=++authEpoch;
       if (!user) {
+        window.lifeSession?.close();
         window.becomingStorage?.unbind();window.authenticatedUser=null;window.i3Runtime?.stop();
         if (started) { window.learningDB?.goOffline?.(); location.reload(); return; }
         status.textContent = accessMessage || '此工作台僅供擁有者使用，請登入你的 Google 帳號。';
@@ -134,7 +154,7 @@ if (window.workspaceLocalOnly) {
       window.authenticatedUser = user;
       login.close();
       try { await startLearning(()=>epoch===authEpoch&&activeUID===user.uid&&window.authenticatedUser?.uid===user.uid); if(epoch!==authEpoch||activeUID!==user.uid)return;addAccount(auth, user); }
-      catch { status.textContent = '介面載入失敗，請重新整理後重試。'; login.showModal(); }
+      catch { if(epoch!==authEpoch)return;window.lifeSession?.close();window.i3Runtime?.lifecycle.fail('life/start-failed');status.textContent = '資料區尚未就緒或本機保存失敗，請重新整理後重試。'; login.showModal(); }
     }, error => { window.becomingStorage?.unbind();window.authenticatedUser=null;window.i3Runtime?.stop();status.textContent = authMessage(error); button.disabled = false; });
   } catch {
     status.textContent = '登入服務未載入，請檢查網路後重新整理。';

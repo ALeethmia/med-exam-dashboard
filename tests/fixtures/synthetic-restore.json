@@ -1,0 +1,19 @@
+{
+  "checklist": {"checked": true, "unchecked": false, "zero": 0, "emptyText": ""},
+  "custom_events": {"2026-10-01": [null, {"id": "synthetic-event", "text": "合成事件", "color": "emerald"}, null]},
+  "habits": {"2026-10-01": {"daily-game": true, "daily-exam": false}},
+  "pharmacology": {"synthetic_a": false, "synthetic_b": true},
+  "physiology": {"fc_p_1_a": true, "fc_p_1_b": false},
+  "questOS": {"v1": {
+    "courseFirstCompletion": {"physiology__fc_p_1_a": {"day": "2026-10-01"}},
+    "restoreProof": {
+      "dense": [null, "first", false, null, 0, null],
+      "sparse": [null, null, null, null, "last", null],
+      "allNull": [null, null],
+      "emptyArray": [], "emptyObject": {}, "nullField": null,
+      "numericObject": {"0": "a", "1": "b"},
+      "nested": [{"kept": "value", "removed": null}, null, {"count": 2}]
+    }
+  }},
+  "videos": [null, true, false, null, true, null]
+}

@@ -1,0 +1,824 @@
+{
+  "mainSHA": "faf357ceab5752c4399bd6712c68a9ad2b1c2587",
+  "reviewedSHA": "00c28dea082707affef25726cc5c7605cee7b446",
+  "main": {
+    "startTime": "2026-10-15T19:24:44.859Z",
+    "duration": 668908.639,
+    "expected": 109,
+    "skipped": 0,
+    "unexpected": 87,
+    "flaky": 0
+  },
+  "reviewed": {
+    "startTime": "2026-10-15T19:35:56.002Z",
+    "duration": 690075.268,
+    "expected": 110,
+    "skipped": 0,
+    "unexpected": 86,
+    "flaky": 0
+  },
+  "final": {
+    "startTime": "2026-10-16T03:45:36.226Z",
+    "duration": 313651.08099999995,
+    "expected": 201,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "regressions": [],
+  "classificationCounts": {
+    "既有失敗／過時 UID fixture": 25,
+    "既有失敗／Mock 與重連時序": 7,
+    "既有失敗／過時 UID 與獎勵假設": 5,
+    "既有失敗／過時 Auth 假設": 2,
+    "既有失敗／過時寫入契約假設": 1,
+    "既有失敗／過時 UI 與資料假設": 39,
+    "既有失敗／過時 UI 假設": 7,
+    "環境／計時失敗": 1
+  },
+  "rows": [
+    {
+      "key": "adaptive.spec.js:priority/date edits and reschedule previews cancel with identical persisted data",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#adaptive-candidates') Expected substring: \"生化自主複習\" Received string: \"沒有未完成的彈性任務。可在首頁自行選課或新增任務。\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#adaptive-candidates') with timeout 5000ms - waitin"
+    },
+    {
+      "key": "adaptive.spec.js:confirmed distribution honors priorities, original dates and XP, and does not complete linked courses",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('#adaptive-preview-form') Expected: visible Received: hidden Timeout: 5000ms Call log: - Expect \"toBeVisible\" locator('#adaptive-preview-form') with timeout 5000ms - waiting for locator('#adaptive-preview-form') 13 × lo"
+    },
+    {
+      "key": "adaptive.spec.js:waiting tasks retain legal dates, reappear via explicit scheduling and remain separate from fixed biochemistry",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('#adaptive-preview-form') Expected: visible Received: hidden Timeout: 5000ms Call log: - Expect \"toBeVisible\" locator('#adaptive-preview-form') with timeout 5000ms - waiting for locator('#adaptive-preview-form') 13 × lo"
+    },
+    {
+      "key": "adaptive.spec.js:unknown work and overload remain visible; no fake feasible plan or automatic rest-day changes",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('#adaptive-preview-form') Expected: visible Received: hidden Timeout: 5000ms Call log: - Expect \"toBeVisible\" locator('#adaptive-preview-form') with timeout 5000ms - waiting for locator('#adaptive-preview-form') 13 × lo"
+    },
+    {
+      "key": "adaptive.spec.js:locked task is excluded while known time conflicts with fixed classes are rejected in task editor",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#adaptive-candidates') Expected substring: \"生化自主複習\" Received string: \"沒有未完成的彈性任務。可在首頁自行選課或新增任務。\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#adaptive-candidates') with timeout 5000ms - waitin"
+    },
+    {
+      "key": "adaptive.spec.js:mobile capacity and preview fit in light appearance",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('#adaptive-preview-form') Expected: visible Received: hidden Timeout: 5000ms Call log: - Expect \"toBeVisible\" locator('#adaptive-preview-form') with timeout 5000ms - waiting for locator('#adaptive-preview-form') 13 × lo"
+    },
+    {
+      "key": "adaptive.spec.js:mobile capacity and preview fit in dark appearance",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('#adaptive-preview-form') Expected: visible Received: hidden Timeout: 5000ms Call log: - Expect \"toBeVisible\" locator('#adaptive-preview-form') with timeout 5000ms - waiting for locator('#adaptive-preview-form') 13 × lo"
+    },
+    {
+      "key": "adaptive.spec.js:mobile capacity and preview fit in system appearance",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('#adaptive-preview-form') Expected: visible Received: hidden Timeout: 5000ms Call log: - Expect \"toBeVisible\" locator('#adaptive-preview-form') with timeout 5000ms - waiting for locator('#adaptive-preview-form') 13 × lo"
+    },
+    {
+      "key": "adaptive.spec.js:mock cloud batch survives offline reload and commits both dates in one transaction on reconnect",
+      "category": "既有失敗／Mock 與重連時序",
+      "note": "補齊 UID seed、off、transaction.committed；等待 readiness，修復重連 retry 遺漏。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#adaptive-sync') Expected substring: \"整批排程待同步\" Received string: \"沒有待同步的整批排程。\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#adaptive-sync') with timeout 5000ms - waiting for locator('#adaptive-"
+    },
+    {
+      "key": "adaptive.spec.js:remote completion stops all offline moves and explicit withdrawal preserves latest completion and XP",
+      "category": "既有失敗／Mock 與重連時序",
+      "note": "補齊 UID seed、off、transaction.committed；等待 readiness，修復重連 retry 遺漏。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: page.evaluate: TypeError: entry.ref.off is not a function at detach (http://127.0.0.1:3111/readiness.js:22:69) at retry (http://127.0.0.1:3111/readiness.js:24:81) at Object.connectionCallback [as fn] (http://127.0.0.1:3111/readiness.js:27:217) at <anonymous>:128:76 at Arra"
+    },
+    {
+      "key": "adaptive.spec.js:capacity conflict compares meaningful local/cloud values and adopting cloud preserves the remote exam date",
+      "category": "既有失敗／Mock 與重連時序",
+      "note": "補齊 UID seed、off、transaction.committed；等待 readiness，修復重連 retry 遺漏。",
+      "main": "timedOut",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded."
+    },
+    {
+      "key": "adaptive.spec.js:no-estimate preview dates can be edited; rest dates rejected and custom estimate survives commit",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('#adaptive-preview-form') Expected: visible Received: hidden Timeout: 5000ms Call log: - Expect \"toBeVisible\" locator('#adaptive-preview-form') with timeout 5000ms - waiting for locator('#adaptive-preview-form') 13 × lo"
+    },
+    {
+      "key": "adaptive.spec.js:weekly task removal needs no confirmation, preserves data and XP, and supports undo for unfinished and completed tasks",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "timedOut",
+      "reviewed": "timedOut",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.click: Test timeout of 30000ms exceeded. Call log: - waiting for getByLabel('移除任務：移除測試', { exact: true }) 68 | const tasks={a:task('移除測試','2026-10-12',{minutes:null,planning:{waiting:true},links:[{path:'biochem',id:'1'}]}),done:tas"
+    },
+    {
+      "key": "adaptive.spec.js:weekly task removal queues offline and synchronizes its tombstone on reconnect",
+      "category": "既有失敗／Mock 與重連時序",
+      "note": "補齊 UID seed、off、transaction.committed；等待 readiness，修復重連 retry 遺漏。",
+      "main": "timedOut",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded."
+    },
+    {
+      "key": "adaptive.spec.js:removal of an existing timed conflict succeeds while undo still checks its time slot",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "timedOut",
+      "reviewed": "timedOut",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.click: Test timeout of 30000ms exceeded. Call log: - waiting for getByLabel('移除任務：衝突任務', { exact: true }) 76 | 77 | test('removal of an existing timed conflict succeeds while undo still checks its time slot',async({page})=>{ > 78 |"
+    },
+    {
+      "key": "adaptive.spec.js:remove sits on the right and uses theme error colour at 390px",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "timedOut",
+      "reviewed": "timedOut",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.boundingBox: Test timeout of 30000ms exceeded. Call log: - waiting for locator('#adaptive-tasks [data-id=a]').getByLabel('移除任務：版型測試', { exact: true }) 81 | for(const width of [390,1280])test('remove sits on the right and uses theme"
+    },
+    {
+      "key": "adaptive.spec.js:remove sits on the right and uses theme error colour at 1280px",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "timedOut",
+      "reviewed": "timedOut",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.boundingBox: Test timeout of 30000ms exceeded. Call log: - waiting for locator('#adaptive-tasks [data-id=a]').getByLabel('移除任務：版型測試', { exact: true }) 81 | for(const width of [390,1280])test('remove sits on the right and uses theme"
+    },
+    {
+      "key": "adaptive.spec.js:recently removed entry survives reload and restores completed and waiting tasks without XP changes",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "timedOut",
+      "reviewed": "timedOut",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.click: Test timeout of 30000ms exceeded. Call log: - waiting for getByLabel('移除任務：已完成復原', { exact: true }) 94 | }); 95 | test('recently removed entry survives reload and restores completed and waiting tasks without XP changes',asyn"
+    },
+    {
+      "key": "adaptive.spec.js:cloud removed tasks remain recoverable after reload and restoration syncs on reconnect",
+      "category": "既有失敗／Mock 與重連時序",
+      "note": "補齊 UID seed、off、transaction.committed；等待 readiness，修復重連 retry 遺漏。",
+      "main": "timedOut",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.click: Test timeout of 30000ms exceeded. Call log: - waiting for getByLabel('復原任務：生理', { exact: true }) - locator resolved to <button type=\"button\" aria-label=\"復原任務：生理\" class=\"workspace-link\">復原</button> - attempting click action -"
+    },
+    {
+      "key": "course-dates.spec.js:old completions stay undated until explicitly entered and old award date can be removed without changing award",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveValue(expected) failed Locator: locator('[data-study-key=\"physiology__fc_p_1_a\"]').locator('input[type=date]') Expected: \"\" Received: \"2026-10-14\" Timeout: 5000ms Call log: - Expect \"toHaveValue\" locator('[data-study-key=\"physiology__fc_p_1_a\"]').loca"
+    },
+    {
+      "key": "dashboard.spec.js:planned tasks award XP once and never change course completion",
+      "category": "既有失敗／過時 UID 與獎勵假設",
+      "note": "歷史資料種植至 UID scope，驗證歷史 XP 不變；新任務不得再發 XP。Mock 補齊 once、off、committed 與路徑訂閱通知。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#xp-detail') Expected substring: \"20 XP\" Received string: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 13"
+    },
+    {
+      "key": "dashboard.spec.js:all subjects keep search, filters, item checks and batch operations",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: page.evaluate: TypeError: Cannot read properties of null (reading '1') at eval (eval at evaluate (:370:30), <anonymous>:1:64) at UtilityScript.evaluate (<anonymous>:372:16) at UtilityScript.<anonymous> (<anonymous>:1:44) at eval (eval at evaluate (:370:30), <anonymous>:1:6"
+    },
+    {
+      "key": "dashboard.spec.js:midnight in Taipei refreshes daily tasks and habit date bindings",
+      "category": "既有失敗／過時 UID 與獎勵假設",
+      "note": "歷史資料種植至 UID scope，驗證歷史 XP 不變；新任務不得再發 XP。Mock 補齊 once、off、committed 與路徑訂閱通知。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#xp-detail') Expected substring: \"20 XP\" Received string: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 14"
+    },
+    {
+      "key": "dashboard.spec.js:mock Firebase keeps unrelated records and confines XP to its namespace",
+      "category": "既有失敗／過時 UID 與獎勵假設",
+      "note": "歷史資料種植至 UID scope，驗證歷史 XP 不變；新任務不得再發 XP。Mock 補齊 once、off、committed 與路徑訂閱通知。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#xp-detail') Expected substring: \"20 XP\" Received string: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 14"
+    },
+    {
+      "key": "dashboard.spec.js:Google login gates database access and exposes UID without clearing progress",
+      "category": "既有失敗／Mock 與重連時序",
+      "note": "補齊 Auth mock 的 off 以完成登出清理／reload；維持登入前零資料讀取、登出隔離與舊紀錄不變。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(received).toBe(expected) // Object.is equality Expected: 0 Received: 1 294 | await page.locator('#sign-out').click(); 295 | await expect(page.locator('#google-sign-in')).toBeEnabled(); > 296 | expect(await page.evaluate(() => window.authTest.reads)).toBe(0); | ^ 297"
+    },
+    {
+      "key": "dashboard.spec.js:cloud access rejects an account when owner UID is unset",
+      "category": "既有失敗／過時 Auth 假設",
+      "note": "登出身份明確為 null；保留未授權帳號 databaseCalls=0、signOut、無 studyData 與原始 cache 不變。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(received).toBeUndefined() Received: null 330 | expect(await page.evaluate(()=>window.ownerTest)).toEqual({databaseCalls:0,signOuts:1}); 331 | expect(await page.evaluate(()=>window.studyData)).toBeUndefined(); > 332 | expect(await page.evaluate(()=>window.authenticat"
+    },
+    {
+      "key": "dashboard.spec.js:cloud access rejects an account when owner UID is different",
+      "category": "既有失敗／過時 Auth 假設",
+      "note": "登出身份明確為 null；保留未授權帳號 databaseCalls=0、signOut、無 studyData 與原始 cache 不變。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(received).toBeUndefined() Received: null 330 | expect(await page.evaluate(()=>window.ownerTest)).toEqual({databaseCalls:0,signOuts:1}); 331 | expect(await page.evaluate(()=>window.studyData)).toBeUndefined(); > 332 | expect(await page.evaluate(()=>window.authenticat"
+    },
+    {
+      "key": "dashboard.spec.js:planner selects across subjects, keeps task and course completion separate, and locates the course",
+      "category": "既有失敗／過時寫入契約假設",
+      "note": "新任務不發 XP；課程型任務透過唯一課程 writer 更新；歷史 XP 不變，保留持久化與關聯檢查。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(received).toEqual(expected) // deep equality - Expected - 1 + Received + 3 Object { \"biochem\": Object {}, \"pharmacology\": Object {}, - \"physiology\": Object {}, + \"physiology\": Object { + \"fc_p_3_a\": true, + }, \"videos\": Object {}, } 387 | const states=await page.eva"
+    },
+    {
+      "key": "dashboard.spec.js:free tasks retain ID through edits, ordering, postponement and deletion; copying starts a new activity",
+      "category": "既有失敗／過時 UID 與獎勵假設",
+      "note": "歷史資料種植至 UID scope，驗證歷史 XP 不變；新任務不得再發 XP。Mock 補齊 once、off、committed 與路徑訂閱通知。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#xp-detail') Expected: \"20 XP\" Received: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 13 × locator resolved to "
+    },
+    {
+      "key": "dashboard.spec.js:legacy time goals and course awards retain XP and readable history",
+      "category": "既有失敗／過時 UID 與獎勵假設",
+      "note": "歷史資料種植至 UID scope，驗證歷史 XP 不變；新任務不得再發 XP。Mock 補齊 once、off、committed 與路徑訂閱通知。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#xp-detail') Expected: \"40 XP\" Received: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 10 × locator resolved to "
+    },
+    {
+      "key": "dashboard.spec.js:same-field conflicts display both versions and resolve only after a user chooses",
+      "category": "既有失敗／Mock 與重連時序",
+      "note": "補齊 UID seed、off、transaction.committed；等待 readiness，修復重連 retry 遺漏。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#planner-conflicts') Expected substring: \"本機的考古題任務\" Received string: \"\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#planner-conflicts') with timeout 5000ms - waiting for locator('#planner-con"
+    },
+    {
+      "key": "growth.spec.js:growth separates current scheduled task completion from reward history and dated recovery",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#growth-week-tasks') Expected: \"本週 Planner 已完成 1 / 2 項任務（依安排日期）\" Received: \"本週尚未安排 Planner 任務\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#growth-week-tasks') with timeout 5000ms - waiting for loca"
+    },
+    {
+      "key": "growth.spec.js:lord identity and accessible chronicles entry work without exposing personal account data at 390px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#lord-name') Expected: \"我的領主\" Received: \"本機示範（未連線）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#lord-name') with timeout 5000ms - waiting for locator('#lord-name') 14 × locator resolved to <h2 id=\""
+    },
+    {
+      "key": "growth.spec.js:lord identity and accessible chronicles entry work without exposing personal account data at 1440px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#lord-name') Expected: \"我的領主\" Received: \"本機示範（未連線）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#lord-name') with timeout 5000ms - waiting for locator('#lord-name') 14 × locator resolved to <h2 id=\""
+    },
+    {
+      "key": "growth.spec.js:growth empty states and historical pause limitations are explicit",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#growth-award-total') Expected substring: \"累積 0 筆\" Received string: \"歷史 0 筆獎勵 · 0 XP（歷史紀錄）\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#growth-award-total') with timeout 5000ms - waiting for "
+    },
+    {
+      "key": "growth.spec.js:single week trend stays in plan and all three course basis notes agree at 390px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#kingdom-subjects [data-subject=videos]') Expected substring: \"依影片時長\" Received string: \"解剖學已完成 0 · 剩餘 30 · 0%\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#kingdom-subjects [data-subject=video"
+    },
+    {
+      "key": "growth.spec.js:single week trend stays in plan and all three course basis notes agree at 1440px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#kingdom-subjects [data-subject=videos]') Expected substring: \"依影片時長\" Received string: \"解剖學已完成 0 · 剩餘 30 · 0%\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#kingdom-subjects [data-subject=video"
+    },
+    {
+      "key": "growth.spec.js:dated course-only records remain stable on cancel and recheck and exclude Planner/time rewards",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#growth-week-courses') Expected: \"本週有日期的首次完成紀錄 1 課程單元\" Received: \"首次完成紀錄尚缺課程日期\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#growth-week-courses') with timeout 5000ms - waiting for locator('#growth-"
+    },
+    {
+      "key": "growth.spec.js:remote and offline course award snapshots count stable IDs once without creating new rewards",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: page.evaluate: TypeError: entry.ref.off is not a function at detach (http://127.0.0.1:3111/readiness.js:22:69) at retry (http://127.0.0.1:3111/readiness.js:24:81) at Object.connectionCallback [as fn] (http://127.0.0.1:3111/readiness.js:27:217) at <anonymous>:30:53 at Array"
+    },
+    {
+      "key": "kingdom-map.spec.js:滾輪縮放有邊界，拖曳建築不會選取，點擊與鍵盤可操作",
+      "category": "既有失敗／過時 UI 假設",
+      "note": "驗證實際 ellipse ground 與來源階段標籤；普通滾輪仍捲頁，明確 zoom 模式與 Ctrl／鍵盤保留驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).not.toHaveText(expected) failed Locator: locator('[data-zoom]') Expected: not \"100%\" Received: \"100%\" Timeout: 5000ms Call log: - Expect \"not toHaveText\" locator('[data-zoom]') with timeout 5000ms - waiting for locator('[data-zoom]') 14 × locator resolved t"
+    },
+    {
+      "key": "kingdom-map.spec.js:預覽沒有持久化寫入或業務初始化，重新載入清除模擬",
+      "category": "既有失敗／過時 UI 假設",
+      "note": "驗證實際 ellipse ground 與來源階段標籤；普通滾輪仍捲頁，明確 zoom 模式與 Ctrl／鍵盤保留驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveAttribute(expected) failed Locator: locator('[data-building=academy]') Expected: \"奧術學院，模擬階段 1 / 5\" Received: \"奧術學院，來源階段 I\" Timeout: 5000ms Call log: - Expect \"toHaveAttribute\" locator('[data-building=academy]') with timeout 5000ms - waiting for locato"
+    },
+    {
+      "key": "kingdom-map.spec.js:macOS Chrome 回報情境：拖曳 SVG 文字不反白，地圖外仍可選取與複製",
+      "category": "既有失敗／過時 UI 假設",
+      "note": "驗證實際 ellipse ground 與來源階段標籤；普通滾輪仍捲頁，明確 zoom 模式與 Ctrl／鍵盤保留驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).not.toHaveText(expected) failed Locator: locator('[data-zoom]') Expected: not \"120%\" Received: \"120%\" Timeout: 5000ms Call log: - Expect \"not toHaveText\" locator('[data-zoom]') with timeout 5000ms - waiting for locator('[data-zoom]') 14 × locator resolved t"
+    },
+    {
+      "key": "kingdom-map.spec.js:地圖滑鼠操作不留下上下焦點藍線，Tab 仍有清楚焦點提示",
+      "category": "既有失敗／過時 UI 假設",
+      "note": "驗證實際 ellipse ground 與來源階段標籤；普通滾輪仍捲頁，明確 zoom 模式與 Ctrl／鍵盤保留驗證。",
+      "main": "timedOut",
+      "reviewed": "timedOut",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.evaluate: Test timeout of 30000ms exceeded. Call log: - waiting for locator('[data-building=academy] > polygon').first() 67 | const r=await map.boundingBox();await page.mouse.move(r.x+20,r.y+20);await page.mouse.down();await page.m"
+    },
+    {
+      "key": "kingdom-map.spec.js:Chrome wheel 模擬：雙指滑動優先平移，捏合與滑鼠模式縮放",
+      "category": "既有失敗／過時 UI 假設",
+      "note": "驗證實際 ellipse ground 與來源階段標籤；普通滾輪仍捲頁，明確 zoom 模式與 Ctrl／鍵盤保留驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).not.toHaveAttribute(expected) failed Locator: locator('[data-scene]') Expected: not \"translate(25.105263157894797 -33.19999999999999) scale(0.903157894736842)\" Received: \"translate(25.105263157894797 -33.19999999999999) scale(0.903157894736842)\" Timeout: 50"
+    },
+    {
+      "key": "kingdom-map.spec.js:滑鼠冷啟動點擊地圖與建築沒有原生矩形框，選取與 Tab 焦點不同",
+      "category": "既有失敗／過時 UI 假設",
+      "note": "驗證實際 ellipse ground 與來源階段標籤；普通滾輪仍捲頁，明確 zoom 模式與 Ctrl／鍵盤保留驗證。",
+      "main": "timedOut",
+      "reviewed": "timedOut",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.evaluate: Test timeout of 30000ms exceeded. Call log: - waiting for locator('[data-building=academy]').locator('> polygon').first() 89 | const r=await map.boundingBox();await page.mouse.click(r.x+20,r.y+20);const rootState=await ma"
+    },
+    {
+      "key": "kingdom-map.spec.js:觸控板捏合靈敏度提高為 1.5 倍，普通滾輪與按鈕速度不變",
+      "category": "既有失敗／過時 UI 假設",
+      "note": "驗證實際 ellipse ground 與來源階段標籤；普通滾輪仍捲頁，明確 zoom 模式與 Ctrl／鍵盤保留驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('[data-zoom]') Expected: \"111%\" Received: \"100%\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('[data-zoom]') with timeout 5000ms - waiting for locator('[data-zoom]') 14 × locator resolved to <output da"
+    },
+    {
+      "key": "kingdom.spec.js:Becoming brand and read-only kingdom enter, leave and reload without changing learning records or awards",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#tab-content-kingdom') Timeout: 5000ms - Expected substring - 1 + Received string + 10 - 學者的試煉 + 資料快照已就緒（空紀錄亦為有效結果）重試讀取冒險者公會證 · 唯讀來源本機示範（未連線）學者領主 · 邊境開拓者Aetheria／艾瑟利亞Chapter 1 · 初始之地Lv. 1 · 王國整體 0.00%已完成 0 學習"
+    },
+    {
+      "key": "kingdom.spec.js:kingdom exam date follows Planner settings without auto-passing after the exam",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(received).toEqual(expected) // deep equality - Expected - 1 + Received + 1 Object { - \"becoming_uid_v1:local-demo:med_exam_active_tab\": \"plan\", + \"becoming_uid_v1:local-demo:med_exam_active_tab\": \"kingdom\", \"becoming_uid_v1:local-demo:med_exam_adaptive_study_v1_loca"
+    },
+    {
+      "key": "kingdom.spec.js:kingdom fits 390px in light appearance",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('.kingdom-map') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" locator('.kingdom-map') with timeout 5000ms - waiting for locator('.kingdom-map') 12 | }); 13 | for(const wi"
+    },
+    {
+      "key": "kingdom.spec.js:kingdom fits 390px in dark appearance",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('.kingdom-map') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" locator('.kingdom-map') with timeout 5000ms - waiting for locator('.kingdom-map') 12 | }); 13 | for(const wi"
+    },
+    {
+      "key": "kingdom.spec.js:kingdom fits 390px in system appearance",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('.kingdom-map') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" locator('.kingdom-map') with timeout 5000ms - waiting for locator('.kingdom-map') 12 | }); 13 | for(const wi"
+    },
+    {
+      "key": "kingdom.spec.js:kingdom fits 1440px in light appearance",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('.kingdom-map') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" locator('.kingdom-map') with timeout 5000ms - waiting for locator('.kingdom-map') 12 | }); 13 | for(const wi"
+    },
+    {
+      "key": "kingdom.spec.js:kingdom fits 1440px in dark appearance",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('.kingdom-map') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" locator('.kingdom-map') with timeout 5000ms - waiting for locator('.kingdom-map') 12 | }); 13 | for(const wi"
+    },
+    {
+      "key": "kingdom.spec.js:kingdom fits 1440px in system appearance",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('.kingdom-map') Expected: visible Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toBeVisible\" locator('.kingdom-map') with timeout 5000ms - waiting for locator('.kingdom-map') 12 | }); 13 | for(const wi"
+    },
+    {
+      "key": "kingdom.spec.js:kingdom reads cloud updates and offline legacy records without writing new namespaces",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).not.toContainText(expected) failed Locator: locator('.lord-profile') Expected substring: not \"不可曝光真名\" Received string: \"冒險者公會證 · 唯讀來源不可曝光真名學者領主 · 邊境開拓者Aetheria／艾瑟利亞Chapter 1 · 初始之地Lv. 1 · 王國整體 3.56%已完成 1 學習單元已解鎖 0 / 3 項成就學院 5.93% ×40% · 兵營 0.00% ×40% · 要塞 5"
+    },
+    {
+      "key": "kingdom.spec.js:chronicles retain unlocked achievements and historical XP while home has no character UI at 390px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#xp-detail') Expected: \"200 XP\" Received: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 14 × locator resolved to"
+    },
+    {
+      "key": "kingdom.spec.js:chronicles retain unlocked achievements and historical XP while home has no character UI at 1440px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#xp-detail') Expected: \"200 XP\" Received: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 13 × locator resolved to"
+    },
+    {
+      "key": "kingdom.spec.js:legacy progression saved opens kingdom chronicles and preserves awards",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toBeVisible() failed Locator: locator('#tab-content-kingdom') Expected: visible Received: hidden Timeout: 5000ms Call log: - Expect \"toBeVisible\" locator('#tab-content-kingdom') with timeout 5000ms - waiting for locator('#tab-content-kingdom') 14 × locator "
+    },
+    {
+      "key": "kingdom.spec.js:legacy progression hash opens kingdom chronicles and preserves awards",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#xp-detail') Expected: \"0 XP\" Received: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 13 × locator resolved to <"
+    },
+    {
+      "key": "kingdom.spec.js:legacy progression query opens kingdom chronicles and preserves awards",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#xp-detail') Expected: \"0 XP\" Received: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 14 × locator resolved to <"
+    },
+    {
+      "key": "kingdom.spec.js:legacy progression call opens kingdom chronicles and preserves awards",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#xp-detail') Expected: \"0 XP\" Received: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 13 × locator resolved to <"
+    },
+    {
+      "key": "life.spec.js:daily goals read the actual Planner date; leisure and time goals leave XP and courses alone",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#xp-detail') Expected substring: \"20 XP\" Received string: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 14"
+    },
+    {
+      "key": "life.spec.js:legacy exercise and rest remain visible without invented actions or migration writes",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#life-exercise') Expected substring: \"已完成（舊打卡）\" Received string: \"運動未安排未安排訓練菜單 →\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#life-exercise') with timeout 5000ms - waiting for locator('#life-"
+    },
+    {
+      "key": "life.spec.js:life goal date bindings follow Taiwan midnight without losing yesterday",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'days') at eval (eval at evaluate (:370:30), <anonymous>:1:65) at UtilityScript.evaluate (<anonymous>:372:16) at UtilityScript.<anonymous> (<anonymous>:1:44) at eval (eval at evaluate (:370:30), <anonymous>:"
+    },
+    {
+      "key": "life.spec.js:legacy weekly schedule offers a draft comparison and upgrades only on save",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toContainText(expected) failed Locator: locator('#training-description') Expected substring: \"一般體能重建菜單\" Received string: \"未安排 · 未安排 · 階段 1 菜單\" Timeout: 5000ms Call log: - Expect \"toContainText\" locator('#training-description') with timeout 5000ms - waiting "
+    },
+    {
+      "key": "life.spec.js:stage suggestions follow stages and saving an unchanged suggestion does not make it custom",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'days') at eval (eval at evaluate (:370:30), <anonymous>:1:65) at UtilityScript.evaluate (<anonymous>:372:16) at UtilityScript.<anonymous> (<anonymous>:1:44) at eval (eval at evaluate (:370:30), <anonymous>:"
+    },
+    {
+      "key": "life.spec.js:settings drafts including start, stage, mode and preset cancel without any local data changes",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'training') at eval (eval at evaluate (:370:30), <anonymous>:1:65) at UtilityScript.evaluate (<anonymous>:372:16) at UtilityScript.<anonymous> (<anonymous>:1:44) at eval (eval at evaluate (:370:30), <anonymo"
+    },
+    {
+      "key": "life.spec.js:moving from a started source into a completed target preserves source and archives target on confirmation",
+      "category": "既有失敗／過時 UID fixture",
+      "note": "測試資料放入已驗證 UID 的 storage，未放寬產品隔離；保留原日期、獎勵、操作及跨重載驗證。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: page.evaluate: TypeError: Cannot read properties of null (reading 'days') at eval (eval at evaluate (:370:30), <anonymous>:1:65) at UtilityScript.evaluate (<anonymous>:372:16) at UtilityScript.<anonymous> (<anonymous>:1:44) at eval (eval at evaluate (:370:30), <anonymous>:"
+    },
+    {
+      "key": "rpg-ux.spec.js:compact guild pass, three chronicles views and unchanged territory values at 320px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#lord-name') Expected: \"我的領主\" Received: \"本機示範（未連線）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#lord-name') with timeout 5000ms - waiting for locator('#lord-name') 13 × locator resolved to <h2 id=\""
+    },
+    {
+      "key": "rpg-ux.spec.js:compact guild pass, three chronicles views and unchanged territory values at 390px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#lord-name') Expected: \"我的領主\" Received: \"本機示範（未連線）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#lord-name') with timeout 5000ms - waiting for locator('#lord-name') 13 × locator resolved to <h2 id=\""
+    },
+    {
+      "key": "rpg-ux.spec.js:compact guild pass, three chronicles views and unchanged territory values at 1440px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#lord-name') Expected: \"我的領主\" Received: \"本機示範（未連線）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#lord-name') with timeout 5000ms - waiting for locator('#lord-name') 13 × locator resolved to <h2 id=\""
+    },
+    {
+      "key": "rpg-ux.spec.js:chronicles keyboard tabs and refresh keep original awards and default collapsed detailed history",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#xp-detail') Expected: \"60 XP\" Received: \"歷史 0 XP（不決定目前等級）\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#xp-detail') with timeout 5000ms - waiting for locator('#xp-detail') 13 × locator resolved to "
+    },
+    {
+      "key": "territory.spec.js:territory stages and keyboard details explain real evidence without storage writes at 390px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-academy .building-stage') Expected: \"符文書庫\" Received: \"研究營地\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-academy .building-stage') with timeout 5000ms - waiting for locator('#buil"
+    },
+    {
+      "key": "territory.spec.js:territory stages and keyboard details explain real evidence without storage writes at 1440px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-academy .building-stage') Expected: \"符文書庫\" Received: \"研究營地\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-academy .building-stage') with timeout 5000ms - waiting for locator('#buil"
+    },
+    {
+      "key": "territory.spec.js:cancelled courses lower current buildings while explicit first dates remain history and old XP is unchanged",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-keep .building-stage') Expected: \"燈火據點\" Received: \"邊境營地\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-keep .building-stage') with timeout 5000ms - waiting for locator('#building-k"
+    },
+    {
+      "key": "territory.spec.js:keep keeps both route calculations optional and recent results unique at 390px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveAttribute(expected) failed Locator: locator('#building-keep summary [role=progressbar]') Expected: \"37\" Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toHaveAttribute\" locator('#building-keep summary [role=progressbar]') with timeout "
+    },
+    {
+      "key": "territory.spec.js:keep keeps both route calculations optional and recent results unique at 1440px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveAttribute(expected) failed Locator: locator('#building-keep summary [role=progressbar]') Expected: \"37\" Timeout: 5000ms Error: element(s) not found Call log: - Expect \"toHaveAttribute\" locator('#building-keep summary [role=progressbar]') with timeout "
+    },
+    {
+      "key": "territory.spec.js:keep study only shows only the genuinely attained route",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-keep .building-stage') Expected: \"石築要塞\" Received: \"邊境營地\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-keep .building-stage') with timeout 5000ms - waiting for locator('#building-k"
+    },
+    {
+      "key": "territory.spec.js:keep cross only shows only the genuinely attained route",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-keep .building-stage') Expected: \"石築要塞\" Received: \"邊境營地\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-keep .building-stage') with timeout 5000ms - waiting for locator('#building-k"
+    },
+    {
+      "key": "territory.spec.js:keep highest study only shows only the genuinely attained route",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-keep .building-stage') Expected: \"學者之城\" Received: \"邊境營地\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-keep .building-stage') with timeout 5000ms - waiting for locator('#building-k"
+    },
+    {
+      "key": "territory.spec.js:keep highest cross only shows only the genuinely attained route",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-keep .building-stage') Expected: \"學者之城\" Received: \"邊境營地\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-keep .building-stage') with timeout 5000ms - waiting for locator('#building-k"
+    },
+    {
+      "key": "territory.spec.js:undated achievements are labelled and follow dated history without current milestones",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveCount(expected) failed Locator: locator('#building-academy .building-events [data-event-id]') Expected: 3 Received: 0 Timeout: 5000ms Call log: - Expect \"toHaveCount\" locator('#building-academy .building-events [data-event-id]') with timeout 5000ms - "
+    },
+    {
+      "key": "territory.spec.js:four of 115 courses shows six-unit next target with two remaining and three-layer UX at 390px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-academy').locator('.building-number') Expected: \"4 / 6\" Received: \"0 / 6\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-academy').locator('.building-number') with timeout 5000ms - "
+    },
+    {
+      "key": "territory.spec.js:four of 115 courses shows six-unit next target with two remaining and three-layer UX at 1440px",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-academy').locator('.building-number') Expected: \"4 / 6\" Received: \"0 / 6\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-academy').locator('.building-number') with timeout 5000ms - "
+    },
+    {
+      "key": "territory.spec.js:keep nearest construction condition still requires both parts of the cross-domain route",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-keep .building-progress-label') Expected: \"再完成 2 個活動日即可升級\" Received: \"再完成 3 個活動日即可升級\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-keep .building-progress-label') with timeout 500"
+    },
+    {
+      "key": "territory.spec.js:highest academy and barracks stop promising a next upgrade",
+      "category": "既有失敗／過時 UI 與資料假設",
+      "note": "UID 內種植合成紀錄；保留數值、日期、XP、鍵盤、唯讀與無溢出驗證；使用目前詳細資訊位置。",
+      "main": "failed",
+      "reviewed": "failed",
+      "final": "passed",
+      "evidence": "Error: expect(locator).toHaveText(expected) failed Locator: locator('#building-academy .building-next-target') Expected: \"已達最高階段\" Received: \"下一階段 · 符文書庫\" Timeout: 5000ms Call log: - Expect \"toHaveText\" locator('#building-academy .building-next-target') with timeout 5000ms - waiti"
+    },
+    {
+      "key": "life.spec.js:mock Firebase persists training offline through reload and reconnect without touching XP or study data",
+      "category": "環境／計時失敗",
+      "note": "原 main 操作按鈕等待 timeout；相同環境 reviewed 與最終版通過。未據此宣稱產品修復。",
+      "main": "timedOut",
+      "reviewed": "passed",
+      "final": "passed",
+      "evidence": "Test timeout of 30000ms exceeded. Error: locator.click: Test timeout of 30000ms exceeded. Call log: - waiting for getByRole('button', { name: '修改日期／類型' }) 7 | } 8 | async function arrange(page,type='seated',day) { > 9 | await page.getByRole('button',{name:'修改日期／類型'}).click(); | ^"
+    }
+  ]
+}

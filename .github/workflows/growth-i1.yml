@@ -7,7 +7,7 @@ permissions:
 jobs:
   mock-regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -17,24 +17,22 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: node scripts/course-rules-candidate.mjs --check
       - run: npm test
       - run: npm run build
       - run: npm run lint
       - run: npx playwright install --with-deps chromium
-      - name: Existing Dashboard regression subset
-        run: npx playwright test tests/browser/version.spec.js tests/browser/course-dates.spec.js --grep 'footer reads|Preview footer|first date can' --reporter=line
+      - name: Complete browser product and isolated sync regressions
+        run: npx playwright test --reporter=line
       - name: Sync UX and isolated B1 decision model
         run: |
-          npx playwright test tests/browser/sync-ux.spec.js --reporter=line
           node --test tests/sync-b1/reconcile-model.test.mjs
       - name: Isolated B2-A queue contract and Chromium multi-tab tests
         run: |
           node --test tests/sync-queue/contract.test.mjs
-          npx playwright test tests/browser/sync-queue.spec.js --reporter=line
       - name: Isolated B2-B.1 write Adapter
         run: |
           node --test tests/sync-queue/write-adapter.test.mjs
-          npx playwright test tests/browser/write-adapter.spec.js --reporter=line
       - name: Synthetic B2-B.1 SDK Emulator integration
         shell: bash
         run: |
@@ -45,6 +43,7 @@ jobs:
           curl --fail --silent --show-error --retry 2 https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js -o "$fixture_dir/firebase-app-compat.js"
           curl --fail --silent --show-error --retry 2 https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js -o "$fixture_dir/firebase-database-compat.js"
           B2B1_EMULATOR_JAR="$fixture_dir/database.jar" FIREBASE_SDK_DIR="$fixture_dir" node tests/sync-queue/adapter-emulator.mjs
+          B2B1_EMULATOR_JAR="$fixture_dir/database.jar" FIREBASE_SDK_DIR="$fixture_dir" node tests/sync-queue/durable-course-emulator.mjs
       - name: Canonical auth and Fixtures integration
         shell: bash
         run: |

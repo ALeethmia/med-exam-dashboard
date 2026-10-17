@@ -9,3 +9,5 @@ test-results/
 .growth-evidence/
 
 /node_modules
+
+/work/

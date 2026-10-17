@@ -24,8 +24,8 @@ button:focus-visible,select:focus-visible { outline:3px solid #6b79ae; outline-o
 [data-map]:active { cursor:grabbing; }
 [data-building] { cursor:pointer; }
 /* 選取狀態與鍵盤焦點分開；只描繪地基，不使用大型包圍矩形。 */
-[data-map] [data-building][aria-pressed=true] > polygon:first-of-type { stroke:#8b641e; stroke-width:3; }
-[data-map]:not([data-pointer-focus]) [data-building]:focus-visible > polygon:first-of-type { stroke:#344a81; stroke-width:5; stroke-dasharray:6 4; }
+[data-map] [data-building][aria-pressed=true] .ground { stroke:#8b641e; stroke-width:3; }
+[data-map]:not([data-pointer-focus]) [data-building]:focus-visible .ground { stroke:#344a81; stroke-width:5; stroke-dasharray:6 4; }
 .map-hint { margin:0; padding:12px 16px; color:#687568; font-size:12px; }
 .preview-controls { padding:24px; margin-top:20px; }
 .building-choices { display:flex; flex-wrap:wrap; gap:10px; }

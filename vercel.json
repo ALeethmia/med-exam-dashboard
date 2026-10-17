@@ -2,7 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "codex/growth-i1-integration": false
+      "codex/growth-i1-integration": false,
+      "fix/durable-course-sync": false
     }
   },
   "rewrites": [
