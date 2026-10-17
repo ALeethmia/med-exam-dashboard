@@ -8,6 +8,7 @@ let activeUID=null,authEpoch=0;
 async function startLearning(stillCurrent=()=>true) {
   if (started) return;
   if(!window.workspaceLocalOnly){const {guardPendingReset}=await import('./src/ui/reset-ui.js');if(!stillCurrent()||!await guardPendingReset(window.authenticatedUser))return;}
+  if(!stillCurrent())return;
   started = true;
   const accountStorage=window.becomingStorage.view();
   if(!window.workspaceLocalOnly){

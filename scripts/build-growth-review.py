@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil,re
 root=Path(__file__).resolve().parents[1];app=root;dist=root/'.growth-review/growth-i1'
-exclude={'auth.js','firebase-entry.js','firebase-config.js','owner-config.js','host-index.html','kingdom-preview.html','kingdom-preview.js','kingdom-map.css','kingdom-preview-state.js','metadata.json','tests','scripts','playwright.config.js','server.js','package-lock.json','firebase.json','database.rules.json'}
+exclude={'first-start.html','auth.js','firebase-entry.js','firebase-config.js','owner-config.js','host-index.html','kingdom-preview.html','kingdom-preview.js','kingdom-map.css','kingdom-preview-state.js','metadata.json','tests','scripts','playwright.config.js','server.js','package-lock.json','firebase.json','database.rules.json'}
 if dist.exists():shutil.rmtree(dist)
 dist.mkdir(parents=True)
 for p in list(app.iterdir())+list((root/'tests/fixtures').iterdir()):
